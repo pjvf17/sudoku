@@ -857,5 +857,5 @@ wss.on("connection", function (ws: WebSocket) {
   });
 });
 
-await app.listen("tealog.xyz:8011");
+await app.listen({ port: 8011 });
 
