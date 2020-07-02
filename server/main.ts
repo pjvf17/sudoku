@@ -829,7 +829,7 @@ var sudoku = {};
 })();
 /* eslint-enable */
 
-const puzzle = sudoku.board_string_to_grid(sudoku.generate("easy"));
+let puzzle = sudoku.board_string_to_grid(sudoku.generate("easy"));
 
 console.log(puzzle);
 
@@ -844,18 +844,16 @@ const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
   // Add client to set
-  console.log("connection");
   clients.add(ws);
-  ws.send(JSON.stringify({puzzle}));
+  ws.send(JSON.stringify({ puzzle }));
   ws.on("message", function (message: any) {
-    let updatedPuzzle = JSON.parse(message);
-    console.log(updatedPuzzle);
+    puzzle = JSON.parse(message);
+    console.log(puzzle);
     // Send to all connected
     for (let client of clients) {
-      client.send(message);
+      client.send(puzzle);
     }
   });
 });
 
 await app.listen({ port: 8011 });
-
