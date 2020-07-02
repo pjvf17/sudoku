@@ -844,17 +844,19 @@ const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
   // Add client to set
-  console.log("connection");
-  clients.add(ws);
   ws.send(JSON.stringify(puzzle));
   ws.on("message", function (message: any) {
     let updatedPuzzle = JSON.parse(message);
     puzzle = updatedPuzzle;
-    console.log(updatedPuzzle);
     // Send to all connected
-    for (let client of clients) {
-      client.send(message);
+    for (let client of wss.clients) {
+      if (!client.isClosed) {
+        client.send(message);
+      }
     }
+  });
+  ws.on("close", function (message: any) {
+    console.log(`socket closed: ${message}`);
   });
 });
 

@@ -22,7 +22,7 @@
 <script>
 var sudoku = {}; 
 
-const socket = new WebSocket("ws://tealog.xyz:8010");
+const socket = new WebSocket("ws://localhost:8010");
 /* eslint-disable */
 console.log(sudoku);
 (function() {
@@ -829,10 +829,15 @@ console.log(sudoku);
 })();
 /* eslint-enable */
 
-import { ref, toRaw } from "vue";
+import { ref, toRaw, onBeforeUnmount } from "vue";
 
 export default {
   setup() {
+
+    onBeforeUnmount( () => {
+      socket.close(1000, "logging off")
+    })
+
     socket.onopen = function() {
       console.log("connection established");
     };
