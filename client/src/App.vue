@@ -846,6 +846,7 @@ export default {
       // Update puzzle
       puzzle.value[row][col] = cell;
       // Send to socket server
+      console.log("sending");
       socket.send(JSON.stringify({ puzzle: puzzle.value }));
     };
 

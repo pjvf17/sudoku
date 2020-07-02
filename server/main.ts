@@ -847,6 +847,8 @@ wss.on("connection", function (ws: WebSocket) {
   clients.add(ws);
   ws.send(JSON.stringify({ puzzle }));
   ws.on("message", function (message: any) {
+    console.log(message);
+    console.log(JSON.parse(message));
     puzzle = JSON.parse(message);
     console.log(puzzle);
     // Send to all connected
