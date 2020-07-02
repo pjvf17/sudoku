@@ -830,7 +830,7 @@ import {
 
 const clients: any = new Set();
 
-const wss = new WebSocketServer(8091);
+const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
   // Add client to set
@@ -846,4 +846,4 @@ wss.on("connection", function (ws: WebSocket) {
   });
 });
 
-await app.listen({ port: 8090 });
+await app.listen({ port: 8011 });

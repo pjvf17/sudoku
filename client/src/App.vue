@@ -22,7 +22,7 @@
 <script>
 var sudoku = {}; 
 
-const socket = new WebSocket("ws://localhost:8091");
+const socket = new WebSocket("ws://tealog.xyz:8010");
 /* eslint-disable */
 console.log(sudoku);
 (function() {
