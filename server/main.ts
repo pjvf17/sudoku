@@ -856,5 +856,5 @@ wss.on("connection", function (ws: WebSocket) {
   });
 });
 
-await app.listen({ port: 8011 });
+await app.listen({ port: 8011, hostname: "tealog.xyz" });
 
