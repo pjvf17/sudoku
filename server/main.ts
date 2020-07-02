@@ -830,6 +830,21 @@ var sudoku = {};
 /* eslint-enable */
 
 let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("easy")) };
+// Loop through rows
+for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
+  const row = puzzle.puzzle[rowIndex];
+  for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+    const cell = row[cellIndex];
+    if (cell != ".") {
+      row[cellIndex] = {
+        number: cell,
+        given: true,
+      };
+    } else {
+      row[cellIndex] = { number: "", given: false };
+    }
+  }
+}
 
 console.log(puzzle);
 

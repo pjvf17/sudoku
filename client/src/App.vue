@@ -5,12 +5,12 @@
         <tr v-for="(row, n) in puzzle" :key="n">
           <td v-for="(cell, j) in row" :key="n+j">
             <input
-              :value="cell == '.' ? null : cell"
+              :value="cell.number"
               @input="handleInput($event.target.value, n, j)"
               type="text"
               :name="`${j}+${n}`"
               :id="`${j}+${n}`"
-              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0 }, 'sudoku-board-cell']"
+              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given }, 'sudoku-board-cell']"
             />
           </td>
         </tr>
@@ -855,7 +855,7 @@ export default {
 
     const handleInput = (cell, row, col) => {
       // Update puzzle
-      puzzle.value[row][col] = cell;
+      puzzle.value[row][col].number = cell;
       // Send to socket server
       console.log("sending");
       socket.send(JSON.stringify({ puzzle: puzzle.value }));
@@ -901,6 +901,8 @@ td {
     height: 55px;
     border: 1px solid #ccc;
     text-align: center;
+    color: grey;
+    font-style: italic;
   }
 }
 
@@ -917,5 +919,11 @@ td {
 
 .border-top {
   border-top: $border;
+}
+
+.bold {
+  font-style: normal;
+  color: black;
+  font-weight: 600;
 }
 </style>
