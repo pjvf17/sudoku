@@ -833,29 +833,29 @@ const puzzle = sudoku.board_string_to_grid(sudoku.generate("easy"));
 
 console.log(puzzle);
 
-import {
-  WebSocket,
-  WebSocketServer,
-} from "https://deno.land/x/websocket/mod.ts";
+// import {
+//   WebSocket,
+//   WebSocketServer,
+// } from "https://deno.land/x/websocket/mod.ts";
 
-const clients: any = new Set();
+// const clients: any = new Set();
 
-const wss = new WebSocketServer(8010);
+// const wss = new WebSocketServer(8010);
 
-wss.on("connection", function (ws: WebSocket) {
-  // Add client to set
-  console.log("connection");
-  clients.add(ws);
-  ws.send(JSON.stringify({puzzle}));
-  ws.on("message", function (message: any) {
-    let updatedPuzzle = JSON.parse(message);
-    console.log(updatedPuzzle);
-    // Send to all connected
-    for (let client of clients) {
-      client.send(message);
-    }
-  });
-});
+// wss.on("connection", function (ws: WebSocket) {
+//   // Add client to set
+//   console.log("connection");
+//   clients.add(ws);
+//   ws.send(JSON.stringify({puzzle}));
+//   ws.on("message", function (message: any) {
+//     let updatedPuzzle = JSON.parse(message);
+//     console.log(updatedPuzzle);
+//     // Send to all connected
+//     for (let client of clients) {
+//       client.send(message);
+//     }
+//   });
+// });
 
 await app.listen({ port: 8011});
 
