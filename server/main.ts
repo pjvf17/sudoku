@@ -15,6 +15,14 @@ app.use(async (context) => {
   }
 });
 
+app.addEventListener("listen", ({ hostname, port, secure }) => {
+  console.log(
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
+    }:${port}`
+  );
+});
+
 /* eslint-disable */
 var sudoku = {};
 (function () {
@@ -849,3 +857,4 @@ wss.on("connection", function (ws: WebSocket) {
 });
 
 await app.listen({ port: 8011 });
+
