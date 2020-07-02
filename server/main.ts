@@ -823,6 +823,8 @@ var sudoku = {};
 
 const puzzle = sudoku.board_string_to_grid(sudoku.generate("easy"));
 
+console.log(puzzle);
+
 import {
   WebSocket,
   WebSocketServer,
