@@ -831,6 +831,7 @@ var sudoku = {};
 /* eslint-enable */
 
 let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")) };
+
 // Loop through rows
 for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
   const row = puzzle.puzzle[rowIndex];
@@ -858,8 +859,14 @@ for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
   }
 }
 
+// In validation, only the validator that invalidate a number can revalidate it
+// i.e. If a certain cell was set to invalid by the row validation,
+// the reason will be set to "row." Then, only the row validation can undo it
+// However, a validation reason can be overwritten
+
 const valiadeSudoku = (sudokuToCheck) => {
   console.time("validating");
+
   // Check rows
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     const row = sudokuToCheck.puzzle[rowIndex];
@@ -869,7 +876,7 @@ const valiadeSudoku = (sudokuToCheck) => {
     for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
       const cell = row[cellIndex];
       // Returns true if blank
-      if (typeof cell == "string" && cell.length == 0) {
+      if (typeof cell.number == "string" && cell.number.length == 0) {
         continue;
       }
       // Check if cell number is already in row
@@ -883,14 +890,10 @@ const valiadeSudoku = (sudokuToCheck) => {
     for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
       const cell = row[cellIndex];
 
-      console.log(cell.number);
       if (cell.number.length != 0) {
         // If number is a duplicate and not a given
-        console.log("first");
         if (duplicates.includes(cell.number) && !cell.given) {
           // Set valid to false
-          console.log("here");
-
           row[cellIndex].valid.value = false;
           row[cellIndex].valid.reason = "row";
         } else if (row[cellIndex].valid.reason == "row") {
@@ -902,9 +905,11 @@ const valiadeSudoku = (sudokuToCheck) => {
         row[cellIndex].valid.reason = null;
       }
     }
-    console.log(row);
+    console.log(duplicates);
     sudokuToCheck.puzzle[rowIndex] = row;
   }
+
+  // Check columns
   // Loop trough columns
   for (let colIndex = 0; colIndex < 9; colIndex++) {
     const numbers = [];
@@ -914,7 +919,7 @@ const valiadeSudoku = (sudokuToCheck) => {
       // Get cell
       const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
       // Returns true if blank
-      if (typeof cell == "string" && cell.length == 0) {
+      if (typeof cell.number == "string" && cell.number.length == 0) {
         continue;
       }
       // Check if cell number is already in row
@@ -924,7 +929,7 @@ const valiadeSudoku = (sudokuToCheck) => {
         numbers.push(cell.number);
       }
     }
-    // Loop through again and mark duplicates
+    // Loop through again and mark duplicates as invalid
     for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
       const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
 
@@ -949,9 +954,28 @@ const valiadeSudoku = (sudokuToCheck) => {
       }
     }
   }
-  console.log(sudokuToCheck.puzzle);
+  console.log("hello")
+  const cubes = [];
+  // Assemble 3x3s
+  for (let colIndex = 0; colIndex < 9; colIndex += 3) {
+    for (let rowIndex = 0; rowIndex < 9; rowIndex += 3) {
+      const puzzle = sudokuToCheck.puzzle;
+      const array = [
+        ...puzzle[rowIndex].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
+        ...puzzle[rowIndex+1].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
+        ...puzzle[rowIndex+2].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
+      ];
+      cubes.push(array);
+    }
+  }
+  console.log("cubes:")
+  console.log(cubes);
+
+  // console.log(sudokuToCheck.puzzle);
   console.timeLog("validating");
   console.timeEnd("validating");
+  console.log("hello")
+
   return sudokuToCheck;
 };
 
