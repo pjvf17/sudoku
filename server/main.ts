@@ -844,6 +844,7 @@ const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
   // Add client to set
+  console.log("connection");
   clients.add(ws);
   ws.send(JSON.stringify({puzzle}));
   ws.on("message", function (message: any) {
@@ -856,5 +857,5 @@ wss.on("connection", function (ws: WebSocket) {
   });
 });
 
-await app.listen({ port: 8011 });
+await app.listen({ port: 8011, hostname: "tealog.xyz" });
 
