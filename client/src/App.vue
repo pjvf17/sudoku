@@ -6,11 +6,11 @@
           <td v-for="(cell, j) in row" :key="n+j">
             <input
               :value="cell.number"
-              @keypress="handleInput({cell, row: n, col: j, value: $event.key, $event})"
+              @keydown="handleInput({cell, row: n, col: j, key: $event.key, $event})"
               type="text"
               :name="`${j}+${n}`"
               :id="`${j}+${n}`"
-              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given, invalid: !cell.valid }, 'sudoku-board-cell']"
+              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
               :disabled="cell.given"
             />
           </td>
@@ -853,20 +853,31 @@ export default {
       // console.table(toRaw(puzzle.value));
     };
 
-    const handleInput = ({cell, row, col, value, $event}) => {
-      // console.log($event);
-      $event.preventDefault();
+    const handleInput = ({ cell, row, col, key, $event }) => {
+      const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
       // Only allow change of non-givens
-      if (!cell.given) {
+      if (!cell.given && acceptedKeys.includes(key)) {
+        $event.preventDefault();
+
         // Update puzzle
         // console.log(puzzle.value[row][col]);
         // console.log(value);
-        puzzle.value[row][col].number = value;
+        puzzle.value[row][col].number = key;
         // console.log(puzzle.value[row][col]);
         // Send to socket server
         console.log("sending");
         console.log(toRaw(puzzle.value));
         socket.send(JSON.stringify({ puzzle: puzzle.value }));
+      } else if (key == "Backspace") {
+        $event.preventDefault();
+
+        puzzle.value[row][col].number = "";
+        console.log("sending");
+        console.log(toRaw(puzzle.value));
+        socket.send(JSON.stringify({ puzzle: puzzle.value }));
+      } else if (key != "Tab") {
+        $event.preventDefault();
       }
     };
 
@@ -942,6 +953,5 @@ td {
 
 .invalid {
   color: red;
-
 }
 </style>

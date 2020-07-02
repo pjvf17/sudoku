@@ -835,7 +835,7 @@ let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")) };
 for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
   const row = puzzle.puzzle[rowIndex];
   // loop through row
-  for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+  for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
     const cell = row[cellIndex];
     // If cell is poplated
     if (cell != ".") {
@@ -843,10 +843,17 @@ for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
       row[cellIndex] = {
         number: cell,
         given: true,
-        valid: true,
+        valid: {
+          value: true,
+          reason: null,
+        },
       };
     } else {
-      row[cellIndex] = { number: "", given: false, valid: true };
+      row[cellIndex] = {
+        number: "",
+        given: false,
+        valid: { value: true, reason: null },
+      };
     }
   }
 }
@@ -854,12 +861,12 @@ for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
 const valiadeSudoku = (sudokuToCheck) => {
   console.time("validating");
   // Check rows
-  for (let rowIndex = 0; rowIndex < sudokuToCheck.puzzle.length; rowIndex++) {
+  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     const row = sudokuToCheck.puzzle[rowIndex];
     const numbers = [];
     const duplicates = [];
     // Loop through row
-    for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+    for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
       const cell = row[cellIndex];
       // Returns true if blank
       if (typeof cell == "string" && cell.length == 0) {
@@ -873,7 +880,7 @@ const valiadeSudoku = (sudokuToCheck) => {
       }
     }
     // Loop through again and mark duplicates
-    for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+    for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
       const cell = row[cellIndex];
 
       console.log(cell.number);
@@ -883,16 +890,64 @@ const valiadeSudoku = (sudokuToCheck) => {
         if (duplicates.includes(cell.number) && !cell.given) {
           // Set valid to false
           console.log("here");
-          row[cellIndex].valid = false;
-        } else {
-          row[cellIndex].valid = true;
+
+          row[cellIndex].valid.value = false;
+          row[cellIndex].valid.reason = "row";
+        } else if (row[cellIndex].valid.reason == "row") {
+          row[cellIndex].valid.value = true;
+          row[cellIndex].valid.reason = null;
         }
-      } else {
-        row[cellIndex].valid = true;
+      } else if (row[cellIndex].valid.reason == "row") {
+        row[cellIndex].valid.value = true;
+        row[cellIndex].valid.reason = null;
       }
     }
     console.log(row);
     sudokuToCheck.puzzle[rowIndex] = row;
+  }
+  // Loop trough columns
+  for (let colIndex = 0; colIndex < 9; colIndex++) {
+    const numbers = [];
+    const duplicates = [];
+    // Loop through rows
+    for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
+      // Get cell
+      const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
+      // Returns true if blank
+      if (typeof cell == "string" && cell.length == 0) {
+        continue;
+      }
+      // Check if cell number is already in row
+      if (numbers.includes(cell.number)) {
+        duplicates.push(cell.number);
+      } else {
+        numbers.push(cell.number);
+      }
+    }
+    // Loop through again and mark duplicates
+    for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
+      const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
+
+      if (cell.number.length != 0) {
+        // If number is a duplicate and not a given
+        if (duplicates.includes(cell.number) && !cell.given) {
+          // Set valid to false
+          sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = false;
+          // Set reason to column
+          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = "col";
+        } else if (
+          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason == "col"
+        ) {
+          sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = true;
+          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = null;
+        }
+      } else if (
+        sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason == "col"
+      ) {
+        sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = true;
+        sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = null;
+      }
+    }
   }
   console.log(sudokuToCheck.puzzle);
   console.timeLog("validating");
