@@ -6,11 +6,12 @@
           <td v-for="(cell, j) in row" :key="n+j">
             <input
               :value="cell.number"
-              @input="handleInput($event.target.value, n, j)"
+              @keypress="handleInput({cell, row: n, col: j, value: $event.key, $event})"
               type="text"
               :name="`${j}+${n}`"
               :id="`${j}+${n}`"
               :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given }, 'sudoku-board-cell']"
+              :disabled="cell.given"
             />
           </td>
         </tr>
@@ -20,11 +21,11 @@
 </template>
 
 <script>
-var sudoku = {}; 
+var sudoku = {};
 
 console.log(process.env.VUE_APP_WS_URL);
 
-const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010"
+const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
 console.log(wsUrl);
 
 const socket = new WebSocket(wsUrl);
@@ -838,27 +839,34 @@ import { ref, toRaw, onBeforeUnmount } from "vue";
 
 export default {
   setup() {
-
-    onBeforeUnmount( () => {
-      socket.close(1000, "logging off")
-    })
+    onBeforeUnmount(() => {
+      socket.close(1000, "logging off");
+    });
 
     socket.onopen = function() {
       console.log("connection established");
     };
-    const puzzle = ref({})
-    socket.onmessage = function({data}) {
-      console.log(JSON.parse(data));
+    const puzzle = ref({});
+    socket.onmessage = function({ data }) {
       puzzle.value = JSON.parse(data).puzzle;
       console.log(toRaw(puzzle.value));
-    }
+    };
 
-    const handleInput = (cell, row, col) => {
-      // Update puzzle
-      puzzle.value[row][col].number = cell;
-      // Send to socket server
-      console.log("sending");
-      socket.send(JSON.stringify({ puzzle: puzzle.value }));
+    const handleInput = ({cell, row, col, value, $event}) => {
+      console.log($event);
+      $event.preventDefault();
+      // Only allow change of non-givens
+      if (!cell.given) {
+        // Update puzzle
+        console.log(puzzle.value[row][col]);
+        console.log(value);
+        puzzle.value[row][col].number = value;
+        console.log(puzzle.value[row][col]);
+        // Send to socket server
+        console.log("sending");
+        console.log(toRaw(puzzle.value));
+        socket.send(JSON.stringify({ puzzle: puzzle.value }));
+      }
     };
 
     return {
@@ -903,6 +911,10 @@ td {
     text-align: center;
     color: grey;
     font-style: italic;
+
+    &:disabled {
+      background-color: white;
+    }
   }
 }
 
