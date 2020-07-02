@@ -10,7 +10,7 @@
               type="text"
               :name="`${j}+${n}`"
               :id="`${j}+${n}`"
-              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given }, 'sudoku-board-cell']"
+              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given, invalid: !cell.valid }, 'sudoku-board-cell']"
               :disabled="cell.given"
             />
           </td>
@@ -849,20 +849,20 @@ export default {
     const puzzle = ref({});
     socket.onmessage = function({ data }) {
       puzzle.value = JSON.parse(data).puzzle;
-      console.log(toRaw(puzzle.value));
-      console.table(toRaw(puzzle.value));
+      // console.log(toRaw(puzzle.value));
+      // console.table(toRaw(puzzle.value));
     };
 
     const handleInput = ({cell, row, col, value, $event}) => {
-      console.log($event);
+      // console.log($event);
       $event.preventDefault();
       // Only allow change of non-givens
       if (!cell.given) {
         // Update puzzle
-        console.log(puzzle.value[row][col]);
-        console.log(value);
+        // console.log(puzzle.value[row][col]);
+        // console.log(value);
         puzzle.value[row][col].number = value;
-        console.log(puzzle.value[row][col]);
+        // console.log(puzzle.value[row][col]);
         // Send to socket server
         console.log("sending");
         console.log(toRaw(puzzle.value));
@@ -938,5 +938,10 @@ td {
   font-style: normal;
   color: black;
   font-weight: 600;
+}
+
+.invalid {
+  color: red;
+
 }
 </style>
