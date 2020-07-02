@@ -24,6 +24,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 });
 
 /* eslint-disable */
+// https://github.com/robatron/sudoku.js/
 var sudoku = {};
 (function () {
   sudoku.DIGITS = "123456789"; // Allowed sudoku.DIGITS
@@ -829,22 +830,77 @@ var sudoku = {};
 })();
 /* eslint-enable */
 
-let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("easy")) };
+let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")) };
 // Loop through rows
 for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
   const row = puzzle.puzzle[rowIndex];
+  // loop through row
   for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
     const cell = row[cellIndex];
+    // If cell is poplated
     if (cell != ".") {
+      // Make a cell object with given equal to true
       row[cellIndex] = {
         number: cell,
         given: true,
+        valid: true,
       };
     } else {
-      row[cellIndex] = { number: "", given: false };
+      row[cellIndex] = { number: "", given: false, valid: true };
     }
   }
 }
+
+const valiadeSudoku = (sudokuToCheck) => {
+  console.time("validating");
+  // Check rows
+  for (let rowIndex = 0; rowIndex < sudokuToCheck.puzzle.length; rowIndex++) {
+    const row = sudokuToCheck.puzzle[rowIndex];
+    const numbers = [];
+    const duplicates = [];
+    // Loop through row
+    for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+      const cell = row[cellIndex];
+      // Returns true if blank
+      if (typeof cell == "string" && cell.length == 0) {
+        continue;
+      }
+      // Check if cell number is already in row
+      if (numbers.includes(cell.number)) {
+        duplicates.push(cell.number);
+      } else {
+        numbers.push(cell.number);
+      }
+    }
+    // Loop through again and mark duplicates
+    for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+      const cell = row[cellIndex];
+
+      console.log(cell.number);
+      if (cell.number.length != 0) {
+        // If number is a duplicate and not a given
+        console.log("first");
+        if (duplicates.includes(cell.number) && !cell.given) {
+          // Set valid to false
+          console.log("here");
+          row[cellIndex].valid = false;
+        } else {
+          row[cellIndex].valid = true;
+        }
+      } else {
+        row[cellIndex].valid = true;
+      }
+    }
+    console.log(row);
+    sudokuToCheck.puzzle[rowIndex] = row;
+  }
+  console.log(sudokuToCheck.puzzle);
+  console.timeLog("validating");
+  console.timeEnd("validating");
+  return sudokuToCheck;
+};
+
+puzzle = valiadeSudoku(puzzle);
 
 console.log(puzzle);
 
@@ -861,12 +917,12 @@ wss.on("connection", function (ws: WebSocket) {
   // Add client to set
   ws.send(JSON.stringify(puzzle));
   ws.on("message", function (message: any) {
-    let updatedPuzzle = JSON.parse(message);
+    let updatedPuzzle = valiadeSudoku(JSON.parse(message));
     puzzle = updatedPuzzle;
     // Send to all connected
     for (let client of wss.clients) {
       if (!client.isClosed) {
-        client.send(message);
+        client.send(JSON.stringify(puzzle));
       }
     }
   });

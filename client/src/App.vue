@@ -850,6 +850,7 @@ export default {
     socket.onmessage = function({ data }) {
       puzzle.value = JSON.parse(data).puzzle;
       console.log(toRaw(puzzle.value));
+      console.table(toRaw(puzzle.value));
     };
 
     const handleInput = ({cell, row, col, value, $event}) => {
