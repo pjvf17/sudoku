@@ -838,6 +838,7 @@ export default {
     };
     const puzzle = ref({})
     socket.onmessage = function({data}) {
+      console.log(JSON.parse(data));
       puzzle.value = JSON.parse(data).puzzle;
       console.log(toRaw(puzzle.value));
     }
