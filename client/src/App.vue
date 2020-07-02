@@ -5,7 +5,7 @@
         <tr v-for="(row, n) in puzzle" :key="n">
           <td v-for="(cell, j) in row" :key="n+j">
             <input
-              :value="cell"
+              :value="cell == '.' ? null : cell"
               @input="handleInput($event.target.value, n, j)"
               type="text"
               :name="`${j}+${n}`"
@@ -22,7 +22,7 @@
 <script>
 var sudoku = {}; 
 
-const socket = new WebSocket("ws://tealog.xyz:8010");
+const socket = new WebSocket("ws://localhost:8010");
 /* eslint-disable */
 console.log(sudoku);
 (function() {
