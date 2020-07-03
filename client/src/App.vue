@@ -859,7 +859,6 @@ export default {
       // Only allow change of non-givens
       if (!cell.given && acceptedKeys.includes(key)) {
         $event.preventDefault();
-
         // Update puzzle
         // console.log(puzzle.value[row][col]);
         // console.log(value);
