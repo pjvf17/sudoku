@@ -1109,6 +1109,8 @@ wss.on("connection", function (ws: WebSocket) {
   ws.send(JSON.stringify({ color }));
 
   ws.on("message", function (message: any) {
+    console.time("message");
+    console.timeLog("message");
     const { sudokuObj: updatedPuzzle } = JSON.parse(message);
     sudokuObj = validateSudoku(updatedPuzzle);
     // Send to all connected
@@ -1117,6 +1119,7 @@ wss.on("connection", function (ws: WebSocket) {
         client.send(JSON.stringify({ sudokuObj }));
       }
     }
+    console.timeEnd("message");
   });
   ws.on("close", function (message: any) {
     console.log(colors);
