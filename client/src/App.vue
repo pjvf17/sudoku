@@ -2,16 +2,21 @@
   <div id="app">
     <table>
       <tbody>
-        <tr v-for="(row, n) in puzzle" :key="n">
-          <td v-for="(cell, j) in row" :key="n+j">
+        <tr v-for="(row, rowIndex) in puzzle" :key="rowIndex">
+          <td
+            v-for="(cell, colIndex) in row"
+            :key="`${colIndex}+${rowIndex}-td`"
+            :id="`${colIndex}+${rowIndex}-td-id`"
+          >
             <input
               :value="cell.number"
-              @keydown="handleInput({cell, row: n, col: j, key: $event.key, $event})"
+              @keydown.exact="handleInput({cell, row: rowIndex, col: colIndex, key: $event.key, $event})"
               type="text"
-              :name="`${j}+${n}`"
-              :id="`${j}+${n}`"
-              :class="[{'border-right': ((j+1) % 3) == 0, 'border-bottom': ((n+1) % 3) == 0, 'border-left': j == 0, 'border-top': n == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
+              :name="`${colIndex}+${rowIndex}`"
+              :id="`${colIndex}+${rowIndex}`"
+              :class="[{'border-right': ((colIndex+1) % 3) == 0, 'border-bottom': ((rowIndex+1) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
               :disabled="cell.given"
+              :ref="el => { inputs[rowIndex][colIndex] = el }"
             />
           </td>
         </tr>
@@ -835,7 +840,7 @@ console.log(sudoku);
 })();
 /* eslint-enable */
 
-import { ref, toRaw, onBeforeUnmount } from "vue";
+import { ref, onBeforeUnmount, onBeforeUpdate } from "vue";
 
 export default {
   setup() {
@@ -865,24 +870,45 @@ export default {
         puzzle.value[row][col].number = key;
         // console.log(puzzle.value[row][col]);
         // Send to socket server
-        console.log("sending");
-        console.log(toRaw(puzzle.value));
+        // console.log("sending");
+        // console.log(toRaw(puzzle.value));
         socket.send(JSON.stringify({ puzzle: puzzle.value }));
       } else if (key == "Backspace") {
         $event.preventDefault();
-
         puzzle.value[row][col].number = "";
-        console.log("sending");
-        console.log(toRaw(puzzle.value));
+        // console.log("sending");
+        // console.log(toRaw(puzzle.value));
         socket.send(JSON.stringify({ puzzle: puzzle.value }));
       } else if (key != "Tab") {
         $event.preventDefault();
+        console.log(key);
+        console.log(key != "Meta");
       }
     };
 
+    // For reference: https://composition-api.vuejs.org/api.html#template-refs
+
+    const inputs = ref([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+
+    // make sure to reset the refs before each update
+    onBeforeUpdate(() => {
+      // console.log(toRaw(inputs.value));
+      // inputs.value = [];
+    });
+
     return {
       puzzle,
-      handleInput
+      handleInput,
+      inputs
     };
   }
 };
