@@ -26,7 +26,7 @@
                 :disabled="cell.given"
                 :ref="el => { inputs[rowIndex][colIndex] = el }"
                 @click="handleClick({row: rowIndex, col: colIndex})"
-                :style="{'background-color': cell.focus}"
+                :style="{ 'background-color': checkFocus({row: rowIndex, col: colIndex})}"
               />
             </td>
           </tr>
@@ -849,9 +849,9 @@ console.log(sudoku);
 
   // Pass whatever the root object is, lsike 'window' in browsers
 })();
-/* eslint-enable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw } from "vue";
+/* eslint-enable */
 
 export default {
   setup() {
@@ -864,14 +864,14 @@ export default {
     };
     const color = ref({});
     const sudokuObj = ref({});
-    const ws = ref({});
+    const id = ref({});
     socket.onmessage = function({ data }) {
       console.log(data);
 
       const {
         color: sentColor,
         sudokuObj: sentSudokuObj,
-        ws: sentWs
+        id: sentid
       } = JSON.parse(data);
       console.log(sentColor);
       const { puzzle: sentPuzzle, users: sentUsers } = sentSudokuObj
@@ -884,11 +884,26 @@ export default {
       if (sentColor) {
         color.value = sentColor;
       }
-      if (sentWs) {
-        ws.value = sentWs;
+      if (sentid) {
+        id.value = sentid;
       }
       // console.log(toRaw(sudokuObj.value));
       // console.table(toRaw(sudokuObj.value));
+    };
+
+    const checkFocus = ({ row, col }) => {
+      console.log("checking");
+      for (
+        let userIndex = 0;
+        userIndex < sudokuObj.value.users.length;
+        userIndex++
+      ) {
+        const user = sudokuObj.value.users[userIndex];
+        if (user.focus.row == row && user.focus.col == col) {
+          console.log(`returning ${user.color}`);
+          return user.color;
+        }
+      }
     };
 
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
@@ -923,15 +938,7 @@ export default {
     const getUser = () => {
       let count = 0;
       while (count < sudokuObj.value.users.length) {
-        console.log(toRaw(sudokuObj.value.users[count].ws).webSocket);
-        console.log(toRaw(ws.value).webSocket);
-        console.log(
-          toRaw(sudokuObj.value.users[count].ws).webSocket ==
-            toRaw(ws.value).webSocket
-        );
-        console.log(socket);
-        if (sudokuObj.value.users[count].ws == ws.value) {
-          console.log(count);
+        if (sudokuObj.value.users[count].id == id.value) {
           return count;
         }
         count++;
@@ -949,9 +956,7 @@ export default {
             row: row + rowDir,
             col: col + colDir
           };
-          sudokuObj.value.puzzle[row + rowDir][col + colDir].focus =
-            color.value;
-          socket.send(JSON.stringify({ sudokuObj: sudokuObj.value.puzzle }));
+          socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
         } else {
           if (dir == "row") {
             // console.log("rowDir");
@@ -1027,9 +1032,6 @@ export default {
       }
     };
     const handleClick = ({ row, col }) => {
-      console.log(row);
-      console.log(col);
-      console.log(getUser());
       sudokuObj.value.users[getUser()].focus = {
         row,
         col
@@ -1042,7 +1044,8 @@ export default {
       handleClick,
       inputs,
       color,
-      ws
+      id,
+      checkFocus
     };
   }
 };
@@ -1107,7 +1110,8 @@ td {
 
     &:focus {
       outline: none;
-      // background-color: rgba(var(--color), 0.3);
+      // opacity: 0.5;
+      // background-color: #bf616a, 0.5;
     }
 
     // &:disabled {

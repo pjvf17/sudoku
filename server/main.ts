@@ -1046,11 +1046,11 @@ import {
 const clients: any = new Set();
 
 const colors: any = [
-  { value: "#bf616a", used: false },
-  { value: "#d08770", used: false },
-  { value: "#ebcb8b", used: false },
-  { value: "#a3be8c", used: false },
-  { value: "#b48ead", used: false },
+  { value: "#bf616a88", used: false },
+  { value: "#d0877088", used: false },
+  { value: "#ebcb8b88", used: false },
+  { value: "#a3be8c88", used: false },
+  { value: "#b48ead88", used: false },
 ];
 
 const getColor = (socket) => {
@@ -1090,25 +1090,31 @@ const freeUser = (socket) => {
 const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
-
   // Assign color
   let color = getColor(ws);
+  let id = Math.random();
   // Save to users
-  sudokuObj.users.push({ ws, focus: {row: null, col: null}, name: null, color });
-  // Send ws to user to use as identification in users array
-  ws.send(JSON.stringify({ ws }));
+  sudokuObj.users.push({
+    id,
+    focus: { row: null, col: null },
+    name: null,
+    color,
+    ws,
+  });
+  // Send id to user to use as identification in users array
+  ws.send(JSON.stringify({ id }));
   // Send sudokuObj
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
 
   ws.on("message", function (message: any) {
-    let updatedPuzzle = validateSudoku(JSON.parse(message));
-    sudokuObj = updatedPuzzle;
+    const { sudokuObj: updatedPuzzle } = JSON.parse(message);
+    sudokuObj = validateSudoku(updatedPuzzle);
     // Send to all connected
     for (let client of wss.clients) {
       if (!client.isClosed) {
-        client.send(JSON.stringify(sudokuObj));
+        client.send(JSON.stringify({ sudokuObj }));
       }
     }
   });
