@@ -832,6 +832,7 @@ var sudoku = {};
 
 let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")) };
 
+// Convert puzzle to my own notation
 // Loop through rows
 for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
   const row = puzzle.puzzle[rowIndex];
@@ -864,7 +865,7 @@ for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
 // the reason will be set to "row." Then, only the row validation can undo it
 // However, a validation reason can be overwritten
 
-const valiadeSudoku = (sudokuToCheck) => {
+const validateSudoku = (sudokuToCheck) => {
   console.time("validating");
 
   // Check rows
@@ -1003,7 +1004,7 @@ const valiadeSudoku = (sudokuToCheck) => {
             square[cellIndex].valid.reason = null;
           }
           // Only overwrite / set to valid if what previously invalidated it was
-            // This square validator
+          // This square validator
         } else if (square[cellIndex].valid.reason == "square") {
           square[cellIndex].valid.value = true;
           square[cellIndex].valid.reason = null;
@@ -1011,11 +1012,7 @@ const valiadeSudoku = (sudokuToCheck) => {
       }
       // Save to puzzle
       // Basically doing the reverse of the initial creation of the square
-      sudokuToCheck.puzzle[rowIndex].splice(
-        colIndex,
-        3,
-        ...square.slice(0, 3)
-      );
+      sudokuToCheck.puzzle[rowIndex].splice(colIndex, 3, ...square.slice(0, 3));
       sudokuToCheck.puzzle[rowIndex + 1].splice(
         colIndex,
         3,
@@ -1035,8 +1032,7 @@ const valiadeSudoku = (sudokuToCheck) => {
   return sudokuToCheck;
 };
 
-puzzle = valiadeSudoku(puzzle);
-
+puzzle = validateSudoku(puzzle);
 // console.log(puzzle);
 
 import {
@@ -1046,13 +1042,46 @@ import {
 
 const clients: any = new Set();
 
+const colors: any = [
+  { value: "#bf616a", used: false },
+  { value: "#d08770", used: false },
+  { value: "#ebcb8b", used: false },
+  { value: "#a3be8c", used: false },
+  { value: "#b48ead", used: false },
+];
+
+const getColor = (socket) => {
+  let count = 0;
+  while (count < colors.length) {
+    if (!colors[count].used) {
+      colors[count].used = socket;
+      return colors[count].value;
+    }
+    count++;
+  }
+};
+
+const freeColor = (socket) => {
+  let count = 0;
+  while (count < colors.length) {
+    if (colors[count].used == socket) {
+      colors[count].used = false;
+      return true;
+    }
+    count++;
+  }
+};
+
 const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
   // Add client to set
+  // console.log(puzzle);
   ws.send(JSON.stringify(puzzle));
+  ws.send(JSON.stringify({ color: getColor(ws) }));
+
   ws.on("message", function (message: any) {
-    let updatedPuzzle = valiadeSudoku(JSON.parse(message));
+    let updatedPuzzle = validateSudoku(JSON.parse(message));
     puzzle = updatedPuzzle;
     // Send to all connected
     for (let client of wss.clients) {
@@ -1062,6 +1091,9 @@ wss.on("connection", function (ws: WebSocket) {
     }
   });
   ws.on("close", function (message: any) {
+    console.log(colors);
+    freeColor(ws);
+    console.log(colors);
     console.log(`socket closed: ${message}`);
   });
 });

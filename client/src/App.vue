@@ -859,9 +859,19 @@ export default {
     socket.onopen = function() {
       console.log("connection established");
     };
+    const color = ref({});
     const puzzle = ref({});
     socket.onmessage = function({ data }) {
-      puzzle.value = JSON.parse(data).puzzle;
+      // console.log(data);
+      const {color: sentColor, puzzle: sentPuzzle} = JSON.parse(data);
+      console.log(sentPuzzle);
+      console.log(sentColor)
+      if (sentPuzzle) {
+        puzzle.value = sentPuzzle;
+      }
+      if (sentColor) {
+        color.value = sentColor;
+      }
       // console.log(toRaw(puzzle.value));
       // console.table(toRaw(puzzle.value));
     };
@@ -982,13 +992,16 @@ export default {
     return {
       puzzle,
       handleInput,
-      inputs
+      inputs,
+      color
     };
   }
 };
 </script>
 
 <style lang="scss">
+@import "node_modules/nord/src/sass/nord.scss";
+
 body {
   font-family: Consolea, "Courier New", Courier, monospace;
   margin: 0;
@@ -1005,7 +1018,7 @@ body {
   width: 100vw;
   margin: 0;
   padding: 0;
-  background-color: #2e3440;
+  background-color: $nord1;
 }
 
 $border: 2px solid black;
@@ -1027,6 +1040,7 @@ td {
   padding: 0;
   margin: 0;
   line-height: 20px;
+  background-color: $nord5;
 
   input {
     margin: 0;
@@ -1039,12 +1053,12 @@ td {
     color: grey;
     font-style: italic;
     font-family: Consolea, "Courier New", Courier, monospace;
-    background-color: #eceff4;
+    background-color: $nord5;
     caret-color: transparent !important;
 
     &:focus {
       outline: none;
-      background-color: lightblue;
+      background-color: transparentize($color: $nord13, $amount: 0.5);
     }
 
     // &:disabled {
