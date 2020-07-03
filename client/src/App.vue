@@ -3,11 +3,12 @@
     <div class="pane">
       <table>
         <tbody>
-          <tr v-for="(row, rowIndex) in puzzle" :key="rowIndex">
+          <tr v-for="(row, rowIndex) in sudokuObj.puzzle" :key="rowIndex">
             <td
               v-for="(cell, colIndex) in row"
               :key="`${colIndex}+${rowIndex}-td`"
               :id="`${colIndex}+${rowIndex}-td-id`"
+              :style="{'background-color': cell.focus}"
             >
               <input
                 :value="cell.number"
@@ -24,6 +25,8 @@
                 :class="[{'border-right': ((colIndex+1) % 3) == 0, 'border-bottom': ((rowIndex+1) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
                 :disabled="cell.given"
                 :ref="el => { inputs[rowIndex][colIndex] = el }"
+                @click="handleClick({row: rowIndex, col: colIndex})"
+                :style="{'background-color': cell.focus}"
               />
             </td>
           </tr>
@@ -848,7 +851,7 @@ console.log(sudoku);
 })();
 /* eslint-enable */
 
-import { ref, onBeforeUnmount, onBeforeUpdate } from "vue";
+import { ref, onBeforeUnmount, onBeforeUpdate, toRaw } from "vue";
 
 export default {
   setup() {
@@ -860,20 +863,32 @@ export default {
       console.log("connection established");
     };
     const color = ref({});
-    const puzzle = ref({});
+    const sudokuObj = ref({});
+    const ws = ref({});
     socket.onmessage = function({ data }) {
-      // console.log(data);
-      const {color: sentColor, puzzle: sentPuzzle} = JSON.parse(data);
-      console.log(sentPuzzle);
-      console.log(sentColor)
+      console.log(data);
+
+      const {
+        color: sentColor,
+        sudokuObj: sentSudokuObj,
+        ws: sentWs
+      } = JSON.parse(data);
+      console.log(sentColor);
+      const { puzzle: sentPuzzle, users: sentUsers } = sentSudokuObj
+        ? sentSudokuObj
+        : {};
       if (sentPuzzle) {
-        puzzle.value = sentPuzzle;
+        sudokuObj.value.puzzle = sentPuzzle;
+        sudokuObj.value.users = sentUsers;
       }
       if (sentColor) {
         color.value = sentColor;
       }
-      // console.log(toRaw(puzzle.value));
-      // console.table(toRaw(puzzle.value));
+      if (sentWs) {
+        ws.value = sentWs;
+      }
+      // console.log(toRaw(sudokuObj.value));
+      // console.table(toRaw(sudokuObj.value));
     };
 
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
@@ -905,6 +920,24 @@ export default {
       inputs.value.push([]);
     });
 
+    const getUser = () => {
+      let count = 0;
+      while (count < sudokuObj.value.users.length) {
+        console.log(toRaw(sudokuObj.value.users[count].ws).webSocket);
+        console.log(toRaw(ws.value).webSocket);
+        console.log(
+          toRaw(sudokuObj.value.users[count].ws).webSocket ==
+            toRaw(ws.value).webSocket
+        );
+        console.log(socket);
+        if (sudokuObj.value.users[count].ws == ws.value) {
+          console.log(count);
+          return count;
+        }
+        count++;
+      }
+    };
+
     const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
       try {
         // console.log(row);
@@ -912,6 +945,13 @@ export default {
         // console.log(rowDir), console.log(colDir), console.log(dir);
         if (!inputs.value[row + rowDir][col + colDir].disabled) {
           inputs.value[row + rowDir][col + colDir].focus();
+          sudokuObj.value.users[getUser()].focus = {
+            row: row + rowDir,
+            col: col + colDir
+          };
+          sudokuObj.value.puzzle[row + rowDir][col + colDir].focus =
+            color.value;
+          socket.send(JSON.stringify({ sudokuObj: sudokuObj.value.puzzle }));
         } else {
           if (dir == "row") {
             // console.log("rowDir");
@@ -950,21 +990,21 @@ export default {
       // Only allow change of non-givens
       if (!cell.given && acceptedKeys.includes(key)) {
         $event.preventDefault();
-        // Update puzzle
-        // console.log(puzzle.value[row][col]);
+        // Update sudokuObj
+        // console.log(sudokuObj.value.puzzle[row][col]);
         // console.log(value);
-        puzzle.value[row][col].number = key;
-        // console.log(puzzle.value[row][col]);
+        sudokuObj.value.puzzle[row][col].number = key;
+        // console.log(sudokuObj.value.puzzle[row][col]);
         // Send to socket server
         // console.log("sending");
-        // console.log(toRaw(puzzle.value));
-        socket.send(JSON.stringify({ puzzle: puzzle.value }));
+        // console.log(toRaw(sudokuObj.value.puzzle));
+        socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
       } else if (key == "Backspace") {
         $event.preventDefault();
-        puzzle.value[row][col].number = "";
+        sudokuObj.value.puzzle[row][col].number = "";
         // console.log("sending");
-        // console.log(toRaw(puzzle.value));
-        socket.send(JSON.stringify({ puzzle: puzzle.value }));
+        // console.log(toRaw(sudokuObj.value.puzzle));
+        socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
       } else if (arrowKeys.includes(key)) {
         switch (key) {
           case "ArrowRight":
@@ -975,11 +1015,9 @@ export default {
             break;
           case "ArrowDown":
             recursiveMove(row, col, 1, 0, "col");
-
             break;
           case "ArrowUp":
             recursiveMove(row, col, -1, 0, "col");
-
             break;
         }
       } else if (key != "Tab") {
@@ -988,12 +1026,23 @@ export default {
         console.log(key != "Meta");
       }
     };
-
+    const handleClick = ({ row, col }) => {
+      console.log(row);
+      console.log(col);
+      console.log(getUser());
+      sudokuObj.value.users[getUser()].focus = {
+        row,
+        col
+      };
+      socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+    };
     return {
-      puzzle,
+      sudokuObj,
       handleInput,
+      handleClick,
       inputs,
-      color
+      color,
+      ws
     };
   }
 };
@@ -1058,7 +1107,7 @@ td {
 
     &:focus {
       outline: none;
-      background-color: transparentize($color: $nord13, $amount: 0.5);
+      // background-color: rgba(var(--color), 0.3);
     }
 
     // &:disabled {

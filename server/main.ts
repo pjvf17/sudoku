@@ -830,12 +830,15 @@ var sudoku = {};
 })();
 /* eslint-enable */
 
-let puzzle = { puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")) };
+let sudokuObj = {
+  puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")),
+  users: [],
+};
 
 // Convert puzzle to my own notation
 // Loop through rows
-for (let rowIndex = 0; rowIndex < puzzle.puzzle.length; rowIndex++) {
-  const row = puzzle.puzzle[rowIndex];
+for (let rowIndex = 0; rowIndex < sudokuObj.puzzle.length; rowIndex++) {
+  const row = sudokuObj.puzzle[rowIndex];
   // loop through row
   for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
     const cell = row[cellIndex];
@@ -1032,7 +1035,7 @@ const validateSudoku = (sudokuToCheck) => {
   return sudokuToCheck;
 };
 
-puzzle = validateSudoku(puzzle);
+sudokuObj = validateSudoku(sudokuObj);
 // console.log(puzzle);
 
 import {
@@ -1072,27 +1075,47 @@ const freeColor = (socket) => {
   }
 };
 
+const freeUser = (socket) => {
+  let count = 0;
+  while (count < sudokuObj.users.length) {
+    if (sudokuObj.users[count].ws == socket) {
+      // delete user
+      sudokuObj.users.splice(count, 1);
+      return true;
+    }
+    count++;
+  }
+};
+
 const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
-  // Add client to set
-  // console.log(puzzle);
-  ws.send(JSON.stringify(puzzle));
-  ws.send(JSON.stringify({ color: getColor(ws) }));
+
+  // Assign color
+  let color = getColor(ws);
+  // Save to users
+  sudokuObj.users.push({ ws, focus: {row: null, col: null}, name: null, color });
+  // Send ws to user to use as identification in users array
+  ws.send(JSON.stringify({ ws }));
+  // Send sudokuObj
+  ws.send(JSON.stringify({ sudokuObj }));
+  // Send color assignment
+  ws.send(JSON.stringify({ color }));
 
   ws.on("message", function (message: any) {
     let updatedPuzzle = validateSudoku(JSON.parse(message));
-    puzzle = updatedPuzzle;
+    sudokuObj = updatedPuzzle;
     // Send to all connected
     for (let client of wss.clients) {
       if (!client.isClosed) {
-        client.send(JSON.stringify(puzzle));
+        client.send(JSON.stringify(sudokuObj));
       }
     }
   });
   ws.on("close", function (message: any) {
     console.log(colors);
     freeColor(ws);
+    freeUser(ws);
     console.log(colors);
     console.log(`socket closed: ${message}`);
   });
