@@ -905,7 +905,6 @@ const valiadeSudoku = (sudokuToCheck) => {
         row[cellIndex].valid.reason = null;
       }
     }
-    console.log(duplicates);
     sudokuToCheck.puzzle[rowIndex] = row;
   }
 
@@ -954,34 +953,91 @@ const valiadeSudoku = (sudokuToCheck) => {
       }
     }
   }
-  console.log("hello")
-  const cubes = [];
-  // Assemble 3x3s
+  // Check 3x3s
   for (let colIndex = 0; colIndex < 9; colIndex += 3) {
     for (let rowIndex = 0; rowIndex < 9; rowIndex += 3) {
+      const duplicates = [];
+      const numbers = [];
       const puzzle = sudokuToCheck.puzzle;
-      const array = [
-        ...puzzle[rowIndex].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
-        ...puzzle[rowIndex+1].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
-        ...puzzle[rowIndex+2].slice(Math.round(colIndex / 3), Math.round(colIndex / 3) + 3),
+      // Create the cube
+      // Takes the rowIndex, the slices from the colmun index for 3 numbers
+      // Goes from the top left of the puzzle down to the bottom left
+      // Then form the top middle down to the bottom middle
+      // And finally the top right down to the bottom right
+      const cube = [
+        ...puzzle[rowIndex].slice(colIndex, colIndex + 3),
+        ...puzzle[rowIndex + 1].slice(colIndex, colIndex + 3),
+        ...puzzle[rowIndex + 2].slice(colIndex, colIndex + 3),
       ];
-      cubes.push(array);
+      // Identify duplicates
+      for (let cellIndex = 0; cellIndex < cube.length; cellIndex++) {
+        const cell = cube[cellIndex];
+        // Returns true if blank
+        if (typeof cell.number == "string" && cell.number.length == 0) {
+          continue;
+        }
+        // Check if cell number is already in cube
+        if (numbers.includes(cell.number)) {
+          duplicates.push(cell.number);
+        } else {
+          numbers.push(cell.number);
+        }
+      }
+      // Mark as invalid
+      // Loop through again and mark duplicates as invalid
+      for (let cellIndex = 0; cellIndex < cube.length; cellIndex++) {
+        if (cube[cellIndex].number.length != 0) {
+          // If number is a duplicate and not a given
+          if (
+            duplicates.includes(cube[cellIndex].number) &&
+            !cube[cellIndex].given
+          ) {
+            // Set valid to false
+            cube[cellIndex].valid.value = false;
+            // Set reason to column
+            cube[cellIndex].valid.reason = "cube";
+            // Only overwrite / set to valid if what previously invalidated it was
+            // This cube validator
+          } else if (cube[cellIndex].valid.reason == "cube") {
+            cube[cellIndex].valid.value = true;
+            cube[cellIndex].valid.reason = null;
+          }
+          // Only overwrite / set to valid if what previously invalidated it was
+            // This cube validator
+        } else if (cube[cellIndex].valid.reason == "cube") {
+          cube[cellIndex].valid.value = true;
+          cube[cellIndex].valid.reason = null;
+        }
+      }
+      // Save to puzzle
+      // Basically doing the reverse of the initial creation of the cube
+      sudokuToCheck.puzzle[rowIndex].splice(
+        colIndex,
+        3,
+        ...cube.slice(0, 3)
+      );
+      sudokuToCheck.puzzle[rowIndex + 1].splice(
+        colIndex,
+        3,
+        ...cube.slice(3, 6)
+      );
+      sudokuToCheck.puzzle[rowIndex + 2].splice(
+        colIndex,
+        3,
+        ...cube.slice(6, 9)
+      );
     }
   }
-  console.log("cubes:")
-  console.log(cubes);
 
-  // console.log(sudokuToCheck.puzzle);
   console.timeLog("validating");
   console.timeEnd("validating");
-  console.log("hello")
 
   return sudokuToCheck;
 };
 
 puzzle = valiadeSudoku(puzzle);
 
-console.log(puzzle);
+// console.log(puzzle);
 
 import {
   WebSocket,
