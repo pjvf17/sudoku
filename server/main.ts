@@ -1075,10 +1075,10 @@ const freeColor = (socket) => {
   }
 };
 
-const freeUser = (socket) => {
+const freeUser = (Identify) => {
   let count = 0;
   while (count < sudokuObj.users.length) {
-    if (sudokuObj.users[count].ws == socket) {
+    if (sudokuObj.users[count].id == Identify) {
       // delete user
       sudokuObj.users.splice(count, 1);
       return true;
@@ -1121,9 +1121,14 @@ wss.on("connection", function (ws: WebSocket) {
   ws.on("close", function (message: any) {
     console.log(colors);
     freeColor(ws);
-    freeUser(ws);
+    freeUser(id);
     console.log(colors);
     console.log(`socket closed: ${message}`);
+    for (let client of wss.clients) {
+      if (!client.isClosed) {
+        client.send(JSON.stringify({ sudokuObj }));
+      }
+    }
   });
 });
 

@@ -866,7 +866,7 @@ export default {
     const sudokuObj = ref({});
     const id = ref({});
     socket.onmessage = function({ data }) {
-      console.log(data);
+      console.log(JSON.parse(data));
 
       const {
         color: sentColor,
