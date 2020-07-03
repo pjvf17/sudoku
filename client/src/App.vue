@@ -10,7 +10,13 @@
           >
             <input
               :value="cell.number"
-              @keydown.exact="handleInput({cell, row: rowIndex, col: colIndex, key: $event.key, $event})"
+              @keydown.exact="handleInput({
+                cell, 
+                row: rowIndex, 
+                col: colIndex, 
+                key: $event.key, 
+                $event,
+              })"
               type="text"
               :name="`${colIndex}+${rowIndex}`"
               :id="`${colIndex}+${rowIndex}`"
@@ -858,8 +864,76 @@ export default {
       // console.table(toRaw(puzzle.value));
     };
 
+    // For reference: https://composition-api.vuejs.org/api.html#template-refs
+
+    // For refs
+    const inputs = ref([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+    inputs.value.push([]);
+
+    // make sure to reset the refs before each update
+    onBeforeUpdate(() => {
+      // console.log(toRaw(inputs.value));
+      inputs.value = [];
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+      inputs.value.push([]);
+    });
+
+    const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
+      try {
+        // console.log(row);
+        // console.log(col);
+        // console.log(rowDir), console.log(colDir), console.log(dir);
+        if (!inputs.value[row + rowDir][col + colDir].disabled) {
+          inputs.value[row + rowDir][col + colDir].focus();
+        } else {
+          if (dir == "row") {
+            // console.log("rowDir");
+            // console.log(rowDir);
+            if (colDir > 0) {
+              colDir++;
+            } else if (colDir < 0) {
+              colDir--;
+            }
+          } else if (dir == "col") {
+            if (rowDir > 0) {
+              rowDir++;
+            } else if (rowDir < 0) {
+              rowDir--;
+            }
+          }
+          count++;
+          if (count > 4) {
+            return 0;
+          }
+          recursiveMove(row, col, rowDir, colDir, dir, count);
+        }
+      } catch {
+        // console.log(err);
+        // console.log(row);
+        // console.log(col);
+        // console.log(rowDir), console.log(colDir), console.log(dir);
+        // console.log(toRaw(inputs.value));
+      }
+    };
+
     const handleInput = ({ cell, row, col, key, $event }) => {
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+      const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
 
       // Only allow change of non-givens
       if (!cell.given && acceptedKeys.includes(key)) {
@@ -879,31 +953,29 @@ export default {
         // console.log("sending");
         // console.log(toRaw(puzzle.value));
         socket.send(JSON.stringify({ puzzle: puzzle.value }));
+      } else if (arrowKeys.includes(key)) {
+        switch (key) {
+          case "ArrowRight":
+            recursiveMove(row, col, 0, 1, "row");
+            break;
+          case "ArrowLeft":
+            recursiveMove(row, col, 0, -1, "row");
+            break;
+          case "ArrowDown":
+            recursiveMove(row, col, 1, 0, "col");
+
+            break;
+          case "ArrowUp":
+            recursiveMove(row, col, -1, 0, "col");
+
+            break;
+        }
       } else if (key != "Tab") {
         $event.preventDefault();
         console.log(key);
         console.log(key != "Meta");
       }
     };
-
-    // For reference: https://composition-api.vuejs.org/api.html#template-refs
-
-    const inputs = ref([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-
-    // make sure to reset the refs before each update
-    onBeforeUpdate(() => {
-      // console.log(toRaw(inputs.value));
-      // inputs.value = [];
-    });
 
     return {
       puzzle,
@@ -915,10 +987,13 @@ export default {
 </script>
 
 <style lang="scss">
+body {
+  font-family: Consolea, "Courier New", Courier, monospace;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  // font-family: 'Courier New', Courier, monospace;
+  // -webkit-font-smoothing: antialiased;
+  // -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   display: flex;
@@ -943,11 +1018,12 @@ td {
     padding: 0;
     font-size: 40px;
     width: 63px;
-    height: 55px;
+    height: 63px;
     border: 1px solid #ccc;
     text-align: center;
     color: grey;
     font-style: italic;
+    font-family: Consolea, "Courier New", Courier, monospace;
 
     &:disabled {
       background-color: white;
