@@ -866,6 +866,7 @@ export default {
     const sudokuObj = ref({});
     const id = ref({});
     socket.onmessage = function({ data }) {
+      console.time("message");
       console.log(JSON.parse(data));
 
       const {
@@ -892,6 +893,7 @@ export default {
     };
 
     const checkFocus = ({ row, col }) => {
+      console.time("checkFocus");
       console.log("checking");
       for (
         let userIndex = 0;
@@ -904,6 +906,7 @@ export default {
           return user.color;
         }
       }
+      console.timeLog("checkFocus");
     };
 
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
@@ -951,6 +954,8 @@ export default {
         // console.log(col);
         // console.log(rowDir), console.log(colDir), console.log(dir);
         if (!inputs.value[row + rowDir][col + colDir].disabled) {
+          console.timeEnd("checkFocus");
+
           inputs.value[row + rowDir][col + colDir].focus();
           sudokuObj.value.users[getUser()].focus = {
             row: row + rowDir,
@@ -1032,6 +1037,7 @@ export default {
       }
     };
     const handleClick = ({ row, col }) => {
+      console.timeEnd("checkFocus");
       sudokuObj.value.users[getUser()].focus = {
         row,
         col
