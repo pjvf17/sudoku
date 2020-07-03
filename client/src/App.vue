@@ -1,33 +1,35 @@
 <template>
   <div id="app">
-    <table>
-      <tbody>
-        <tr v-for="(row, rowIndex) in puzzle" :key="rowIndex">
-          <td
-            v-for="(cell, colIndex) in row"
-            :key="`${colIndex}+${rowIndex}-td`"
-            :id="`${colIndex}+${rowIndex}-td-id`"
-          >
-            <input
-              :value="cell.number"
-              @keydown.exact="handleInput({
+    <div class="pane">
+      <table>
+        <tbody>
+          <tr v-for="(row, rowIndex) in puzzle" :key="rowIndex">
+            <td
+              v-for="(cell, colIndex) in row"
+              :key="`${colIndex}+${rowIndex}-td`"
+              :id="`${colIndex}+${rowIndex}-td-id`"
+            >
+              <input
+                :value="cell.number"
+                @keydown.exact="handleInput({
                 cell, 
                 row: rowIndex, 
                 col: colIndex, 
                 key: $event.key, 
                 $event,
               })"
-              type="text"
-              :name="`${colIndex}+${rowIndex}`"
-              :id="`${colIndex}+${rowIndex}`"
-              :class="[{'border-right': ((colIndex+1) % 3) == 0, 'border-bottom': ((rowIndex+1) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
-              :disabled="cell.given"
-              :ref="el => { inputs[rowIndex][colIndex] = el }"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                type="text"
+                :name="`${colIndex}+${rowIndex}`"
+                :id="`${colIndex}+${rowIndex}`"
+                :class="[{'border-right': ((colIndex+1) % 3) == 0, 'border-bottom': ((rowIndex+1) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
+                :disabled="cell.given"
+                :ref="el => { inputs[rowIndex][colIndex] = el }"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -989,6 +991,8 @@ export default {
 <style lang="scss">
 body {
   font-family: Consolea, "Courier New", Courier, monospace;
+  margin: 0;
+  padding: 0;
 }
 #app {
   // font-family: 'Courier New', Courier, monospace;
@@ -999,9 +1003,19 @@ body {
   display: flex;
   height: 100vh;
   width: 100vw;
+  margin: 0;
+  padding: 0;
+  background-color: #2e3440;
 }
 
 $border: 2px solid black;
+
+.pane {
+  padding: 1em;
+  border-radius: 3px;
+  box-shadow: 0px 0px 15px 0px rgba($color: #000000, $alpha: 0.3);
+  margin: auto;
+}
 
 table {
   border-collapse: collapse;
@@ -1013,6 +1027,7 @@ td {
   padding: 0;
   margin: 0;
   line-height: 20px;
+
   input {
     margin: 0;
     padding: 0;
@@ -1024,10 +1039,17 @@ td {
     color: grey;
     font-style: italic;
     font-family: Consolea, "Courier New", Courier, monospace;
+    background-color: #eceff4;
+    caret-color: transparent !important;
 
-    &:disabled {
-      background-color: white;
+    &:focus {
+      outline: none;
+      background-color: lightblue;
     }
+
+    // &:disabled {
+    // background-color: white;
+    // }
   }
 }
 
