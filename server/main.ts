@@ -1078,9 +1078,13 @@ const freeUser = (id) => {
   delete users[id];
 };
 
-const updateFocus = ({id, focus}) =>{
+const updateFocus = ({ id, focus }) => {
   users[id].focus = focus;
-}
+};
+
+const updateNumber = ({ address, number }) => {
+  sudokuObj.puzzle[`r${address.r}c${address.c}`] = number;
+};
 
 const wss = new WebSocketServer(8010);
 
@@ -1117,7 +1121,9 @@ wss.on("connection", function (ws: WebSocket) {
       updateFocus(focusUpdate);
     }
     // Recieved number update
-
+    if (numberUpdate) {
+      updateNumber(numberUpdate);
+    }
     // console.time("message");
     // console.timeLog("message");
     // // const { sudokuObj: updatedPuzzle } = JSON.parse(message);
@@ -1125,7 +1131,8 @@ wss.on("connection", function (ws: WebSocket) {
 
     // Send to all connected
     for (let client of wss.clients) {
-      if (!client.isClosed) {
+      // Send only to open clients, and not the one who sent a message
+      if (!client.isClosed && client != ws) {
         client.send(message);
       }
     }

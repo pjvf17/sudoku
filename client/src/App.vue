@@ -72,9 +72,9 @@ export default {
         // Users obj, sent once
         users: sentUsers,
         // // FocusUpdate, sent whenver someone moves
-        focusUpdate
+        focusUpdate,
         // // NumberUpdate, sent whenever someone changes a number
-        // numberUpdate: sentNumberUpdate
+        numberUpdate
       } = JSON.parse(data);
 
       const {
@@ -109,11 +109,16 @@ export default {
         users.value[id].focus = focus;
         // console.log(toRaw(users.value));
       }
+      // update a number
+      if (numberUpdate) {
+        let { address, number } = numberUpdate;
+        sudokuObj.value.puzzle[`r${address.r}c${address.c}`].number = number;
+      }
     };
 
     const checkFocus = computed(() => {
       // reset focus
-      const focused = {}
+      const focused = {};
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
@@ -125,7 +130,7 @@ export default {
         }
       }
       // console.log(focused);
-      return focused
+      return focused;
     });
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
 
@@ -209,20 +214,18 @@ export default {
       if (!cell.given && acceptedKeys.includes(key)) {
         $event.preventDefault();
         // Update sudokuObj
-        // console.log(sudokuObj.value.puzzle[row][col]);
-        // console.log(value);
-        sudokuObj.value.puzzle[row][col].number = key;
-        // console.log(sudokuObj.value.puzzle[row][col]);
-        // Send to socket server
-        // console.log("sending");
-        // console.log(toRaw(sudokuObj.value.puzzle));
-        socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+        sudokuObj.value.puzzle[`r${row}c${col}`].number = key;
+
+        let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+
+        socket.send(JSON.stringify({ numberUpdate: { address, number: key } }));
       } else if (key == "Backspace") {
         $event.preventDefault();
-        sudokuObj.value.puzzle[row][col].number = "";
+        sudokuObj.value.puzzle[`r${row}c${col}`].number = "";
 
-        // console.log(toRaw(sudokuObj.value.puzzle));
-        socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+        let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+
+        socket.send(JSON.stringify({ numberUpdate: { address, number: "" } }));
       } else if (arrowKeys.includes(key)) {
         switch (key) {
           case "ArrowRight":
