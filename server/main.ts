@@ -1083,7 +1083,7 @@ const updateFocus = ({ id, focus }) => {
 };
 
 const updateNumber = ({ address, number }) => {
-  sudokuObj.puzzle[`r${address.r}c${address.c}`] = number;
+  sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
 };
 
 const wss = new WebSocketServer(8010);
@@ -1110,6 +1110,15 @@ wss.on("connection", function (ws: WebSocket) {
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
+
+  // Send to everyone else, updated users
+  // Send to all connected
+  for (let client of wss.clients) {
+    // Send only to open clients, and not the one who sent a message
+    if (!client.isClosed && client != ws) {
+      client.send(JSON.stringify({ users }));
+    }
+  }
 
   ws.on("message", function (message: any) {
     const { focusUpdate, numberUpdate } = JSON.parse(message);
@@ -1147,7 +1156,7 @@ wss.on("connection", function (ws: WebSocket) {
     console.log(`socket closed: ${message}`);
     for (let client of wss.clients) {
       if (!client.isClosed) {
-        client.send(JSON.stringify({ sudokuObj }));
+        client.send(JSON.stringify({ users }));
       }
     }
   });
