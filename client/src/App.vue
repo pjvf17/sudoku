@@ -65,6 +65,7 @@ export default {
     const focused = ref({});
 
     socket.onmessage = function({ data }) {
+      console.log("message recieved");
       const {
         color: sentColor,
         sudokuObj: sentSudokuObj,
