@@ -1131,6 +1131,8 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
+      console.log(numberUpdate);
+
       updateNumber(numberUpdate);
     }
     // console.time("message");
