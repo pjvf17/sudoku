@@ -831,212 +831,209 @@ var sudoku = {};
 /* eslint-enable */
 
 let sudokuObj = {
-  puzzle: sudoku.board_string_to_grid(sudoku.generate("insane")),
-  users: [],
+  puzzle: sudoku.generate("insane"),
 };
 
-// Convert puzzle to my own notation
+console.log(sudoku.print_board(sudokuObj.puzzle));
+
+// console.log(sudokuObj.puzzle);
+
+// Convert puzzle rncn
 // Loop through rows
-for (let rowIndex = 0; rowIndex < sudokuObj.puzzle.length; rowIndex++) {
-  const row = sudokuObj.puzzle[rowIndex];
-  // loop through row
-  for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
-    const cell = row[cellIndex];
-    // If cell is poplated
+// for (let rowIndex = 0; rowIndex < sudokuObj.puzzle.length; rowIndex++) {
+//   const row = sudokuObj.puzzle[rowIndex];
+//   // loop through row
+//   for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
+//     const cell = row[cellIndex];
+//     // If cell is poplated
+//     if (cell != ".") {
+//       // Make a cell object with given equal to true
+//       row[cellIndex] = {
+//         number: cell,
+//         given: true,
+//         valid: {
+//           value: true,
+//           reason: null,
+//         },
+//       };
+//     } else {
+//       row[cellIndex] = {
+//         number: "",
+//         given: false,
+//         valid: { value: true, reason: null },
+//       };
+//     }
+//   }
+// }
+
+const puzzle = {};
+
+for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
+  for (let colIndex = 0; colIndex < 9; colIndex++) {
+    // console.log(rowIndex*9+colIndex)
+    const cell = sudokuObj.puzzle.substr(rowIndex * 9 + colIndex, 1);
+    let formattedCell = {};
     if (cell != ".") {
       // Make a cell object with given equal to true
-      row[cellIndex] = {
+      formattedCell = {
         number: cell,
         given: true,
         valid: {
           value: true,
           reason: null,
         },
+        candidates: [],
+        address: { r: rowIndex + 1, c: colIndex + 1 },
       };
     } else {
-      row[cellIndex] = {
+      formattedCell = {
         number: "",
         given: false,
         valid: { value: true, reason: null },
+        candidates: [],
+        address: { r: rowIndex + 1, c: colIndex + 1 },
       };
     }
+    // Convert to rncn notation indexed from 1
+    puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
   }
 }
 
-// In validation, only the validator that invalidate a number can revalidate it
-// i.e. If a certain cell was set to invalid by the row validation,
-// the reason will be set to "row." Then, only the row validation can undo it
-// However, a validation reason can be overwritten
+sudokuObj.puzzle = puzzle;
 
-const validateSudoku = (sudokuToCheck) => {
-  console.time("validating");
+sudokuObj.rows = {};
+sudokuObj.cols = {};
+sudokuObj.squares = {};
 
-  // Check rows
-  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-    const row = sudokuToCheck.puzzle[rowIndex];
-    const numbers = [];
-    const duplicates = [];
-    // Loop through row
-    for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
-      const cell = row[cellIndex];
-      // Returns true if blank
-      if (typeof cell.number == "string" && cell.number.length == 0) {
-        continue;
-      }
-      // Check if cell number is already in row
-      if (numbers.includes(cell.number)) {
-        duplicates.push(cell.number);
-      } else {
-        numbers.push(cell.number);
-      }
-    }
-    // Loop through again and mark duplicates
-    for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
-      const cell = row[cellIndex];
-
-      if (cell.number.length != 0) {
-        // If number is a duplicate and not a given
-        if (duplicates.includes(cell.number) && !cell.given) {
-          // Set valid to false
-          row[cellIndex].valid.value = false;
-          row[cellIndex].valid.reason = "row";
-        } else if (row[cellIndex].valid.reason == "row") {
-          row[cellIndex].valid.value = true;
-          row[cellIndex].valid.reason = null;
-        }
-      } else if (row[cellIndex].valid.reason == "row") {
-        row[cellIndex].valid.value = true;
-        row[cellIndex].valid.reason = null;
-      }
-    }
-    sudokuToCheck.puzzle[rowIndex] = row;
-  }
-
-  // Check columns
-  // Loop trough columns
-  for (let colIndex = 0; colIndex < 9; colIndex++) {
-    const numbers = [];
-    const duplicates = [];
-    // Loop through rows
-    for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-      // Get cell
-      const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
-      // Returns true if blank
-      if (typeof cell.number == "string" && cell.number.length == 0) {
-        continue;
-      }
-      // Check if cell number is already in row
-      if (numbers.includes(cell.number)) {
-        duplicates.push(cell.number);
-      } else {
-        numbers.push(cell.number);
-      }
-    }
-    // Loop through again and mark duplicates as invalid
-    for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-      const cell = sudokuToCheck.puzzle[rowIndex][colIndex];
-
-      if (cell.number.length != 0) {
-        // If number is a duplicate and not a given
-        if (duplicates.includes(cell.number) && !cell.given) {
-          // Set valid to false
-          sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = false;
-          // Set reason to column
-          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = "col";
-        } else if (
-          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason == "col"
-        ) {
-          sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = true;
-          sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = null;
-        }
-      } else if (
-        sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason == "col"
-      ) {
-        sudokuToCheck.puzzle[rowIndex][colIndex].valid.value = true;
-        sudokuToCheck.puzzle[rowIndex][colIndex].valid.reason = null;
-      }
+const makeRows = (puzzle) => {
+  let rows = {};
+  for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
+    rows[`r${rowIndex}`] = [];
+    for (let colIndex = 1; colIndex <= 9; colIndex++) {
+      rows[`r${rowIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
     }
   }
-  // Check 3x3s
-  for (let colIndex = 0; colIndex < 9; colIndex += 3) {
-    for (let rowIndex = 0; rowIndex < 9; rowIndex += 3) {
-      const duplicates = [];
-      const numbers = [];
-      const puzzle = sudokuToCheck.puzzle;
-      // Create the square
-      // Takes the rowIndex, the slices from the colmun index for 3 numbers
-      // Goes from the top left of the puzzle down to the bottom left
-      // Then form the top middle down to the bottom middle
-      // And finally the top right down to the bottom right
-      const square = [
-        ...puzzle[rowIndex].slice(colIndex, colIndex + 3),
-        ...puzzle[rowIndex + 1].slice(colIndex, colIndex + 3),
-        ...puzzle[rowIndex + 2].slice(colIndex, colIndex + 3),
-      ];
-      // Identify duplicates
-      for (let cellIndex = 0; cellIndex < square.length; cellIndex++) {
-        const cell = square[cellIndex];
-        // Returns true if blank
-        if (typeof cell.number == "string" && cell.number.length == 0) {
-          continue;
-        }
-        // Check if cell number is already in square
-        if (numbers.includes(cell.number)) {
-          duplicates.push(cell.number);
-        } else {
-          numbers.push(cell.number);
-        }
-      }
-      // Mark as invalid
-      // Loop through again and mark duplicates as invalid
-      for (let cellIndex = 0; cellIndex < square.length; cellIndex++) {
-        if (square[cellIndex].number.length != 0) {
-          // If number is a duplicate and not a given
-          if (
-            duplicates.includes(square[cellIndex].number) &&
-            !square[cellIndex].given
-          ) {
-            // Set valid to false
-            square[cellIndex].valid.value = false;
-            // Set reason to column
-            square[cellIndex].valid.reason = "square";
-            // Only overwrite / set to valid if what previously invalidated it was
-            // This square validator
-          } else if (square[cellIndex].valid.reason == "square") {
-            square[cellIndex].valid.value = true;
-            square[cellIndex].valid.reason = null;
-          }
-          // Only overwrite / set to valid if what previously invalidated it was
-          // This square validator
-        } else if (square[cellIndex].valid.reason == "square") {
-          square[cellIndex].valid.value = true;
-          square[cellIndex].valid.reason = null;
-        }
-      }
-      // Save to puzzle
-      // Basically doing the reverse of the initial creation of the square
-      sudokuToCheck.puzzle[rowIndex].splice(colIndex, 3, ...square.slice(0, 3));
-      sudokuToCheck.puzzle[rowIndex + 1].splice(
-        colIndex,
-        3,
-        ...square.slice(3, 6)
-      );
-      sudokuToCheck.puzzle[rowIndex + 2].splice(
-        colIndex,
-        3,
-        ...square.slice(6, 9)
-      );
+  return rows;
+};
+const makeCols = (puzzle) => {
+  let cols = {};
+  for (let colIndex = 1; colIndex <= 9; colIndex++) {
+    cols[`c${colIndex}`] = [];
+    for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
+      cols[`c${colIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
     }
   }
-
-  console.timeLog("validating");
-  console.timeEnd("validating");
-
-  return sudokuToCheck;
+  return cols;
 };
 
-sudokuObj = validateSudoku(sudokuObj);
+sudokuObj.rows = makeRows(sudokuObj.puzzle);
+sudokuObj.cols = makeCols(sudokuObj.puzzle);
+
+const getSquare = (cell) => {
+  let s13 = [1, 2, 3];
+  let s46 = [4, 5, 6];
+  let s79 = [7, 8, 9];
+
+  let square;
+  if (cell.address.r >= 1 && cell.address.r <= 3) {
+    square = s13;
+  }
+  if (cell.address.r >= 4 && cell.address.r <= 6) {
+    square = s46;
+  }
+  if (cell.address.r >= 7 && cell.address.r <= 9) {
+    square = s79;
+  }
+  return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
+};
+
+const makeSquares = (puzzle) => {
+  let squares = {
+    s1: [],
+    s2: [],
+    s3: [],
+    s4: [],
+    s5: [],
+    s6: [],
+    s7: [],
+    s8: [],
+    s9: [],
+  };
+
+  for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
+    for (let colIndex = 1; colIndex <= 9; colIndex++) {
+      squares[getSquare(puzzle[`r${rowIndex}c${colIndex}`])].push(
+        puzzle[`r${rowIndex}c${colIndex}`]
+      );
+    }
+  }
+
+  puzzle.squares = squares;
+  // console.log("\n\n squares:");
+  // console.log(squares);
+  return squares;
+};
+
+sudokuObj.squares = makeSquares(sudokuObj.puzzle);
 // console.log(puzzle);
+
+const getPeers = (cell) => {
+  // Define the three units we're pulling from
+  // console.log(cell);
+  let row,
+    col,
+    square = [];
+  row = sudokuObj.rows[`r${cell.address.r}`];
+  col = sudokuObj.cols[`c${cell.address.c}`];
+  square = sudokuObj.squares[getSquare(cell)];
+
+  return { row, col, square };
+};
+
+// console.log(getPeers({
+//   number: "7",
+//   given: true,
+//   valid: { value: true, reason: null },
+//   candidates: [],
+//   address: { r: 9, c: 7 }
+// }))
+
+const validateSquare = (cell) => {
+  // Skip givens
+  if (cell.given) {
+    return cell;
+  }
+  const { row, col, square } = getPeers(cell);
+  const peers = [...row, ...col, ...square];
+  // console.log("validateSquare");
+  for (let cellIndex = 0; cellIndex < peers.length; cellIndex++) {
+    // Skip the cell we're checking
+    if (peers[cellIndex].address != cell.address) {
+      if (peers[cellIndex].number == cell.number) {
+        cell.valid.value = false;
+      }
+    }
+    // Stop at first invalid
+    if (!cell.valid.value) {
+      break;
+    }
+    // console.log("cell:");
+    // console.log(peers[cellIndex]);
+  }
+  // console.log("length:");
+  // console.log(peers.length);
+  return cell;
+};
+
+// console.log(
+//   validateSquare({
+//     number: "7",
+//     given: true,
+//     valid: { value: true, reason: null },
+//     candidates: [],
+//     address: { r: 9, c: 7 },
+//   })
+// );
 
 import {
   WebSocket,
@@ -1075,17 +1072,15 @@ const freeColor = (socket) => {
   }
 };
 
-const freeUser = (Identify) => {
-  let count = 0;
-  while (count < sudokuObj.users.length) {
-    if (sudokuObj.users[count].id == Identify) {
-      // delete user
-      sudokuObj.users.splice(count, 1);
-      return true;
-    }
-    count++;
-  }
+const users = {};
+
+const freeUser = (id) => {
+  delete users[id];
 };
+
+const updateFocus = ({id, focus}) =>{
+  users[id].focus = focus;
+}
 
 const wss = new WebSocketServer(8010);
 
@@ -1094,32 +1089,48 @@ wss.on("connection", function (ws: WebSocket) {
   let color = getColor(ws);
   let id = Math.random();
   // Save to users
-  sudokuObj.users.push({
+  users[id] = {
     id,
     focus: { row: null, col: null },
     name: null,
     color,
     ws,
-  });
+  };
+  // Send users array
+  ws.send(JSON.stringify({ users }));
   // Send id to user to use as identification in users array
   ws.send(JSON.stringify({ id }));
   // Send sudokuObj
+  console.log("sending");
+  console.log(sudokuObj);
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
 
   ws.on("message", function (message: any) {
-    console.time("message");
-    console.timeLog("message");
-    const { sudokuObj: updatedPuzzle } = JSON.parse(message);
-    sudokuObj = validateSudoku(updatedPuzzle);
+    const { focusUpdate, numberUpdate } = JSON.parse(message);
+
+    // Recieved movement/focus update
+    if (focusUpdate) {
+      console.log(focusUpdate);
+      // update user
+      updateFocus(focusUpdate);
+    }
+    // Recieved number update
+
+    // console.time("message");
+    // console.timeLog("message");
+    // // const { sudokuObj: updatedPuzzle } = JSON.parse(message);
+    // sudokuObj = validateSudoku(updatedPuzzle);
+
     // Send to all connected
     for (let client of wss.clients) {
       if (!client.isClosed) {
-        client.send(JSON.stringify({ sudokuObj }));
+        client.send(message);
       }
     }
-    console.timeEnd("message");
+
+    // console.timeEnd("message");
   });
   ws.on("close", function (message: any) {
     console.log(colors);

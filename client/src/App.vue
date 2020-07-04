@@ -3,17 +3,15 @@
     <div class="pane">
       <table>
         <tbody>
-          <tr v-for="(row, rowIndex) in sudokuObj.puzzle" :key="rowIndex">
+          <tr v-for="rowIndex in 9" :key="rowIndex">
             <td
-              v-for="(cell, colIndex) in row"
-              :key="`${colIndex}+${rowIndex}-td`"
-              :id="`${colIndex}+${rowIndex}-td-id`"
-              :style="{'background-color': cell.focus}"
+              v-for="colIndex in 9"
+              :key="`r${rowIndex}c${colIndex}-td`"
+              :id="`r${rowIndex}c${colIndex}-td-id`"
             >
               <input
-                :value="cell.number"
-                @keydown.exact="handleInput({
-                cell, 
+                :value="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number"
+                @keydown.exact="handleInput({cell: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`], 
                 row: rowIndex, 
                 col: colIndex, 
                 key: $event.key, 
@@ -22,11 +20,11 @@
                 type="text"
                 :name="`${colIndex}+${rowIndex}`"
                 :id="`${colIndex}+${rowIndex}`"
-                :class="[{'border-right': ((colIndex+1) % 3) == 0, 'border-bottom': ((rowIndex+1) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: cell.given, invalid: !cell.valid.value }, 'sudoku-board-cell']"
-                :disabled="cell.given"
-                :ref="el => { inputs[rowIndex][colIndex] = el }"
+                :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
+                :disabled="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given"
+                :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
                 @click="handleClick({row: rowIndex, col: colIndex})"
-                :style="{ 'background-color': focused[`${colIndex}-${rowIndex}`]}"
+                :style="{ 'background-color': checkFocus[`r${rowIndex}c${colIndex}`]}"
               />
             </td>
           </tr>
@@ -45,7 +43,7 @@ console.log(wsUrl);
 const socket = new WebSocket(wsUrl);
 /* eslint-disable */
 
-import { ref, onBeforeUnmount, onBeforeUpdate, toRaw } from "vue";
+import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 /* eslint-enable */
 
 export default {
@@ -59,23 +57,42 @@ export default {
     };
     const color = ref({});
     const sudokuObj = ref({});
+    const users = ref({});
     const id = ref({});
-    const focused = ref({});
+    // const focused = ref({});
 
     socket.onmessage = function({ data }) {
       const {
+        // Color assignment, sent once
         color: sentColor,
+        // Sudoku puzzle, sent once
         sudokuObj: sentSudokuObj,
-        id: sentid
+        // Id assignment, sent once
+        id: sentid,
+        // Users obj, sent once
+        users: sentUsers,
+        // // FocusUpdate, sent whenver someone moves
+        focusUpdate
+        // // NumberUpdate, sent whenever someone changes a number
+        // numberUpdate: sentNumberUpdate
       } = JSON.parse(data);
-      const { puzzle: sentPuzzle, users: sentUsers } = sentSudokuObj
-        ? sentSudokuObj
-        : {};
-      if (sentPuzzle) {
+
+      const {
+        puzzle: sentPuzzle,
+        sentRows,
+        sentCols,
+        sentSquares
+      } = sentSudokuObj ? sentSudokuObj : {};
+
+      if (sentSudokuObj) {
         sudokuObj.value.puzzle = sentPuzzle;
-        sudokuObj.value.users = sentUsers;
-        focused.value = {};
-        checkFocus();
+        sudokuObj.value.rows = sentRows;
+        sudokuObj.value.cols = sentCols;
+        sudokuObj.value.squares = sentSquares;
+        // focused.value = {};
+      }
+      if (sentUsers) {
+        users.value = sentUsers;
       }
       if (sentColor) {
         color.value = sentColor;
@@ -84,53 +101,47 @@ export default {
       if (sentid) {
         id.value = sentid;
       }
-    };
-
-    const checkFocus = () => {
-      for (
-        let userIndex = 0;
-        userIndex < sudokuObj.value.users.length;
-        userIndex++
-      ) {
-        const user = sudokuObj.value.users[userIndex];
-        if (user.id != id.value) {
-          focused.value[`${user.focus.col}-${user.focus.row}`] = user.color;
-        }
+      // update focus
+      if (focusUpdate) {
+        // console.log(focusUpdate);
+        const { id, focus } = focusUpdate;
+        // console.log(users.value[id]);
+        users.value[id].focus = focus;
+        // console.log(toRaw(users.value));
       }
     };
+
+    const checkFocus = computed(() => {
+      // reset focus
+      const focused = {}
+      for (const userId in users.value) {
+        if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
+          const user = users.value[userId];
+          // skip self
+          if (user.id != id.value) {
+            focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
+            // console.log(focused);
+          }
+        }
+      }
+      // console.log(focused);
+      return focused
+    });
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
 
     // For refs
-    const inputs = ref([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
-    inputs.value.push([]);
+    const inputs = ref({});
 
     // make sure to reset the refs before each update
     onBeforeUpdate(() => {
       // console.log(toRaw(inputs.value));
-      inputs.value = [];
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
-      inputs.value.push([]);
+      inputs.value = {};
     });
 
     const getUser = () => {
       let count = 0;
-      while (count < sudokuObj.value.users.length) {
-        if (sudokuObj.value.users[count].id == id.value) {
+      while (count < users.value.length) {
+        if (users.value[count].id == id.value) {
           return count;
         }
         count++;
@@ -142,15 +153,23 @@ export default {
         // console.log(row);
         // console.log(col);
         // console.log(rowDir), console.log(colDir), console.log(dir);
-        if (!inputs.value[row + rowDir][col + colDir].disabled) {
-          inputs.value[row + rowDir][col + colDir].focus();
-          sudokuObj.value.users[getUser()].focus = {
-            row: row + rowDir,
-            col: col + colDir
-          };
-          focused.value = {};
-          checkFocus();
-          socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+        if (!inputs.value[`r${row + rowDir}c${col + colDir}`].disabled) {
+          // inputs.value[row + rowDir][col + colDir].focus();
+          inputs.value[`r${row + rowDir}c${col + colDir}`].focus();
+          // users.value[getUser()].focus = {
+          //   row: row + rowDir,
+          //   col: col + colDir
+          // };
+          // focused.value = {};
+          // socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+          socket.send(
+            JSON.stringify({
+              focusUpdate: {
+                id: id.value,
+                focus: { row: row + rowDir, col: col + colDir }
+              }
+            })
+          );
         } else {
           if (dir == "row") {
             // console.log("rowDir");
@@ -224,12 +243,10 @@ export default {
       }
     };
     const handleClick = ({ row, col }) => {
-      sudokuObj.value.users[getUser()].focus = {
+      users.value[getUser()].focus = {
         row,
         col
       };
-      focused.value = {};
-      checkFocus();
       socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
     };
     return {
@@ -240,7 +257,8 @@ export default {
       color,
       id,
       checkFocus,
-      focused
+      // focused,
+      users
     };
   }
 };
