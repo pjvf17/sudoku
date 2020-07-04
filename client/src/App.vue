@@ -145,6 +145,8 @@ export default {
             row: row + rowDir,
             col: col + colDir
           };
+          focused.value = {};
+          checkFocus();
           socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
         } else {
           if (dir == "row") {
@@ -223,6 +225,8 @@ export default {
         row,
         col
       };
+      focused.value = {};
+      checkFocus();
       socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
     };
     return {
