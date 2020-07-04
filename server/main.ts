@@ -1105,8 +1105,8 @@ wss.on("connection", function (ws: WebSocket) {
   // Send id to user to use as identification in users array
   ws.send(JSON.stringify({ id }));
   // Send sudokuObj
-  console.log("sending");
-  console.log(sudokuObj);
+  // console.log("sending");
+  // console.log(sudokuObj);
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
