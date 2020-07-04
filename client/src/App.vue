@@ -26,7 +26,7 @@
                 :disabled="cell.given"
                 :ref="el => { inputs[rowIndex][colIndex] = el }"
                 @click="handleClick({row: rowIndex, col: colIndex})"
-                :style="{ 'background-color': checkFocus({row: rowIndex, col: colIndex})}"
+                :style="{ 'background-color': focused[`${colIndex}-${rowIndex}`]}"
               />
             </td>
           </tr>
@@ -865,22 +865,22 @@ export default {
     const color = ref({});
     const sudokuObj = ref({});
     const id = ref({});
-    socket.onmessage = function({ data }) {
-      console.time("message");
-      console.log(JSON.parse(data));
+    const focused = ref({});
 
+    socket.onmessage = function({ data }) {
       const {
         color: sentColor,
         sudokuObj: sentSudokuObj,
         id: sentid
       } = JSON.parse(data);
-      console.log(sentColor);
       const { puzzle: sentPuzzle, users: sentUsers } = sentSudokuObj
         ? sentSudokuObj
         : {};
       if (sentPuzzle) {
         sudokuObj.value.puzzle = sentPuzzle;
         sudokuObj.value.users = sentUsers;
+        focused.value = {};
+        checkFocus();
       }
       if (sentColor) {
         color.value = sentColor;
@@ -888,27 +888,18 @@ export default {
       if (sentid) {
         id.value = sentid;
       }
-      // console.log(toRaw(sudokuObj.value));
-      // console.table(toRaw(sudokuObj.value));
     };
 
-    const checkFocus = ({ row, col }) => {
-      console.time("checkFocus");
-      console.log("checking");
+    const checkFocus = () => {
       for (
         let userIndex = 0;
         userIndex < sudokuObj.value.users.length;
         userIndex++
       ) {
         const user = sudokuObj.value.users[userIndex];
-        if (user.focus.row == row && user.focus.col == col) {
-          console.log(`returning ${user.color}`);
-          return user.color;
-        }
+        focused.value[`${user.focus.col}-${user.focus.row}`] = user.color;
       }
-      console.timeLog("checkFocus");
     };
-
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
 
     // For refs
@@ -954,8 +945,6 @@ export default {
         // console.log(col);
         // console.log(rowDir), console.log(colDir), console.log(dir);
         if (!inputs.value[row + rowDir][col + colDir].disabled) {
-          console.timeEnd("checkFocus");
-
           inputs.value[row + rowDir][col + colDir].focus();
           sudokuObj.value.users[getUser()].focus = {
             row: row + rowDir,
@@ -1032,12 +1021,9 @@ export default {
         }
       } else if (key != "Tab") {
         $event.preventDefault();
-        console.log(key);
-        console.log(key != "Meta");
       }
     };
     const handleClick = ({ row, col }) => {
-      console.timeEnd("checkFocus");
       sudokuObj.value.users[getUser()].focus = {
         row,
         col
@@ -1051,7 +1037,8 @@ export default {
       inputs,
       color,
       id,
-      checkFocus
+      checkFocus,
+      focused
     };
   }
 };
