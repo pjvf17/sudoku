@@ -1131,6 +1131,8 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
+      console.log(numberUpdate);
+
       updateNumber(numberUpdate);
     }
     // console.time("message");
@@ -1149,10 +1151,10 @@ wss.on("connection", function (ws: WebSocket) {
     // console.timeEnd("message");
   });
   ws.on("close", function (message: any) {
-    console.log(colors);
     freeColor(ws);
     freeUser(id);
-    console.log(colors);
+    console.log(users);
+    console.log(ws);
     console.log(`socket closed: ${message}`);
     for (let client of wss.clients) {
       if (!client.isClosed) {
