@@ -1112,7 +1112,7 @@ wss.on("connection", function (ws: WebSocket) {
     console.time("message");
     console.timeLog("message");
     const { sudokuObj: updatedPuzzle } = JSON.parse(message);
-    sudokuObj = updatedPuzzle;
+    sudokuObj = validateSudoku(updatedPuzzle);
     // Send to all connected
     for (let client of wss.clients) {
       if (!client.isClosed) {
