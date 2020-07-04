@@ -246,11 +246,18 @@ export default {
       }
     };
     const handleClick = ({ row, col }) => {
-      users.value[getUser()].focus = {
-        row,
-        col
-      };
-      socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+      // users.value[getUser()].focus = {
+      //   row,
+      //   col
+      // };
+      socket.send(
+        JSON.stringify({
+          focusUpdate: {
+            id: id.value,
+            focus: { row: row, col: col }
+          }
+        })
+      );
     };
     return {
       sudokuObj,
