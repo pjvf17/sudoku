@@ -8,8 +8,11 @@
               v-for="colIndex in 9"
               :key="`r${rowIndex}c${colIndex}-td`"
               :id="`r${rowIndex}c${colIndex}-td-id`"
+              :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
+              @click="handleClick({row: rowIndex, col: colIndex})"
+              :style="{ 'background-color': checkFocus[`r${rowIndex}c${colIndex}`]}"
             >
-              <input
+              <!-- <input
                 :value="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number"
                 @keydown.exact="handleInput({cell: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`], 
                 row: rowIndex, 
@@ -22,10 +25,20 @@
                 :id="`${colIndex}+${rowIndex}`"
                 :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
                 :disabled="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given"
-                :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
                 @click="handleClick({row: rowIndex, col: colIndex})"
                 :style="{ 'background-color': checkFocus[`r${rowIndex}c${colIndex}`]}"
-              />
+              />-->
+              <svg class="inputReplacement">
+                <text
+                  :class="[{bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given}, 'svgText']"
+                  x="50%"
+                  y="60%"
+                  dominant-baseline="middle"
+                  text-anchor="middle"
+                  :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
+                >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
+                <!-- <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" /> -->
+              </svg>
             </td>
           </tr>
         </tbody>
@@ -122,14 +135,9 @@ export default {
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
-          // skip self
-          if (user.id != id.value) {
-            focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
-            // console.log(focused);
-          }
+          focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
         }
       }
-      // console.log(focused);
       return focused;
     });
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
@@ -144,13 +152,19 @@ export default {
     });
 
     const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
+      console.log(toRaw(inputs.value));
+
       if (!inputs.value[`r${row + rowDir}c${col + colDir}`].disabled) {
-        inputs.value[`r${row + rowDir}c${col + colDir}`].focus();
+        row = row + rowDir;
+        col = col + colDir;
+
+        inputs.value[`r${row}c${col}`].focus();
+        users.value[id.value].focus = { row, col };
         socket.send(
           JSON.stringify({
             focusUpdate: {
               id: id.value,
-              focus: { row: row + rowDir, col: col + colDir }
+              focus: { row, col }
             }
           })
         );
@@ -176,13 +190,19 @@ export default {
       }
     };
 
-    const handleInput = ({ cell, row, col, key, $event }) => {
+    const handleInput = ({ key, event }) => {
+      console.log(key);
+      console.log(event);
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
-
+      // Address of cursor
+      const { row, col } = users.value[id.value].focus;
       // Only allow change of non-givens
-      if (!cell.given && acceptedKeys.includes(key)) {
-        $event.preventDefault();
+      if (
+        !sudokuObj.value.puzzle[`r${row}c${col}`].given &&
+        acceptedKeys.includes(key)
+      ) {
+        event.preventDefault();
         // Update sudokuObj
         sudokuObj.value.puzzle[`r${row}c${col}`].number = key;
 
@@ -190,7 +210,7 @@ export default {
 
         socket.send(JSON.stringify({ numberUpdate: { address, number: key } }));
       } else if (key == "Backspace") {
-        $event.preventDefault();
+        event.preventDefault();
         sudokuObj.value.puzzle[`r${row}c${col}`].number = "";
 
         let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
@@ -212,10 +232,16 @@ export default {
             break;
         }
       } else if (key != "Tab") {
-        $event.preventDefault();
+        event.preventDefault();
       }
     };
+
+    document.body.addEventListener("keydown", function() {
+      handleInput({ key: event.key, event });
+    });
+
     const handleClick = ({ row, col }) => {
+      users.value[id.value].focus = { row, col };
       socket.send(
         JSON.stringify({
           focusUpdate: {
@@ -276,35 +302,52 @@ table {
   margin: auto;
 }
 
+tr {
+  background-color: $nord5;
+}
+
 td {
   padding: 0;
   margin: 0;
   line-height: 20px;
+  width: 63px;
+  height: 63px;
   background-color: $nord5;
+  border: 1px solid #ccc;
+  // background-color: var(--color);
 
-  input {
+  input,
+  .inputReplacement {
     margin: 0;
     padding: 0;
     font-size: 40px;
     width: 63px;
     height: 63px;
-    border: 1px solid #ccc;
     text-align: center;
     color: grey;
     font-style: italic;
     font-family: Consolea, "Courier New", Courier, monospace;
-    background-color: $nord5;
     caret-color: transparent !important;
-
+    z-index: 3;
     &:focus {
       outline: none;
       // opacity: 0.5;
-      background-color: var(--color);
+    }
+
+    text {
+      fill: grey;
     }
 
     // &:disabled {
     // background-color: white;
     // }
+  }
+}
+
+.svgText {
+  z-index: 3;
+  &.bold {
+    fill: black;
   }
 }
 
