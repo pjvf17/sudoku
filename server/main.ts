@@ -831,7 +831,7 @@ var sudoku = {};
 /* eslint-enable */
 
 let sudokuObj = {
-  puzzle: sudoku.generate("insane"),
+  puzzle: sudoku.generate("medium"),
 };
 
 console.log(sudoku.print_board(sudokuObj.puzzle));

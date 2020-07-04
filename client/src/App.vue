@@ -143,66 +143,36 @@ export default {
       inputs.value = {};
     });
 
-    const getUser = () => {
-      let count = 0;
-      while (count < users.value.length) {
-        if (users.value[count].id == id.value) {
-          return count;
+    const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
+      if (!inputs.value[`r${row + rowDir}c${col + colDir}`].disabled) {
+        inputs.value[`r${row + rowDir}c${col + colDir}`].focus();
+        socket.send(
+          JSON.stringify({
+            focusUpdate: {
+              id: id.value,
+              focus: { row: row + rowDir, col: col + colDir }
+            }
+          })
+        );
+      } else {
+        if (dir == "row") {
+          if (colDir > 0) {
+            colDir++;
+          } else if (colDir < 0) {
+            colDir--;
+          }
+        } else if (dir == "col") {
+          if (rowDir > 0) {
+            rowDir++;
+          } else if (rowDir < 0) {
+            rowDir--;
+          }
         }
         count++;
-      }
-    };
-
-    const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
-      try {
-        // console.log(row);
-        // console.log(col);
-        // console.log(rowDir), console.log(colDir), console.log(dir);
-        if (!inputs.value[`r${row + rowDir}c${col + colDir}`].disabled) {
-          // inputs.value[row + rowDir][col + colDir].focus();
-          inputs.value[`r${row + rowDir}c${col + colDir}`].focus();
-          // users.value[getUser()].focus = {
-          //   row: row + rowDir,
-          //   col: col + colDir
-          // };
-          // focused.value = {};
-          // socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
-          socket.send(
-            JSON.stringify({
-              focusUpdate: {
-                id: id.value,
-                focus: { row: row + rowDir, col: col + colDir }
-              }
-            })
-          );
-        } else {
-          if (dir == "row") {
-            // console.log("rowDir");
-            // console.log(rowDir);
-            if (colDir > 0) {
-              colDir++;
-            } else if (colDir < 0) {
-              colDir--;
-            }
-          } else if (dir == "col") {
-            if (rowDir > 0) {
-              rowDir++;
-            } else if (rowDir < 0) {
-              rowDir--;
-            }
-          }
-          count++;
-          if (count > 4) {
-            return 0;
-          }
-          recursiveMove(row, col, rowDir, colDir, dir, count);
+        if (count > 4) {
+          return 0;
         }
-      } catch {
-        // console.log(err);
-        // console.log(row);
-        // console.log(col);
-        // console.log(rowDir), console.log(colDir), console.log(dir);
-        // console.log(toRaw(inputs.value));
+        recursiveMove(row, col, rowDir, colDir, dir, count);
       }
     };
 
@@ -246,11 +216,14 @@ export default {
       }
     };
     const handleClick = ({ row, col }) => {
-      users.value[getUser()].focus = {
-        row,
-        col
-      };
-      socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
+      socket.send(
+        JSON.stringify({
+          focusUpdate: {
+            id: id.value,
+            focus: { row: row, col: col }
+          }
+        })
+      );
     };
     return {
       sudokuObj,
@@ -260,7 +233,6 @@ export default {
       color,
       id,
       checkFocus,
-      // focused,
       users
     };
   }
