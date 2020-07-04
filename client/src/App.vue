@@ -151,14 +151,38 @@ export default {
       inputs.value = {};
     });
 
-    const recursiveMove = (row, col, rowDir, colDir, dir, count) => {
-      console.log(toRaw(inputs.value));
+    const move = (row, col, rowDir, colDir) => {
+      row = row + rowDir;
+      col = col + colDir;
+      // Don't go beyond edge
+      if (row > 9 || col > 9 || row < 1 || col < 1) {
+        return;
+      }
 
-      if (!inputs.value[`r${row + rowDir}c${col + colDir}`].disabled) {
-        row = row + rowDir;
-        col = col + colDir;
+      inputs.value[`r${row}c${col}`].focus();
+      users.value[id.value].focus = { row, col };
+      socket.send(
+        JSON.stringify({
+          focusUpdate: {
+            id: id.value,
+            focus: { row, col }
+          }
+        })
+      );
+    };
 
-        inputs.value[`r${row}c${col}`].focus();
+    const handleInput = ({ key, event }) => {
+      // console.log(key);
+      // console.log(event);
+      const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+      const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
+      // Address of cursor
+      let { row, col } = users.value[id.value].focus;
+      // Check for null
+      if (row == null || col == null) {
+        // Set to top right
+        row = 1;
+        col = 1;
         users.value[id.value].focus = { row, col };
         socket.send(
           JSON.stringify({
@@ -168,35 +192,9 @@ export default {
             }
           })
         );
-      } else {
-        if (dir == "row") {
-          if (colDir > 0) {
-            colDir++;
-          } else if (colDir < 0) {
-            colDir--;
-          }
-        } else if (dir == "col") {
-          if (rowDir > 0) {
-            rowDir++;
-          } else if (rowDir < 0) {
-            rowDir--;
-          }
-        }
-        count++;
-        if (count > 4) {
-          return 0;
-        }
-        recursiveMove(row, col, rowDir, colDir, dir, count);
+        // end function
+        return;
       }
-    };
-
-    const handleInput = ({ key, event }) => {
-      console.log(key);
-      console.log(event);
-      const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-      const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
-      // Address of cursor
-      const { row, col } = users.value[id.value].focus;
       // Only allow change of non-givens
       if (
         !sudokuObj.value.puzzle[`r${row}c${col}`].given &&
@@ -219,20 +217,18 @@ export default {
       } else if (arrowKeys.includes(key)) {
         switch (key) {
           case "ArrowRight":
-            recursiveMove(row, col, 0, 1, "row");
+            move(row, col, 0, 1, "row");
             break;
           case "ArrowLeft":
-            recursiveMove(row, col, 0, -1, "row");
+            move(row, col, 0, -1, "row");
             break;
           case "ArrowDown":
-            recursiveMove(row, col, 1, 0, "col");
+            move(row, col, 1, 0, "col");
             break;
           case "ArrowUp":
-            recursiveMove(row, col, -1, 0, "col");
+            move(row, col, -1, 0, "col");
             break;
         }
-      } else if (key != "Tab") {
-        event.preventDefault();
       }
     };
 
