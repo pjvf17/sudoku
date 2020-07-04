@@ -79,6 +79,7 @@ export default {
       }
       if (sentColor) {
         color.value = sentColor;
+        document.documentElement.style.setProperty(`--color`, `${sentColor}`);
       }
       if (sentid) {
         id.value = sentid;
@@ -92,7 +93,9 @@ export default {
         userIndex++
       ) {
         const user = sudokuObj.value.users[userIndex];
-        focused.value[`${user.focus.col}-${user.focus.row}`] = user.color;
+        if (user.id != id.value) {
+          focused.value[`${user.focus.col}-${user.focus.row}`] = user.color;
+        }
       }
     };
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
@@ -303,7 +306,7 @@ td {
     &:focus {
       outline: none;
       // opacity: 0.5;
-      // background-color: #bf616a, 0.5;
+      background-color: var(--color);
     }
 
     // &:disabled {
