@@ -44,7 +44,10 @@ console.log(process.env.VUE_APP_WS_URL);
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
 console.log(wsUrl);
 
+
 const socket = new WebSocket(wsUrl);
+console.time("before sudoku")
+console.timeLog("before sudoku");
 /* eslint-disable */
 console.log(sudoku);
 (function() {
@@ -849,6 +852,8 @@ console.log(sudoku);
 
   // Pass whatever the root object is, lsike 'window' in browsers
 })();
+console.timeEnd("before sudoku");
+
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw } from "vue";
 /* eslint-enable */
