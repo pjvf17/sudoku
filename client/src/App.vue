@@ -37,12 +37,10 @@
 </template>
 
 <script>
-
 console.log(process.env.VUE_APP_WS_URL);
 
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
 console.log(wsUrl);
-
 
 const socket = new WebSocket(wsUrl);
 /* eslint-disable */
@@ -65,7 +63,6 @@ export default {
     const focused = ref({});
 
     socket.onmessage = function({ data }) {
-      console.log("message recieved");
       const {
         color: sentColor,
         sudokuObj: sentSudokuObj,
@@ -149,7 +146,6 @@ export default {
             col: col + colDir
           };
           socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
-          console.log("sending");
         } else {
           if (dir == "row") {
             // console.log("rowDir");
@@ -197,14 +193,12 @@ export default {
         // console.log("sending");
         // console.log(toRaw(sudokuObj.value.puzzle));
         socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
-        console.log("sending");
       } else if (key == "Backspace") {
         $event.preventDefault();
         sudokuObj.value.puzzle[row][col].number = "";
-        // console.log("sending");
+
         // console.log(toRaw(sudokuObj.value.puzzle));
         socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
-        console.log("sending");
       } else if (arrowKeys.includes(key)) {
         switch (key) {
           case "ArrowRight":
@@ -230,7 +224,6 @@ export default {
         col
       };
       socket.send(JSON.stringify({ sudokuObj: sudokuObj.value }));
-      console.log("sending");
     };
     return {
       sudokuObj,
