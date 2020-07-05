@@ -893,26 +893,22 @@ for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
 
 sudokuObj.puzzle = puzzle;
 
-sudokuObj.rows = {};
-sudokuObj.cols = {};
-sudokuObj.squares = {};
-
-const makeRows = (puzzle) => {
+const makeRows = () => {
   let rows = {};
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     rows[`r${rowIndex}`] = [];
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      rows[`r${rowIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
+      rows[`r${rowIndex}`].push(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]);
     }
   }
   return rows;
 };
-const makeCols = (puzzle) => {
+const makeCols = () => {
   let cols = {};
   for (let colIndex = 1; colIndex <= 9; colIndex++) {
     cols[`c${colIndex}`] = [];
     for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-      cols[`c${colIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
+      cols[`c${colIndex}`].push(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]);
     }
   }
   return cols;
@@ -936,7 +932,7 @@ const getSquare = (cell) => {
   return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
 };
 
-const makeSquares = (puzzle) => {
+const makeSquares = () => {
   let squares = {
     s1: [],
     s2: [],
@@ -951,30 +947,33 @@ const makeSquares = (puzzle) => {
 
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      squares[getSquare(puzzle[`r${rowIndex}c${colIndex}`])].push(
-        puzzle[`r${rowIndex}c${colIndex}`]
+      squares[getSquare(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`])].push(
+        sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]
       );
     }
   }
 
-  puzzle.squares = squares;
+  // puzzle.squares = squares;
   // console.log("\n\n squares:");
   // console.log(squares);
   return squares;
 };
 
-sudokuObj.squares = makeSquares(sudokuObj.puzzle);
+// sudokuObj = makeSquares(sudokuObj.puzzle);
 // console.log(puzzle);
 
 const getPeers = (cell) => {
   // Define the three units we're pulling from
   // console.log(cell);
+  const rows = makeRows();
+  const cols = makeCols();
+  const squares = makeSquares();
   let row,
     col,
     square = [];
-  row = sudokuObj.rows[`r${cell.address.r}`];
-  col = sudokuObj.cols[`c${cell.address.c}`];
-  square = sudokuObj.squares[getSquare(cell)];
+  row = rows[`r${cell.address.r}`];
+  col = cols[`c${cell.address.c}`];
+  square = squares[getSquare(cell)];
 
   return { row, col, square };
 };
@@ -1063,12 +1062,35 @@ const freeUser = (id) => {
   delete users[id];
 };
 
-const updateFocus = ({ id, focus }) => {
-  users[id].focus = focus;
+const userTimers = {};
+
+const updateFocus = ({ id, focus }, wss, ws) => {
+  // Only activate if client is still connected
+  if (!ws.isClosed) {
+    if (userTimers[id]) {
+      clearTimeout(userTimers[id]);
+    }
+    users[id].focus = focus;
+    userTimers[id] = setTimeout(() => {
+      updateFocus({ id, focus: { row: null, col: null } }, wss, ws);
+      // Get rid of cursor
+      for (let client of wss.clients) {
+        // Send only to open clients, and not the one who sent a message
+        if (!client.isClosed && client != ws) {
+          client.send(
+            JSON.stringify({
+              focusUpdate: { id, focus: { row: null, col: null } },
+            })
+          );
+        }
+      }
+    }, 180000);
+  }
 };
 
 const updateNumber = ({ address, number }) => {
   sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
+  validateSquare(sudokuObj.puzzle[`r${address.r}c${address.c}`]);
 };
 
 const updatePencilMark = ({ address, pencilMark }) => {
@@ -1135,7 +1157,7 @@ wss.on("connection", function (ws: WebSocket) {
     if (focusUpdate) {
       console.log(focusUpdate);
       // update user
-      updateFocus(focusUpdate);
+      updateFocus(focusUpdate, wss, ws);
     }
     // Recieved number update
     if (numberUpdate) {
