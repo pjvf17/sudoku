@@ -96,6 +96,7 @@
         </tbody>
       </table>
       <span style="color: white">{{ notating ? "Notation Mode On" : "Notiation Mode Off" }}</span>
+      <button @click="newGame()">Start New Game</button>
     </div>
   </div>
 </template>
@@ -308,7 +309,7 @@ export default {
         // Skip the cell we're checking
         if (peers[cellIndex].address != cell.address) {
           if (peers[cellIndex].number == cell.number) {
-            valid = false
+            valid = false;
             cell.valid.value = false;
           }
         }
@@ -495,8 +496,15 @@ export default {
         })
       );
     };
+
+    const newGame = () => {
+      console.log("starting new game");
+      socket.send(JSON.stringify({ newGame: true }));
+    };
+
     return {
       sudokuObj,
+      newGame,
       handleInput,
       handleClick,
       inputs,
