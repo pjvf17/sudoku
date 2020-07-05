@@ -830,68 +830,72 @@ var sudoku = {};
 })();
 /* eslint-enable */
 
-let sudokuObj = {
-  puzzle: sudoku.generate("hard"),
+let sudokuObj = {};
+
+const startNewGame = () => {
+  sudokuObj.puzzle = sudoku.generate("hard");
+
+  const puzzle = {};
+
+  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
+    for (let colIndex = 0; colIndex < 9; colIndex++) {
+      // console.log(rowIndex*9+colIndex)
+      const cell = sudokuObj.puzzle.substr(rowIndex * 9 + colIndex, 1);
+      let formattedCell = {};
+      if (cell != ".") {
+        // Make a cell object with given equal to true
+        formattedCell = {
+          number: cell,
+          given: true,
+          valid: {
+            value: true,
+            reason: null,
+          },
+          pencilMarks: [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          candidates: [],
+          address: { r: rowIndex + 1, c: colIndex + 1 },
+        };
+      } else {
+        formattedCell = {
+          number: "",
+          given: false,
+          pencilMarks: [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          valid: { value: true, reason: null },
+          candidates: [],
+          address: { r: rowIndex + 1, c: colIndex + 1 },
+        };
+      }
+      // Convert to rncn notation indexed from 1
+      puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
+    }
+  }
+
+  sudokuObj.puzzle = puzzle;
 };
 
-console.log(sudoku.print_board(sudokuObj.puzzle));
+startNewGame();
 
-const puzzle = {};
-
-for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-  for (let colIndex = 0; colIndex < 9; colIndex++) {
-    // console.log(rowIndex*9+colIndex)
-    const cell = sudokuObj.puzzle.substr(rowIndex * 9 + colIndex, 1);
-    let formattedCell = {};
-    if (cell != ".") {
-      // Make a cell object with given equal to true
-      formattedCell = {
-        number: cell,
-        given: true,
-        valid: {
-          value: true,
-          reason: null,
-        },
-        pencilMarks: [
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
-        candidates: [],
-        address: { r: rowIndex + 1, c: colIndex + 1 },
-      };
-    } else {
-      formattedCell = {
-        number: "",
-        given: false,
-        pencilMarks: [
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
-        valid: { value: true, reason: null },
-        candidates: [],
-        address: { r: rowIndex + 1, c: colIndex + 1 },
-      };
-    }
-    // Convert to rncn notation indexed from 1
-    puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
-  }
-}
-
-sudokuObj.puzzle = puzzle;
+// console.log(sudoku.print_board(sudokuObj.puzzle));
 
 const makeRows = () => {
   let rows = {};
@@ -1151,7 +1155,7 @@ wss.on("connection", function (ws: WebSocket) {
   }
 
   ws.on("message", function (message: any) {
-    const { focusUpdate, numberUpdate, pencilMarkUpdate } = JSON.parse(message);
+    const { focusUpdate, numberUpdate, pencilMarkUpdate, newGame } = JSON.parse(message);
 
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -1172,21 +1176,26 @@ wss.on("connection", function (ws: WebSocket) {
 
       updatePencilMark(pencilMarkUpdate);
     }
-
-    // console.time("message");
-    // console.timeLog("message");
-    // // const { sudokuObj: updatedPuzzle } = JSON.parse(message);
-    // sudokuObj = validateSudoku(updatedPuzzle);
-
-    // Send to all connected
-    for (let client of wss.clients) {
-      // Send only to open clients, and not the one who sent a message
-      if (!client.isClosed && client != ws) {
-        client.send(message);
+    // console.log(newGame);
+    if (newGame) {
+      console.log(newGame);
+      startNewGame();
+      console.log(sudokuObj);
+      for (let client of wss.clients) {
+        // Send only to open clients
+        if (!client.isClosed) {
+          client.send(JSON.stringify({sudokuObj }));
+        }
+      }
+    } else {
+      // Send to all connected
+      for (let client of wss.clients) {
+        // Send only to open clients, and not the one who sent a message
+        if (!client.isClosed && client != ws) {
+          client.send(message);
+        }
       }
     }
-
-    // console.timeEnd("message");
   });
   ws.on("close", function (message: any) {
     freeColor(ws);

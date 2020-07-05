@@ -95,7 +95,8 @@
           </tr>
         </tbody>
       </table>
-      <span style="color: white">{{ notating ? "Notation Mode On" : "Notiation Mode Off" }}</span>
+      <span class="notation-text" style="color: white">{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
+      <button @click="newGame()" class="button">Start New Game</button>
     </div>
   </div>
 </template>
@@ -308,7 +309,7 @@ export default {
         // Skip the cell we're checking
         if (peers[cellIndex].address != cell.address) {
           if (peers[cellIndex].number == cell.number) {
-            valid = false
+            valid = false;
             cell.valid.value = false;
           }
         }
@@ -495,8 +496,15 @@ export default {
         })
       );
     };
+
+    const newGame = () => {
+      console.log("starting new game");
+      socket.send(JSON.stringify({ newGame: true }));
+    };
+
     return {
       sudokuObj,
+      newGame,
       handleInput,
       handleClick,
       inputs,
@@ -539,6 +547,25 @@ $border: 2px solid black;
   border-radius: 3px;
   box-shadow: 0px 0px 15px 0px rgba($color: #000000, $alpha: 0.3);
   margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.button {
+  width: 30%;
+  margin: auto;
+  margin-top: 1em;
+  padding: 1em;
+  border-radius: 3px;
+  box-shadow: 0px 0px 15px 0px rgba($color: #000000, $alpha: 0.3);
+  border: none;
+  background-color: $nord6;
+}
+
+.notation-text {
+  margin: auto;
+  margin-top: .5em;
+  width: 30%;
 }
 
 table {
