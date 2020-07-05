@@ -836,36 +836,6 @@ let sudokuObj = {
 
 console.log(sudoku.print_board(sudokuObj.puzzle));
 
-// console.log(sudokuObj.puzzle);
-
-// Convert puzzle rncn
-// Loop through rows
-// for (let rowIndex = 0; rowIndex < sudokuObj.puzzle.length; rowIndex++) {
-//   const row = sudokuObj.puzzle[rowIndex];
-//   // loop through row
-//   for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
-//     const cell = row[cellIndex];
-//     // If cell is poplated
-//     if (cell != ".") {
-//       // Make a cell object with given equal to true
-//       row[cellIndex] = {
-//         number: cell,
-//         given: true,
-//         valid: {
-//           value: true,
-//           reason: null,
-//         },
-//       };
-//     } else {
-//       row[cellIndex] = {
-//         number: "",
-//         given: false,
-//         valid: { value: true, reason: null },
-//       };
-//     }
-//   }
-// }
-
 const puzzle = {};
 
 for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
@@ -882,6 +852,17 @@ for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
           value: true,
           reason: null,
         },
+        pencilMarks: [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
         candidates: [],
         address: { r: rowIndex + 1, c: colIndex + 1 },
       };
@@ -889,6 +870,17 @@ for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
       formattedCell = {
         number: "",
         given: false,
+        pencilMarks: [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
         valid: { value: true, reason: null },
         candidates: [],
         address: { r: rowIndex + 1, c: colIndex + 1 },
@@ -1086,6 +1078,29 @@ const updateNumber = ({ address, number }) => {
   sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
 };
 
+const updatePencilMark = ({ address, pencilMark }) => {
+  if (pencilMark != "delete") {
+    // Toggle mark
+    sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+      pencilMark - 1
+    ] = !sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+      pencilMark - 1
+    ];
+  } else {
+    sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ];
+  }
+};
+
 const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
@@ -1121,7 +1136,7 @@ wss.on("connection", function (ws: WebSocket) {
   }
 
   ws.on("message", function (message: any) {
-    const { focusUpdate, numberUpdate } = JSON.parse(message);
+    const { focusUpdate, numberUpdate, pencilMarkUpdate } = JSON.parse(message);
 
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -1135,6 +1150,14 @@ wss.on("connection", function (ws: WebSocket) {
 
       updateNumber(numberUpdate);
     }
+    // Recieved pencil mark update
+
+    if (pencilMarkUpdate) {
+      console.log(pencilMarkUpdate);
+
+      updatePencilMark(pencilMarkUpdate);
+    }
+
     // console.time("message");
     // console.timeLog("message");
     // // const { sudokuObj: updatedPuzzle } = JSON.parse(message);

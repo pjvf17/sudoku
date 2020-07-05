@@ -37,12 +37,65 @@
                   text-anchor="middle"
                   :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
                 >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
-                <!-- <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" /> -->
+                <text
+                  v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
+                  x="50%"
+                  y="60%"
+                  dominant-baseline="middle"
+                  text-anchor="middle"
+                >
+                  <tspan
+                    style="font-size: 14px"
+                    y="13"
+                    x="8"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[0] ? 1 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="13"
+                    x="30"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[1] ? 2 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="13"
+                    x="52"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[2] ? 3 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="35"
+                    x="8"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[3] ? 4 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="35"
+                    x="30"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[4] ? 5 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="35"
+                    x="52"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[5] ? 6 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="57"
+                    x="8"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[6] ? 7 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="57"
+                    x="30"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[7] ? 8 : ""}}</tspan>
+                  <tspan
+                    style="font-size: 14px"
+                    y="57"
+                    x="52"
+                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[8] ? 9 : ""}}</tspan>
+                </text>
               </svg>
             </td>
           </tr>
         </tbody>
       </table>
+      <span style="color: white">{{ notating ? "Notation Mode On" : "Notiation Mode Off" }}</span>
     </div>
   </div>
 </template>
@@ -72,6 +125,7 @@ export default {
     const sudokuObj = ref({});
     const users = ref({});
     const id = ref({});
+    const notating = ref(false);
     // const focused = ref({});
 
     socket.onmessage = function({ data }) {
@@ -84,10 +138,12 @@ export default {
         id: sentid,
         // Users obj, sent once
         users: sentUsers,
-        // // FocusUpdate, sent whenver someone moves
+        // FocusUpdate, sent whenver someone moves
         focusUpdate,
-        // // NumberUpdate, sent whenever someone changes a number
-        numberUpdate
+        // NumberUpdate, sent whenever someone changes a number
+        numberUpdate,
+        // PencilMarkUpdate, sent whenever someone changes a pencil mark
+        pencilMarkUpdate
       } = JSON.parse(data);
 
       const {
@@ -102,6 +158,7 @@ export default {
         sudokuObj.value.rows = sentRows;
         sudokuObj.value.cols = sentCols;
         sudokuObj.value.squares = sentSquares;
+        console.log(sentPuzzle);
         // focused.value = {};
       }
       if (sentUsers) {
@@ -126,6 +183,30 @@ export default {
       if (numberUpdate) {
         let { address, number } = numberUpdate;
         sudokuObj.value.puzzle[`r${address.r}c${address.c}`].number = number;
+      }
+      // update a pencilmark
+      if (pencilMarkUpdate) {
+        let { address, pencilMark } = pencilMarkUpdate;
+        if (pencilMark != "delete") {
+          // Toggle mark
+          sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+            pencilMark - 1
+          ] = !sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+            pencilMark - 1
+          ];
+        } else {
+          sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ];
+        }
       }
     };
 
@@ -158,7 +239,6 @@ export default {
       if (row > 9 || col > 9 || row < 1 || col < 1) {
         return;
       }
-
       inputs.value[`r${row}c${col}`].focus();
       users.value[id.value].focus = { row, col };
       socket.send(
@@ -172,6 +252,7 @@ export default {
     };
 
     const handleInput = ({ key, event }) => {
+      // console.log(event);
       // console.log(key);
       // console.log(event);
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -179,6 +260,8 @@ export default {
       // Address of cursor
       let { row, col } = users.value[id.value].focus;
       // Check for null
+      // console.log(row);
+      // console.log(col);
       if (row == null || col == null) {
         // Set to top right
         row = 1;
@@ -201,19 +284,60 @@ export default {
         acceptedKeys.includes(key)
       ) {
         event.preventDefault();
-        // Update sudokuObj
-        sudokuObj.value.puzzle[`r${row}c${col}`].number = key;
+        if (notating.value) {
+          console.log(row);
+          console.log(col);
+          // Toggle notation for number on local copy
+          console.log(sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks);
 
-        let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
-
-        socket.send(JSON.stringify({ numberUpdate: { address, number: key } }));
+          sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[
+            key - 1
+          ] = !sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[key - 1];
+          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          socket.send(
+            JSON.stringify({ pencilMarkUpdate: { address, pencilMark: key } })
+          );
+        } else {
+          // Change local copy of puzzle
+          sudokuObj.value.puzzle[`r${row}c${col}`].number = key;
+          // Send server update
+          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          socket.send(
+            JSON.stringify({ numberUpdate: { address, number: key } })
+          );
+        }
       } else if (key == "Backspace") {
         event.preventDefault();
-        sudokuObj.value.puzzle[`r${row}c${col}`].number = "";
 
-        let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
-
-        socket.send(JSON.stringify({ numberUpdate: { address, number: "" } }));
+        // Check if in notation mode
+        if (notating.value) {
+          // Toggle notation for number on local copy
+          sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks = [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ];
+          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          socket.send(
+            JSON.stringify({
+              pencilMarkUpdate: { address, pencilMark: "delete" }
+            })
+          );
+        } else {
+          // Change local copy of puzzle
+          sudokuObj.value.puzzle[`r${row}c${col}`].number = "";
+          // Send server update
+          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          socket.send(
+            JSON.stringify({ numberUpdate: { address, number: "" } })
+          );
+        }
       } else if (arrowKeys.includes(key)) {
         switch (key) {
           case "ArrowRight":
@@ -229,6 +353,8 @@ export default {
             move(row, col, -1, 0, "col");
             break;
         }
+      } else if (key == "Shift") {
+        notating.value = !notating.value;
       }
     };
 
@@ -255,7 +381,8 @@ export default {
       color,
       id,
       checkFocus,
-      users
+      users,
+      notating
     };
   }
 };
