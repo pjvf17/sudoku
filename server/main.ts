@@ -833,7 +833,7 @@ var sudoku = {};
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = sudoku.generate("easy");
+  sudokuObj.puzzle = sudoku.generate("hard");
 
   const puzzle = {};
 
