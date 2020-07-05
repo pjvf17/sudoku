@@ -1069,27 +1069,26 @@ const freeUser = (id) => {
 const userTimers = {};
 
 const updateFocus = ({ id, focus }, wss, ws) => {
-  // Only activate if client is still connected
-  if (!ws.isClosed) {
-    if (userTimers[id]) {
-      clearTimeout(userTimers[id]);
-    }
-    users[id].focus = focus;
-    userTimers[id] = setTimeout(() => {
-      updateFocus({ id, focus: { row: null, col: null } }, wss, ws);
-      // Get rid of cursor
-      for (let client of wss.clients) {
-        // Send only to open clients, and not the one who sent a message
-        if (!client.isClosed && client != ws) {
-          client.send(
-            JSON.stringify({
-              focusUpdate: { id, focus: { row: null, col: null } },
-            })
-          );
-        }
-      }
-    }, 180000);
+  if (userTimers[id]) {
+    clearTimeout(userTimers[id]);
   }
+  if (users[id]) {
+    users[id].focus = focus;
+  }
+  userTimers[id] = setTimeout(() => {
+    updateFocus({ id, focus: { row: null, col: null } }, wss, ws);
+    // Get rid of cursor
+    for (let client of wss.clients) {
+      // Send only to open clients, and not the one who sent a message
+      if (!client.isClosed && client != ws) {
+        client.send(
+          JSON.stringify({
+            focusUpdate: { id, focus: { row: null, col: null } },
+          })
+        );
+      }
+    }
+  }, 180000);
 };
 
 const updateNumber = ({ address, number }) => {
@@ -1155,7 +1154,9 @@ wss.on("connection", function (ws: WebSocket) {
   }
 
   ws.on("message", function (message: any) {
-    const { focusUpdate, numberUpdate, pencilMarkUpdate, newGame } = JSON.parse(message);
+    const { focusUpdate, numberUpdate, pencilMarkUpdate, newGame } = JSON.parse(
+      message
+    );
 
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -1184,7 +1185,7 @@ wss.on("connection", function (ws: WebSocket) {
       for (let client of wss.clients) {
         // Send only to open clients
         if (!client.isClosed) {
-          client.send(JSON.stringify({sudokuObj }));
+          client.send(JSON.stringify({ sudokuObj }));
         }
       }
     } else {
