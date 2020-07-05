@@ -918,9 +918,6 @@ const makeCols = (puzzle) => {
   return cols;
 };
 
-sudokuObj.rows = makeRows(sudokuObj.puzzle);
-sudokuObj.cols = makeCols(sudokuObj.puzzle);
-
 const getSquare = (cell) => {
   let s13 = [1, 2, 3];
   let s46 = [4, 5, 6];
@@ -1009,11 +1006,7 @@ const validateSquare = (cell) => {
     if (!cell.valid.value) {
       break;
     }
-    // console.log("cell:");
-    // console.log(peers[cellIndex]);
   }
-  // console.log("length:");
-  // console.log(peers.length);
   return cell;
 };
 
