@@ -3,21 +3,41 @@
 // Validation framework
 
 const makeRows = (puzzle: any) => {
-  let rows: any = {};
+  let rows: any = {
+    r1: {},
+    r2: {},
+    r3: {},
+    r4: {},
+    r5: {},
+    r6: {},
+    r7: {},
+    r8: {},
+    r9: {},
+  };
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-    rows[`r${rowIndex}`] = [];
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      rows[`r${rowIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
+      rows[`r${rowIndex}`][`r${rowIndex}c${colIndex}`] =
+        puzzle[`r${rowIndex}c${colIndex}`];
     }
   }
   return rows;
 };
 const makeCols = (puzzle: any) => {
-  let cols: any = {};
+  let cols: any = {
+    c1: {},
+    c2: {},
+    c3: {},
+    c4: {},
+    c5: {},
+    c6: {},
+    c7: {},
+    c8: {},
+    c9: {},
+  };
   for (let colIndex = 1; colIndex <= 9; colIndex++) {
-    cols[`c${colIndex}`] = [];
     for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-      cols[`c${colIndex}`].push(puzzle[`r${rowIndex}c${colIndex}`]);
+      cols[`c${colIndex}`][`r${rowIndex}c${colIndex}`] =
+        puzzle[`r${rowIndex}c${colIndex}`];
     }
   }
   return cols;
@@ -65,11 +85,11 @@ const makeSquares = (puzzle: any) => {
   return squares;
 };
 
-const getPeers = (cell: any, puzzle: any) => {
+const getPeers = (cell: any, puzzle: any, { rows, cols, squares }: any) => {
   // Define the three units we're pulling from
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
+  // const rows = makeRows(puzzle);
+  // const cols = makeCols(puzzle);
+  // const squares = makeSquares(puzzle);
   let row,
     col,
     square = [];
@@ -80,15 +100,24 @@ const getPeers = (cell: any, puzzle: any) => {
   return { row, col, square };
 };
 
-const validateSquare = (cell: any, puzzle: any) => {
+const validateSquare = (
+  cell: any,
+  puzzle: any,
+  { rows, cols, squares }: any
+) => {
   // Skip givens
   if (cell.given) {
     return cell;
   }
-  const { row, col, square } = getPeers(cell, puzzle);
-  const peers = [...row, ...col, ...Object.values(square)];
+  const { row, col, square } = getPeers(cell, puzzle, { rows, cols, squares });
+  const peers: any = [
+    ...Object.values(row),
+    ...Object.values(col),
+    ...Object.values(square),
+  ];
   // console.log("validateSquare");
   let valid = true;
+
   for (let cellIndex = 0; cellIndex < peers.length; cellIndex++) {
     // Skip the cell we're checking
     if (peers[cellIndex].address != cell.address) {
@@ -272,7 +301,6 @@ const puzzleToString = (puzzle: any) => {
 
 console.log(puzzleToString(initalPuzzle));
 
-
 const fillInRemaining: any = (
   address: any,
   puzzle: any,
@@ -282,6 +310,10 @@ const fillInRemaining: any = (
   address = JSON.parse(JSON.stringify(address));
   puzzle = JSON.parse(JSON.stringify(puzzle));
   addressesComplete = JSON.parse(JSON.stringify(addressesComplete));
+
+  let rows = makeRows(puzzle);
+  let cols = makeCols(puzzle);
+  let squares = makeSquares(puzzle);
 
   // WHile we're not at the last cell
   while (`r${address.r}c${address.c}` != "r9c9") {
@@ -320,9 +352,8 @@ const fillInRemaining: any = (
         // Validate cell
         puzzle[`r${address.r}c${address.c}`] = validateSquare(
           puzzle[`r${address.r}c${address.c}`],
-          puzzle
+          puzzle, {rows, cols, squares}
         );
-
         // If invalid
         if (!puzzle[`r${address.r}c${address.c}`].valid.value) {
           // Reset number
@@ -332,6 +363,15 @@ const fillInRemaining: any = (
         } else {
           // Push to completed
           addressesComplete.push(JSON.parse(JSON.stringify(address)));
+          // Update rows, cols, squares
+          rows[`r${address.r}`][`r${address.r}c${address.c}`] =
+            puzzle[`r${address.r}c${address.c}`];
+          cols[`c${address.r}`][`r${address.r}c${address.c}`] =
+            puzzle[`r${address.r}c${address.c}`];
+          squares[getSquare(puzzle[`r${address.r}c${address.c}`])][
+            `r${address.r}c${address.c}`
+          ] = puzzle[`r${address.r}c${address.c}`];
+
           // If not at end of columns
           if (address.c != 9) {
             // Increase column by one
@@ -349,7 +389,6 @@ const fillInRemaining: any = (
           }
         }
       }
-
     } else {
       // No numbers left
       // Reset numbers
@@ -361,6 +400,14 @@ const fillInRemaining: any = (
         address = addressesComplete.pop();
         // Reset the number at the address we're backtracking to
         puzzle[`r${address.r}c${address.c}`].number = ".";
+        // Reset rows, cols, squares
+        rows[`r${address.r}`][`r${address.r}c${address.c}`] =
+          puzzle[`r${address.r}c${address.c}`];
+        cols[`c${address.r}`][`r${address.r}c${address.c}`] =
+          puzzle[`r${address.r}c${address.c}`];
+        squares[getSquare(puzzle[`r${address.r}c${address.c}`])][
+          `r${address.r}c${address.c}`
+        ] = puzzle[`r${address.r}c${address.c}`];
       } else {
         // If nothing to backtrack to, give up
         return puzzle;
@@ -378,9 +425,10 @@ const startTimer = performance.now();
 const testSpeed = async (iterations: number) => {
   const startTimer = performance.now();
   let count = 0;
+  let newPuzzle;
   while (count < iterations) {
     // Start from first
-    let newPuzzle = fillInRemaining(
+    newPuzzle = fillInRemaining(
       { r: 1, c: 1 },
       generateDiagonalSquares(createBlankPuzzle()),
       []
@@ -391,17 +439,18 @@ const testSpeed = async (iterations: number) => {
       console.log(count);
 
       await printSudokuToConsoleFormatted(newPuzzle);
-      return;
+      // return;
     }
     console.log(count);
   }
   const endTimer = performance.now();
   const result = (endTimer - startTimer) / iterations;
   console.log(`On average, it took ${result}ms per puzzle`);
+  await printSudokuToConsoleFormatted(newPuzzle);
+  return newPuzzle;
 };
 
-testSpeed(500);
-
+testSpeed(20);
 // Averaging 250-300ms
 
 // console.log(puzzle);
