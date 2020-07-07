@@ -123,24 +123,13 @@ const validateSquare = (
   ];
   // console.log("validateSquare");
   let valid = true;
-  // peers.find(el=>{
-  //   console.log(el);
-  //   return el.number == number
-  // })
-  for (let cellIndex = 0; cellIndex < peers.length && valid; cellIndex++) {
-    if (peers[cellIndex].number == number) {
-      valid = false;
-      // cell.valid.value = false;
-    }
-    // Stop at first invalid
-    // if (!valid) {
-    //   break;
-    // }
-  }
-  // If valid is still valid, reset cell
-  // if (valid) {
-  //   cell.valid.value = true;
-  // }
+  valid =
+    peers.findIndex((el: any) => {
+      return el.number == number;
+    }) == -1
+      ? true
+      : false;
+
   return valid;
 };
 
@@ -155,60 +144,59 @@ const shuffleArray = (array: any) => {
 
 // start with blank puzzle structure
 const createBlankPuzzle = () => {
-  let puzzleString = "";
+  // let puzzleString = "";
   let puzzle: any = {};
-  for (let i = 0; i < 81; i++) {
-    puzzleString = puzzleString.concat(".");
-  }
+  // for (let i = 0; i < 81; i++) {
+  //   puzzleString = puzzleString.concat(".");
+  // }
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
-      const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
-      let formattedCell = {};
-      if (cell != ".") {
-        // Make a cell object with given equal to true
-        formattedCell = {
-          number: cell,
-          given: true,
-          valid: {
-            value: true,
-            reason: null,
-          },
-          pencilMarks: [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-          ],
-          candidates: [],
-          address: { r: rowIndex + 1, c: colIndex + 1 },
-        };
-      } else {
-        formattedCell = {
-          number: ".",
-          // given: false,
-          // pencilMarks: [
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          //   false,
-          // ],
-          valid: { value: true, reason: null },
-          // candidates: [],
-          address: { r: rowIndex + 1, c: colIndex + 1 },
-          untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
-        };
-      }
+      // const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
+      // if (cell != ".") {
+      //   // Make a cell object with given equal to true
+      //   formattedCell = {
+      //     number: cell,
+      //     given: true,
+      //     valid: {
+      //       value: true,
+      //       reason: null,
+      //     },
+      //     pencilMarks: [
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //       false,
+      //     ],
+      //     candidates: [],
+      //     address: { r: rowIndex + 1, c: colIndex + 1 },
+      //   };
+      // } else {
+      let formattedCell = {
+        number: ".",
+        // given: false,
+        // pencilMarks: [
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        //   false,
+        // ],
+        valid: { value: true, reason: null },
+        // candidates: [],
+        address: { r: rowIndex + 1, c: colIndex + 1 },
+        untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
+      };
+      // }
       // Convert to rncn notation indexed from 1
       puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
     }
@@ -322,36 +310,17 @@ const fillInRemaining: any = (
 
   let count = 0;
   // WHile we're not at the last cell
-  while (`r${address.r}c${address.c}` != "r9c9") {
+  while (address.c < 10 && address.r < 10) {
     count++;
     if (count == 600) {
       puzzle = createBlankPuzzle();
-      puzzle = generateDiagonalSquares(puzzle);
+      // puzzle = generateDiagonalSquares(puzzle);
       rows = makeRows(puzzle);
       squares = makeSquares(puzzle);
       count = 0;
       address = { r: 1, c: 1 };
       addressesComplete = [];
     }
-    // Loop till address not a number
-    while (typeof puzzle[`r${address.r}c${address.c}`].number == "number") {
-      // If not at end of columns
-      if (address.c != 9) {
-        // Increase column by one
-        address.c++;
-        // If not at end of rows
-      } else if (address.r != 9) {
-        // Reset column
-        address.c = 1;
-        // Increase row by one
-        address.r++;
-      } else {
-        // At the end
-        return puzzle;
-      }
-    }
-    // We should now have an address of an unfilled number
-
     // Check to see if there are untriedNumbers
     if (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
       // While there are numbers left
@@ -399,6 +368,8 @@ const fillInRemaining: any = (
             address.r++;
             break;
             // return fillInRemaining(address, puzzle, addressesComplete);
+          } else {
+            return puzzle;
           }
         }
       }
@@ -435,10 +406,10 @@ const testSpeed = async (iterations: number) => {
     // Start from first
     let newPuzzle = fillInRemaining(
       { r: 1, c: 1 },
-      generateDiagonalSquares(createBlankPuzzle()),
+      createBlankPuzzle(),
       []
     );
-  printSudokuToConsole(newPuzzle);
+    printSudokuToConsole(newPuzzle);
     count++;
     if (puzzleToString(newPuzzle).indexOf(".") != -1) {
       console.log(count);
@@ -453,7 +424,7 @@ const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
-testSpeed(1000);
+testSpeed(10000);
 
 // Averaging 250-300ms
 
