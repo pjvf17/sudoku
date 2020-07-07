@@ -109,8 +109,16 @@ const validateSquare = (cell: any, puzzle: any) => {
   return cell;
 };
 
-// start with blank puzzle structure
+// From https://stackoverflow.com/a/12646864
+const shuffleArray = (array: any) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
 
+// start with blank puzzle structure
 const createBlankPuzzle = () => {
   let puzzleString = "";
   let puzzle: any = {};
@@ -163,7 +171,7 @@ const createBlankPuzzle = () => {
           valid: { value: true, reason: null },
           candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
-          untriedNumbers: Array.from(Array(9), (_, i) => i + 1),
+          untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
         };
       }
       // Convert to rncn notation indexed from 1
@@ -177,18 +185,15 @@ const createBlankPuzzle = () => {
 let initalPuzzle = createBlankPuzzle();
 
 // Fill in diagonal squares
-
-const generateSquare = (square: any, sIndex: number, puzzle:any) => {
+const generateSquare = (square: any, sIndex: number, puzzle: any) => {
   const numbers = Array.from(Array(9), (_, i) => i + 1);
+  shuffleArray(numbers);
   for (const rncnAddress in square) {
     if (square.hasOwnProperty(rncnAddress)) {
       // Get reference to cell
       const cell = square[rncnAddress];
-      const rand = Math.round(Math.random() * (numbers.length - 1));
       // Get number, removing each number from the numbers array to make no repeats
-      // Since splice returns an array, get the first (and only) element
-      const number = numbers.splice(rand, 1)[0];
-      //   console.log(`${rand} - ${number}`)
+      const number = numbers.pop();
       // Save number to cell
       cell.number = number;
       // Get address from cell
@@ -204,7 +209,7 @@ const generateSquare = (square: any, sIndex: number, puzzle:any) => {
   //   console.log(square);
 };
 
-const generateDiagonalSquares = (puzzle:any) => {
+const generateDiagonalSquares = (puzzle: any) => {
   const squares = makeSquares(puzzle);
   // Make top right square
   puzzle = generateSquare(squares["s1"], 1, puzzle);
@@ -267,7 +272,6 @@ const puzzleToString = (puzzle: any) => {
 
 console.log(puzzleToString(initalPuzzle));
 
-let count = 0;
 
 const fillInRemaining: any = (
   address: any,
@@ -278,135 +282,100 @@ const fillInRemaining: any = (
   address = JSON.parse(JSON.stringify(address));
   puzzle = JSON.parse(JSON.stringify(puzzle));
   addressesComplete = JSON.parse(JSON.stringify(addressesComplete));
-  count = JSON.parse(JSON.stringify(count))+1;
-  if (count == 1000) {
-    puzzle = createBlankPuzzle();
-    puzzle = generateDiagonalSquares(puzzle);
-    count = 0;
-  }
-  // triedConfigurations = JSON.parse(JSON.stringify(triedConfigurations));
-  //   await printSudokuToConsole(puzzle);
 
-  // Loop till address not a number
-  while (typeof puzzle[`r${address.r}c${address.c}`].number == "number") {
-    // If not at end of columns
-    if (address.c != 9) {
-      // Increase column by one
-      address.c++;
-      // If not at end of rows
-    } else if (address.r != 9) {
-      // Reset column
-      address.c = 1;
-      // Increase row by one
-      address.r++;
-    } else {
-      // At the end
-      return puzzle;
-    }
-  }
-  // We should now have an address of an unfilled number
-
-  // Check to see if there are untriedNumbers
-  if (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length == 0) {
-    // Reset numbers
-    puzzle[`r${address.r}c${address.c}`].untriedNumbers = Array.from(
-      Array(9),
-      (_, i) => i + 1
-    );
-    // console.log("hi");
-    if (addressesComplete.length) {
-      // console.log("backtracking");
-      // printSudokuToConsole(puzzle);
-      // Remove last address from address complete array
-      let newAddress = addressesComplete.pop();
-      // Reset the number at the address we're backtracking to
-      puzzle[`r${newAddress.r}c${newAddress.c}`].number = ".";
-      // Return to previous address
-      return fillInRemaining(newAddress, puzzle, addressesComplete);
-    }
-    // If nothing to backtrack to, give up
-    return puzzle;
-  } else {
-    // While there are numbers left
-    while (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
-      // Try an untried number
-      const rand = Math.round(
-        Math.random() *
-          (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length - 1)
-      );
-      // Get number, removing each number from the untriedNumbers array to make no repeats
-      // Since splice returns an array, get the first (and only) element
-      const number = puzzle[`r${address.r}c${address.c}`].untriedNumbers.splice(
-        rand,
-        1
-      )[0];
-      puzzle[`r${address.r}c${address.c}`].number = number;
-
-      //   console.log(puzzle[`r${address.r}c${address.c}`].number);
-      // Validate cell
-      puzzle[`r${address.r}c${address.c}`] = validateSquare(
-        puzzle[`r${address.r}c${address.c}`],
-        puzzle
-      );
-
-      // If invalid
-      if (!puzzle[`r${address.r}c${address.c}`].valid.value) {
-        // Reset number
-        puzzle[`r${address.r}c${address.c}`].number = ".";
-        puzzle[`r${address.r}c${address.c}`].valid.value = true;
-        // Is valid
+  // WHile we're not at the last cell
+  while (`r${address.r}c${address.c}` != "r9c9") {
+    // Loop till address not a number
+    while (typeof puzzle[`r${address.r}c${address.c}`].number == "number") {
+      // If not at end of columns
+      if (address.c != 9) {
+        // Increase column by one
+        address.c++;
+        // If not at end of rows
+      } else if (address.r != 9) {
+        // Reset column
+        address.c = 1;
+        // Increase row by one
+        address.r++;
       } else {
-        // Push to completed
-        addressesComplete.push(JSON.parse(JSON.stringify(address)));
-        // If not at end of columns
-        if (address.c != 9) {
-          // Increase column by one
-          address.c++;
-          return fillInRemaining(address, puzzle, addressesComplete);
-          // If not at end of rows
-        } else if (address.r != 9) {
-          // Reset column
-          address.c = 1;
-          // Increase row by one
-          address.r++;
-          return fillInRemaining(address, puzzle, addressesComplete);
+        // At the end
+        return puzzle;
+      }
+    }
+    // We should now have an address of an unfilled number
+
+    // Check to see if there are untriedNumbers
+    if (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
+      // While there are numbers left
+      while (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
+        // Try an untried number
+
+        // Get number, removing each number from the untriedNumbers array to make no repeats
+        const number = puzzle[
+          `r${address.r}c${address.c}`
+        ].untriedNumbers.pop();
+        puzzle[`r${address.r}c${address.c}`].number = number;
+
+        //   console.log(puzzle[`r${address.r}c${address.c}`].number);
+        // Validate cell
+        puzzle[`r${address.r}c${address.c}`] = validateSquare(
+          puzzle[`r${address.r}c${address.c}`],
+          puzzle
+        );
+
+        // If invalid
+        if (!puzzle[`r${address.r}c${address.c}`].valid.value) {
+          // Reset number
+          puzzle[`r${address.r}c${address.c}`].number = ".";
+          puzzle[`r${address.r}c${address.c}`].valid.value = true;
+          // Is valid
+        } else {
+          // Push to completed
+          addressesComplete.push(JSON.parse(JSON.stringify(address)));
+          // If not at end of columns
+          if (address.c != 9) {
+            // Increase column by one
+            address.c++;
+            break;
+            // return fillInRemaining(address, puzzle, addressesComplete);
+            // If not at end of rows
+          } else if (address.r != 9) {
+            // Reset column
+            address.c = 1;
+            // Increase row by one
+            address.r++;
+            break;
+            // return fillInRemaining(address, puzzle, addressesComplete);
+          }
         }
       }
-    }
-    // Check if numbers are left
-    if (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length == 0) {
+
+    } else {
+      // No numbers left
       // Reset numbers
-      puzzle[`r${address.r}c${address.c}`].untriedNumbers = Array.from(
-        Array(9),
-        (_, i) => i + 1
+      puzzle[`r${address.r}c${address.c}`].untriedNumbers = shuffleArray(
+        Array.from(Array(9), (_, i) => i + 1)
       );
-      // console.log("hi");
       if (addressesComplete.length) {
-        // console.log("backtracking");
-        // printSudokuToConsole(puzzle);
         // Remove last address from address complete array
-        let newAddress = addressesComplete.pop();
+        address = addressesComplete.pop();
         // Reset the number at the address we're backtracking to
-        puzzle[`r${newAddress.r}c${newAddress.c}`].number = ".";
-        // Return to previous address
-        return fillInRemaining(newAddress, puzzle, addressesComplete);
+        puzzle[`r${address.r}c${address.c}`].number = ".";
+      } else {
+        // If nothing to backtrack to, give up
+        return puzzle;
       }
-      // If nothing to backtrack to, give up
-      return puzzle;
     }
   }
 
   return puzzle;
 };
 
-let iterations = 0
+let iterations = 0;
 
 const startTimer = performance.now();
 
-
-
-
-const testSpeed = (iterations:number) => {
+const testSpeed = async (iterations: number) => {
   const startTimer = performance.now();
   let count = 0;
   while (count < iterations) {
@@ -418,16 +387,22 @@ const testSpeed = (iterations:number) => {
     );
     // await printSudokuToConsoleFormatted(newPuzzle);
     count++;
-    console.log(count);
+    if (puzzleToString(newPuzzle).indexOf(".") != -1) {
+      console.log(count);
+
+      await printSudokuToConsoleFormatted(newPuzzle);
+      return;
     }
-    const endTimer = performance.now();
-    const result = (endTimer - startTimer) / iterations
-    console.log(`On average, it took ${result}ms per puzzle`);
-}
+    console.log(count);
+  }
+  const endTimer = performance.now();
+  const result = (endTimer - startTimer) / iterations;
+  console.log(`On average, it took ${result}ms per puzzle`);
+};
 
-testSpeed(100);
+testSpeed(500);
 
-// Averaging 300ms
+// Averaging 250-300ms
 
 // console.log(puzzle);
 
