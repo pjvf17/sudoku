@@ -172,19 +172,49 @@ export const shuffleArray = (array: any) => {
 };
 
 // start with blank puzzle structure
-export const createBlankPuzzle = (puzzleToParse?: any) => {
-  let puzzleString = puzzleToParse ? puzzleToParse : "";
+export const createBlankPuzzle = () => {
+  let puzzleString = "";
   let puzzle: any = {};
-  if (!puzzleToParse) {
-    for (let i = 0; i < 81; i++) {
-      puzzleString = puzzleString.concat(".");
-    }
+  for (let i = 0; i < 81; i++) {
+    puzzleString = puzzleString.concat(".");
   }
 
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
       const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
+      puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = {
+        number: ".",
+        given: false,
+        pencilMarks: [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        valid: { value: true, reason: null },
+        candidates: [],
+        address: { r: rowIndex + 1, c: colIndex + 1 },
+        untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
+      };
+    }
+  }
+
+  return puzzle;
+};
+
+export const parsePuzzle = (puzzleToPorse: any) => {
+  let puzzle: any = {};
+
+  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
+    for (let colIndex = 0; colIndex < 9; colIndex++) {
+      // console.log(rowIndex*9+colIndex)
+      const cell = puzzleToPorse.substr(rowIndex * 9 + colIndex, 1);
       let formattedCell;
       if (cell != ".") {
         // Make a cell object with given equal to true
@@ -206,7 +236,7 @@ export const createBlankPuzzle = (puzzleToParse?: any) => {
             false,
             false,
           ],
-          candidates: new Set(),
+          candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
       } else {
@@ -225,7 +255,7 @@ export const createBlankPuzzle = (puzzleToParse?: any) => {
             false,
           ],
           valid: { value: true, reason: null },
-          candidates: new Set(),
+          candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
           untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
         };
@@ -422,76 +452,162 @@ export const fillInRemaining: any = (
   return puzzle;
 };
 
-export const singleCandidateAndPositionSolver = async (puzzle: any) => {
-  await printSudokuToConsoleFormatted(puzzle);
+/* 
+
+For each row, column, 3x3 square, 
+The following function needs to correctly assign candidates to each cell
+Furthermore, if, in any given unit there is either:
+  A cell with only one candidate or,
+  Only one cell where a specific number can go
+Assign each cell with those properties appriately and restart
+
+After assigning candidates, check unit for any cells with the above properties
+And assign them the appropriate numbers
+Then restart for that unit
+If no changes, go to next unit
+
+After doing this for each unit, restart
+Stop only when the puzzle is filled or 
+No changes have been made in a given pass
+
+*/
+
+export const singleCandidateAndPositionSolver = (puzzle: any) => {
   const rows = makeRows(puzzle);
   const cols = makeCols(puzzle);
   const squares = makeSquares(puzzle);
-  for (let iteration = 0; iteration < 3; iteration++) {
-    let obj;
-    switch (iteration) {
-      case 0:
-        obj = rows;
-        break;
-      case 1:
-        obj = cols;
-        break;
-      case 2:
-        obj = squares;
-        break;
-    }
 
-    for (const rowAddress in obj) {
-      if (obj.hasOwnProperty(rowAddress)) {
-        const row = obj[rowAddress];
+  let iterations = 0;
+  let changes = 0;
 
-        // Create an array of the numbers in the row
+  do {
+    // console.log(changes);
+    changes = 0;
 
-        // First, create an array of the values
-        const rowNumbers = Object.values(obj[rowAddress])
-          // Second, parse each value as a number
-          .map((el: any) => parseInt(el.number))
-          // Third, filter out any non numbers
-          .filter((el: any) => !isNaN(el));
+    // console.log(changes);
+    // printSudokuToConsole(puzzle);
 
-        // Create an array of numbers from 1 to 9
-        let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-        // For each number in the row
-        unseenNumbers = unseenNumbers.filter((number: any) => {
-          // Return only the numbers not in the row
-          return !rowNumbers.includes(number);
-        });
-        // For each non number in the row, add the unseenNumbers to the candidates Set
-        for (const cellAddress in row) {
-          if (row.hasOwnProperty(cellAddress)) {
-            if (row[cellAddress].number == ".") {
-              // If we're not on the first iteration
-              // Get previous candidates of cell
-              const set = new Set([1]);
-              set.has(1);
-              const previousCandidates =
-                iteration == 0
-                  ? // If on first iteration, just check against a full set of 1-9
-                    new Set(Array.from(Array(9), (_, i) => i + 1))
-                  : // Otherwise, check against previous candidates
-                    row[cellAddress].candidates;
-              // Reset candidates
-              row[cellAddress].candidates = new Set();
-              unseenNumbers
-                // Include only what previous candidates also has
-                .filter((number: any) => {
-                  return previousCandidates.has(number);
-                })
-                // Add each number to the candidates
-                .forEach((number: any) => {
-                  row[cellAddress].candidates.add(number);
-                });
+    for (let iteration = 0; iteration < 3; iteration++) {
+      let units: any;
+      switch (iteration) {
+        case 0:
+          units = rows;
+          break;
+        case 1:
+          units = cols;
+          break;
+        case 2:
+          units = squares;
+          break;
+      }
+      // Update candidates for each cell
+      for (const unitAddress in units) {
+        if (units.hasOwnProperty(unitAddress)) {
+          const unit = units[unitAddress];
+
+          // Create an array of the numbers in the row
+
+          // First, create an array of the values
+          const rowNumbers = Object.values(units[unitAddress])
+            // Second, parse each value as a number
+            .map((el: any) => parseInt(el.number))
+            // Third, filter out any non numbers
+            .filter((el: any) => !isNaN(el));
+
+          // Create an array of numbers from 1 to 9
+          let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+          // For each number in the row
+          unseenNumbers = unseenNumbers.filter((number: any) => {
+            // Return only the numbers not in the row
+            return !rowNumbers.includes(number);
+          });
+          // For each non number in the row, add the unseenNumbers to the candidates Set
+          for (const cellAddress in unit) {
+            if (unit.hasOwnProperty(cellAddress)) {
+              if (unit[cellAddress].number == ".") {
+                // If we're not on the first iteration of both the inner and outer loops
+                // Get previous candidates of cell
+                const previousCandidates =
+                  iterations == 0 && iteration == 0
+                    ? Array.from(Array(9), (_, i) => i + 1)
+                    : unit[cellAddress].candidates;
+                // Reset candidates
+                unit[cellAddress].candidates = [];
+                unseenNumbers
+                  // Include only what previous candidates also has
+                  .filter((number: any) => {
+                    return previousCandidates.includes(number);
+                  })
+                  // Add each number to the candidates
+                  .forEach((number: any) => {
+                    unit[cellAddress].candidates.push(number);
+                  });
+              }
             }
           }
         }
       }
+      // Find cells where there is only one spot in a unit for a given number
+      // And update them
+      for (const unitAddress in units) {
+        if (units.hasOwnProperty(unitAddress)) {
+          // Get array of candidate arrays in unit
+          const unitCandidates = Object.values(units[unitAddress])
+            // Return candidates of each cell
+            .flatMap((el: any) => el.candidates);
+
+          const filteredUnitCandidates = unitCandidates.filter((el: any) => {
+            // Returns true if there is only one instance of a given number
+            return unitCandidates.indexOf(el) == unitCandidates.lastIndexOf(el);
+          });
+          try {
+            if (filteredUnitCandidates.length) {
+              // console.log(filteredUnitCandidates);
+
+              filteredUnitCandidates.forEach((candidate: any) => {
+                let cell: any = Object.values(units[unitAddress]).find(
+                  (el: any) => {
+                    return el.candidates.includes(candidate);
+                  }
+                );
+                if (cell) {
+                  puzzle[
+                    `r${cell.address.r}c${cell.address.c}`
+                  ].number = candidate;
+                  changes++;
+                  // Reset candidates
+                  puzzle[
+                    `r${cell.address.r}c${cell.address.c}`
+                  ].candidates = [];
+                }
+              });
+            }
+          } catch (err) {
+            console.error(err);
+            break;
+          }
+        }
+      }
     }
-  }
+    // Update any cells where there is only one candidate
+    for (const cellAddress in puzzle) {
+      if (
+        puzzle.hasOwnProperty(cellAddress) &&
+        puzzle[cellAddress].number == "."
+      ) {
+        const cell = puzzle[cellAddress];
+        // If only one candidate
+        if (cell.candidates.length == 1) {
+          // Set number to candidate
+          cell.number = cell.candidates.pop();
+          changes++;
+        }
+      }
+    }
+    iterations++;
+  } while (changes > 0);
+  // console.log(puzzleToString(puzzle));
+  return puzzle;
 };
 
 export const testSpeed = async (iterations: number) => {
@@ -518,11 +634,8 @@ export const testSpeed = async (iterations: number) => {
 };
 
 // testSpeed(1);
-
-// From https://www.sudokuoftheday.com/dailypuzzles/archive/archivepuzzle/?days=0&level=1
-// (Might have changed)
-// Should only need single candidate and single position techniques
-export const easyPuzzleString =
-  ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
-
-singleCandidateAndPositionSolver(createBlankPuzzle(easyPuzzleString));
+// // From https://www.sudokuoftheday.com/dailypuzzles/archive/archivepuzzle/?days=0&level=1
+// // (Might have changed)
+// // Should only need single candidate and single position techniques
+// export const easyPuzzleString =
+//   ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
