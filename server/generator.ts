@@ -425,36 +425,68 @@ export const fillInRemaining: any = (
 export const singleCandidateAndPositionSolver = async (puzzle: any) => {
   await printSudokuToConsoleFormatted(puzzle);
   const rows = makeRows(puzzle);
-  // const cols = makeCols(puzzle);
-  // const squares = makeSquares(puzzle);
-  for (const rowAddress in rows) {
-    if (rows.hasOwnProperty(rowAddress)) {
-      const row = rows[rowAddress];
+  const cols = makeCols(puzzle);
+  const squares = makeSquares(puzzle);
+  for (let iteration = 0; iteration < 3; iteration++) {
+    let obj;
+    switch (iteration) {
+      case 0:
+        obj = rows;
+        break;
+      case 1:
+        obj = cols;
+        break;
+      case 2:
+        obj = squares;
+        break;
+    }
 
-      // Create an array of the numbers in the row
+    for (const rowAddress in obj) {
+      if (obj.hasOwnProperty(rowAddress)) {
+        const row = obj[rowAddress];
 
-      // First, create an array of the values
-      const rowNumbers = Object.values(rows[rowAddress])
-        // Second, parse each value as a number
-        .map((el: any) => parseInt(el.number))
-        // Third, filter out any non numbers
-        .filter((el: any) => !isNaN(el));
+        // Create an array of the numbers in the row
 
-      // Create an array of numbers from 1 to 9
-      let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-      // For each number in the row
-      unseenNumbers = unseenNumbers.filter((number: any) => {
-        // Return only the numbers not in the row
-        return !rowNumbers.includes(number);
-      });
-      // For each non number in the row, add the unseenNumbers to the candidates Set
-      for (const cellAddress in row) {
-        if (row.hasOwnProperty(cellAddress)) {
-          if (row[cellAddress].number == ".") {
-            unseenNumbers.forEach((number) => {
-              row[cellAddress].candidates.add(number);
-            });
-            console.log(row[cellAddress].candidates);
+        // First, create an array of the values
+        const rowNumbers = Object.values(obj[rowAddress])
+          // Second, parse each value as a number
+          .map((el: any) => parseInt(el.number))
+          // Third, filter out any non numbers
+          .filter((el: any) => !isNaN(el));
+
+        // Create an array of numbers from 1 to 9
+        let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+        // For each number in the row
+        unseenNumbers = unseenNumbers.filter((number: any) => {
+          // Return only the numbers not in the row
+          return !rowNumbers.includes(number);
+        });
+        // For each non number in the row, add the unseenNumbers to the candidates Set
+        for (const cellAddress in row) {
+          if (row.hasOwnProperty(cellAddress)) {
+            if (row[cellAddress].number == ".") {
+              // If we're not on the first iteration
+              // Get previous candidates of cell
+              const set = new Set([1]);
+              set.has(1);
+              const previousCandidates =
+                iteration == 0
+                  ? // If on first iteration, just check against a full set of 1-9
+                    new Set(Array.from(Array(9), (_, i) => i + 1))
+                  : // Otherwise, check against previous candidates
+                    row[cellAddress].candidates;
+              // Reset candidates
+              row[cellAddress].candidates = new Set();
+              unseenNumbers
+                // Include only what previous candidates also has
+                .filter((number: any) => {
+                  return previousCandidates.has(number);
+                })
+                // Add each number to the candidates
+                .forEach((number: any) => {
+                  row[cellAddress].candidates.add(number);
+                });
+            }
           }
         }
       }
