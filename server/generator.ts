@@ -85,21 +85,6 @@ export const makeSquares = (puzzle: any) => {
   return squares;
 };
 
-// export const getPeers = (cell: any, puzzle: any, { rows, cols, squares }: any) => {
-//   // Define the three units we're pulling from
-//   // const rows = makeRows(puzzle);
-//   // const cols = makeCols(puzzle);
-//   // const squares = makeSquares(puzzle);
-//   let row,
-//     col,
-//     square = [];
-//   row = rows[`r${cell.address.r}`];
-//   col = cols[`c${cell.address.c}`];
-//   square = squares[getSquare(cell)];
-
-//   return { row, col, square };
-// };
-
 export const validateCell = (
   cell: any,
   puzzle: any,
@@ -161,13 +146,12 @@ export const validatePuzzle = (puzzle: any) => {
       // The only difference in code is here
       valid =
         peers.findIndex((el: any) => {
-          // This checks against cell address as well as number, 
+          // This checks against cell address as well as number,
           // Instead of just number as in validateCell
           return el.number == cell.number && el.address != cell.address;
         }) == -1
           ? true
           : false;
-
 
       if (!valid) {
         console.log(cell.address);
@@ -188,60 +172,64 @@ export const shuffleArray = (array: any) => {
 };
 
 // start with blank puzzle structure
-export const createBlankPuzzle = () => {
-  // let puzzleString = "";
+export const createBlankPuzzle = (puzzleToParse?: any) => {
+  let puzzleString = puzzleToParse ? puzzleToParse : "";
   let puzzle: any = {};
-  // for (let i = 0; i < 81; i++) {
-  //   puzzleString = puzzleString.concat(".");
-  // }
+  if (!puzzleToParse) {
+    for (let i = 0; i < 81; i++) {
+      puzzleString = puzzleString.concat(".");
+    }
+  }
+
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
-      // const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
-      // if (cell != ".") {
-      //   // Make a cell object with given equal to true
-      //   formattedCell = {
-      //     number: cell,
-      //     given: true,
-      //     valid: {
-      //       value: true,
-      //       reason: null,
-      //     },
-      //     pencilMarks: [
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //       false,
-      //     ],
-      //     candidates: [],
-      //     address: { r: rowIndex + 1, c: colIndex + 1 },
-      //   };
-      // } else {
-      let formattedCell = {
-        number: ".",
-        // given: false,
-        // pencilMarks: [
-        //   false,
-        //   false,
-        //   false,deno
-        //   false,
-        //   false,
-        //   false,
-        //   false,
-        //   false,
-        //   false,
-        // ],
-        valid: { value: true, reason: null },
-        // candidates: [],
-        address: { r: rowIndex + 1, c: colIndex + 1 },
-        untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
-      };
-      // }
+      const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
+      let formattedCell;
+      if (cell != ".") {
+        // Make a cell object with given equal to true
+        formattedCell = {
+          number: cell,
+          given: true,
+          valid: {
+            value: true,
+            reason: null,
+          },
+          pencilMarks: [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          candidates: new Set(),
+          address: { r: rowIndex + 1, c: colIndex + 1 },
+        };
+      } else {
+        formattedCell = {
+          number: ".",
+          given: false,
+          pencilMarks: [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          valid: { value: true, reason: null },
+          candidates: new Set(),
+          address: { r: rowIndex + 1, c: colIndex + 1 },
+          untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
+        };
+      }
       // Convert to rncn notation indexed from 1
       puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
     }
@@ -434,6 +422,46 @@ export const fillInRemaining: any = (
   return puzzle;
 };
 
+export const singleCandidateAndPositionSolver = async (puzzle: any) => {
+  await printSudokuToConsoleFormatted(puzzle);
+  const rows = makeRows(puzzle);
+  // const cols = makeCols(puzzle);
+  // const squares = makeSquares(puzzle);
+  for (const rowAddress in rows) {
+    if (rows.hasOwnProperty(rowAddress)) {
+      const row = rows[rowAddress];
+
+      // Create an array of the numbers in the row
+
+      // First, create an array of the values
+      const rowNumbers = Object.values(rows[rowAddress])
+        // Second, parse each value as a number
+        .map((el: any) => parseInt(el.number))
+        // Third, filter out any non numbers
+        .filter((el: any) => !isNaN(el));
+
+      // Create an array of numbers from 1 to 9
+      let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+      // For each number in the row
+      unseenNumbers = unseenNumbers.filter((number: any) => {
+        // Return only the numbers not in the row
+        return !rowNumbers.includes(number);
+      });
+      // For each non number in the row, add the unseenNumbers to the candidates Set
+      for (const cellAddress in row) {
+        if (row.hasOwnProperty(cellAddress)) {
+          if (row[cellAddress].number == ".") {
+            unseenNumbers.forEach((number) => {
+              row[cellAddress].candidates.add(number);
+            });
+            console.log(row[cellAddress].candidates);
+          }
+        }
+      }
+    }
+  }
+};
+
 export const testSpeed = async (iterations: number) => {
   const startTimer = performance.now();
   let count = 0;
@@ -458,3 +486,11 @@ export const testSpeed = async (iterations: number) => {
 };
 
 // testSpeed(1);
+
+// From https://www.sudokuoftheday.com/dailypuzzles/archive/archivepuzzle/?days=0&level=1
+// (Might have changed)
+// Should only need single candidate and single position techniques
+export const easyPuzzleString =
+  ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
+
+singleCandidateAndPositionSolver(createBlankPuzzle(easyPuzzleString));
