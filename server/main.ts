@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 import { createEasyPuzzle, puzzleToString } from "./generator.ts";
+import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
 
@@ -1128,7 +1129,7 @@ const wss = new WebSocketServer(8010);
 wss.on("connection", function (ws: WebSocket) {
   // Assign color
   let color = getColor(ws);
-  let id = Math.random();
+  let id = v4.generate();
   // Save to users
   users[id] = {
     id,
