@@ -160,6 +160,7 @@ export default {
         sudokuObj.value.cols = sentCols;
         sudokuObj.value.squares = sentSquares;
         console.log(sentPuzzle);
+        console.log(sentSudokuObj);
         console.log(getPeers(sudokuObj.value.puzzle["r1c1"]));
 
         // focused.value = {};

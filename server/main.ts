@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
+import { createEasyPuzzle, puzzleToString } from "./generator.ts";
 
 const app = new Application();
 
@@ -833,7 +834,7 @@ var sudoku = {};
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = sudoku.generate("hard");
+  sudokuObj.puzzle = puzzleToString(createEasyPuzzle());
 
   const puzzle = {};
 
@@ -894,6 +895,8 @@ const startNewGame = () => {
 };
 
 startNewGame();
+
+// sudokuObj.puzzle = createEasyPuzzle();
 
 // console.log(sudoku.print_board(sudokuObj.puzzle));
 
@@ -1027,6 +1030,7 @@ import {
   WebSocket,
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
+import { createEasyPuzzle } from "./generator.ts";
 
 const clients: any = new Set();
 

@@ -607,7 +607,7 @@ export const createFilledPuzzle = () => {
 
 export const createEasyPuzzle = () => {
   // First get a filled puzzle
-  const puzzle = createFilledPuzzle();
+  let puzzle = createFilledPuzzle();
 
   /* 
   Remove a random cell (that's not the middle?)
@@ -618,9 +618,20 @@ export const createEasyPuzzle = () => {
   */
 
   // Array to hold removed numbers
-  const removed: any = [];
+  let removed: any = [];
+  // Iterations, so we can reset if needed
+  let iterations:number = 0;
 
-  while (removed.length < 20) {
+  while (removed.length < 28) {
+    iterations++;
+    // console.log(iterations);
+    if (iterations == 40) {
+      iterations = 0;
+      // Reset puzzle
+      puzzle = createFilledPuzzle();
+      // Reset removed
+      removed = [];
+    }
     // Get array of shuffled values from 1-9
     let randomArray = createRandomOneNine();
 
@@ -641,13 +652,13 @@ export const createEasyPuzzle = () => {
     // Save number (for backtracking)
     const firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }
       .number;
-    const secondNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }
+    const secondNumber = { ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`] }
       .number;
 
     // Remove number
     puzzle[`r${firstAddress}c${secondAddress}`].number = ".";
-    // Remove counterpart (values swapped)
-    puzzle[`r${secondAddress}c${firstAddress}`].number = ".";
+    // Remove counterpart
+    puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = ".";
 
     // Add numbers to removed
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
@@ -664,7 +675,7 @@ export const createEasyPuzzle = () => {
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
       // Reset counterpart
-      puzzle[`r${secondAddress}c${firstAddress}`].number = secondNumber;
+      puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = secondNumber;
       // Remove from removed
       removed.pop();
     }
@@ -696,5 +707,7 @@ export const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
-await printSudokuToConsoleFormatted(createEasyPuzzle());
+// const easyPuzzle = createEasyPuzzle();
+// await printSudokuToConsoleFormatted(easyPuzzle);
+// await printSudokuToConsoleFormatted(singleCandidateAndPositionSolver(easyPuzzle));
 // testSpeed(1);
