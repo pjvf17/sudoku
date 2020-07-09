@@ -627,7 +627,7 @@ export const createEasyPuzzle = () => {
   // Iterations, so we can reset if needed
   let iterations:number = 0;
 
-  const length = getRndInteger(24, 28);
+  const length = getRndInteger(21, 25);
 
   while (removed.length < length) {
     iterations++;
@@ -707,7 +707,7 @@ export const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
-const easyPuzzle = createEasyPuzzle();
-await printSudokuToConsoleFormatted(easyPuzzle);
-await printSudokuToConsoleFormatted(singleCandidateAndPositionSolver(easyPuzzle));
+// const easyPuzzle = createEasyPuzzle();
+// await printSudokuToConsoleFormatted(easyPuzzle);
+// await printSudokuToConsoleFormatted(singleCandidateAndPositionSolver(easyPuzzle));
 // testSpeed(1);

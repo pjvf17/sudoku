@@ -9,6 +9,7 @@ import {
   validatePuzzle,
   singleCandidateAndPositionSolver,
   parsePuzzle,
+  createEasyPuzzle,
 } from "./generator.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";
@@ -48,6 +49,15 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "Easy Puzzle Generator creates puzzle solveable by single candidate and position techniques",
+  fn():void {
+    const easyPuzzle = createEasyPuzzle();
+    const solvedPuzzle = singleCandidateAndPositionSolver(easyPuzzle);
+    assert(validatePuzzle(solvedPuzzle));
+  }
+})
+
 await bench({
   name: "Fill in remaining",
   runs: 100,
@@ -58,15 +68,27 @@ await bench({
   },
 });
 
+// await bench({
+//   name: "Solve easy puzzle",
+//   runs: 100,
+//   func(b): void {
+//     b.start();
+//     singleCandidateAndPositionSolver(parsePuzzle(easyPuzzleString));
+//     b.stop();
+//   },
+// });
+
 await bench({
-  name: "Solve easy puzzle",
+  name: "Create easy puzzle",
   runs: 100,
-  func(b): void {
+  func(b):void{
     b.start();
-    singleCandidateAndPositionSolver(parsePuzzle(easyPuzzleString));
+    createEasyPuzzle();
     b.stop();
-  },
-});
+  }
+})
+
+
 
 runBenchmarks();
 
