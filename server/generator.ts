@@ -467,7 +467,7 @@ Only stopping when no changes have been made in a given iteration
 
 */
 
-export const singleCandidateAndPositionSolver = (puzzle: any) => {
+export const hiddenAndNakedSingleSolver = (puzzle: any) => {
   const rows = makeRows(puzzle);
   const cols = makeCols(puzzle);
   const squares = makeSquares(puzzle);
@@ -606,8 +606,8 @@ export const createFilledPuzzle = () => {
 };
 
 // From https://www.w3schools.com/JS/js_random.asp
-function getRndInteger(min:number, max:number) {
-  return Math.floor(Math.random() * (max - min + 1) ) + min;
+function getRndInteger(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export const createEasyPuzzle = () => {
@@ -625,13 +625,16 @@ export const createEasyPuzzle = () => {
   // Array to hold removed numbers
   let removed: any = [];
   // Iterations, so we can reset if needed
-  let iterations:number = 0;
+  let iterations: number = 0;
 
   const length = getRndInteger(21, 25);
-
+  // Remove 21-25 pairs 
   while (removed.length < length) {
     iterations++;
-    // console.log(iterations);
+    let firstAddress: number;
+    let secondAddress: number;
+    let firstNumber: number;
+    let secondNumber: number;
     if (iterations == 40) {
       iterations = 0;
       // Reset puzzle
@@ -639,22 +642,21 @@ export const createEasyPuzzle = () => {
       // Reset removed
       removed = [];
     }
-
-    let firstAddress = getRndInteger(1,9);
-    let secondAddress = getRndInteger(1,9);
+    firstAddress = getRndInteger(1, 9);
+    secondAddress = getRndInteger(1, 9);
     // Search for number that hasn't been removed
     // No need to check counterpart because we remove in pairs
     // So if one is removed, the other already is too
     while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".") {
-      firstAddress = getRndInteger(1,9);
-      secondAddress = getRndInteger(1,9);
+      firstAddress = getRndInteger(1, 9);
+      secondAddress = getRndInteger(1, 9);
     }
 
     // Save number (for backtracking)
-    const firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }
-      .number;
-    const secondNumber = { ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`] }
-      .number;
+    firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }.number;
+    secondNumber = {
+      ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`],
+    }.number;
 
     // Remove number
     puzzle[`r${firstAddress}c${secondAddress}`].number = ".";
@@ -664,7 +666,7 @@ export const createEasyPuzzle = () => {
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
 
     // Attempt to solve
-    const attemptedPuzzle = singleCandidateAndPositionSolver(
+    const attemptedPuzzle = hiddenAndNakedSingleSolver(
       JSON.parse(JSON.stringify(puzzle))
     );
     // Validate
@@ -675,13 +677,15 @@ export const createEasyPuzzle = () => {
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
       // Reset counterpart
-      puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = secondNumber;
+      puzzle[
+        `r${10 - firstAddress}c${10 - secondAddress}`
+      ].number = secondNumber;
       // Remove from removed
       removed.pop();
     }
   }
 
-  return puzzle
+  return puzzle;
 };
 
 export const testSpeed = async (iterations: number) => {
@@ -707,7 +711,7 @@ export const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
-// const easyPuzzle = createEasyPuzzle();
-// await printSudokuToConsoleFormatted(easyPuzzle);
-// await printSudokuToConsoleFormatted(singleCandidateAndPositionSolver(easyPuzzle));
+const easyPuzzle = createEasyPuzzle();
+await printSudokuToConsoleFormatted(easyPuzzle);
+await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
 // testSpeed(1);
