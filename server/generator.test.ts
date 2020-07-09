@@ -30,6 +30,9 @@ Deno.test({
   },
 });
 
+// // From https://www.sudokuoftheday.com/dailypuzzles/archive/archivepuzzle/?days=0&level=1
+// // (Might have changed)
+// // Should only need single candidate and single position techniques
 const easyPuzzleString =
   ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
 

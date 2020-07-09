@@ -154,7 +154,7 @@ export const validatePuzzle = (puzzle: any) => {
           : false;
 
       if (!valid) {
-        console.log(cell.address);
+        // console.log(cell.address);
         return valid;
       }
     }
@@ -169,6 +169,11 @@ export const shuffleArray = (array: any) => {
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
+};
+
+// Simply calls shuffle array on an array of numbers 1-9
+export const createRandomOneNine = () => {
+  return shuffleArray(Array.from(Array(9), (_, i) => i + 1));
 };
 
 // start with blank puzzle structure
@@ -200,7 +205,7 @@ export const createBlankPuzzle = () => {
         valid: { value: true, reason: null },
         candidates: [],
         address: { r: rowIndex + 1, c: colIndex + 1 },
-        untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
+        untriedNumbers: createRandomOneNine(),
       };
     }
   }
@@ -257,7 +262,7 @@ export const parsePuzzle = (puzzleToPorse: any) => {
           valid: { value: true, reason: null },
           candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
-          untriedNumbers: shuffleArray(Array.from(Array(9), (_, i) => i + 1)),
+          untriedNumbers: createRandomOneNine(),
         };
       }
       // Convert to rncn notation indexed from 1
@@ -433,9 +438,9 @@ export const fillInRemaining: any = (
     } else {
       // No numbers left
       // Reset numbers
-      puzzle[`r${address.r}c${address.c}`].untriedNumbers = shuffleArray(
-        Array.from(Array(9), (_, i) => i + 1)
-      );
+      puzzle[
+        `r${address.r}c${address.c}`
+      ].untriedNumbers = createRandomOneNine();
       if (addressesComplete.length) {
         // Remove last address from address complete array
         address = addressesComplete.pop();
@@ -454,21 +459,11 @@ export const fillInRemaining: any = (
 
 /* 
 
-For each row, column, 3x3 square, 
-The following function needs to correctly assign candidates to each cell
-Furthermore, if, in any given unit there is either:
-  A cell with only one candidate or,
-  Only one cell where a specific number can go
-Assign each cell with those properties appriately and restart
-
-After assigning candidates, check unit for any cells with the above properties
-And assign them the appropriate numbers
-Then restart for that unit
-If no changes, go to next unit
-
-After doing this for each unit, restart
-Stop only when the puzzle is filled or 
-No changes have been made in a given pass
+The following function loops through a puzzle.
+On each iteration, it updates candidates for each cell
+Then it checks if any unit (row, col, square) has only one spot for a given number to go
+Then it checks for any cell that only has one candidate
+Only stopping when no changes have been made in a given iteration
 
 */
 
@@ -481,11 +476,7 @@ export const singleCandidateAndPositionSolver = (puzzle: any) => {
   let changes = 0;
 
   do {
-    // console.log(changes);
     changes = 0;
-
-    // console.log(changes);
-    // printSudokuToConsole(puzzle);
 
     for (let iteration = 0; iteration < 3; iteration++) {
       let units: any;
@@ -606,8 +597,80 @@ export const singleCandidateAndPositionSolver = (puzzle: any) => {
     }
     iterations++;
   } while (changes > 0);
-  // console.log(puzzleToString(puzzle));
   return puzzle;
+};
+
+// Simple function to create a filled puzzle
+export const createFilledPuzzle = () => {
+  return fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+};
+
+export const createEasyPuzzle = () => {
+  // First get a filled puzzle
+  const puzzle = createFilledPuzzle();
+
+  /* 
+  Remove a random cell (that's not the middle?)
+  Remove its counterpart for symmetry  
+  Call the easiest solver
+  If the easiest solver can't solve the resulting puzzle, backtrack
+  Otherwise go back to beginning
+  */
+
+  // Array to hold removed numbers
+  const removed: any = [];
+
+  while (removed.length < 20) {
+    // Get array of shuffled values from 1-9
+    let randomArray = createRandomOneNine();
+
+    let firstAddress = randomArray.pop();
+    let secondAddress = randomArray.pop();
+    // Search for number that hasn't been removed
+    // No need to check counterpart because we remove in pairs
+    // So if one is removed, the other already is too
+    while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".") {
+      // If array doesn't have two values, reset it
+      if (randomArray.length < 2) {
+        randomArray = createRandomOneNine();
+      }
+      firstAddress = randomArray.pop();
+      secondAddress = randomArray.pop();
+    }
+
+    // Save number (for backtracking)
+    const firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }
+      .number;
+    const secondNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }
+      .number;
+
+    // Remove number
+    puzzle[`r${firstAddress}c${secondAddress}`].number = ".";
+    // Remove counterpart (values swapped)
+    puzzle[`r${secondAddress}c${firstAddress}`].number = ".";
+
+    // Add numbers to removed
+    removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
+
+    // Attempt to solve
+    const attemptedPuzzle = singleCandidateAndPositionSolver(
+      JSON.parse(JSON.stringify(puzzle))
+    );
+    // Validate
+    const valid = validatePuzzle(attemptedPuzzle);
+    // If invalid
+    if (!valid) {
+      // Backtrack
+      // Reset first number
+      puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
+      // Reset counterpart
+      puzzle[`r${secondAddress}c${firstAddress}`].number = secondNumber;
+      // Remove from removed
+      removed.pop();
+    }
+  }
+
+  return puzzle
 };
 
 export const testSpeed = async (iterations: number) => {
@@ -633,9 +696,5 @@ export const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
+await printSudokuToConsoleFormatted(createEasyPuzzle());
 // testSpeed(1);
-// // From https://www.sudokuoftheday.com/dailypuzzles/archive/archivepuzzle/?days=0&level=1
-// // (Might have changed)
-// // Should only need single candidate and single position techniques
-// export const easyPuzzleString =
-//   ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
