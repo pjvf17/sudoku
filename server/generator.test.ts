@@ -9,7 +9,7 @@ import {
   validatePuzzle,
   hiddenAndNakedSingleSolver,
   parsePuzzle,
-  createEasyPuzzle,
+  createPuzzle,
   printSudokuToConsole,
   solver,
 } from "./generator.ts";
@@ -55,7 +55,7 @@ Deno.test({
   name:
     "Easy Puzzle Generator creates puzzle solveable by hidden and naked single techniques",
   fn(): void {
-    const easyPuzzle = createEasyPuzzle();
+    const easyPuzzle = createPuzzle();
     const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle, false).puzzle;
     assert(validatePuzzle(solvedPuzzle));
   },

@@ -690,87 +690,6 @@ function getRndInteger(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export const createEasyPuzzle = () => {
-  // First get a filled puzzle
-  let puzzle = createFilledPuzzle();
-
-  /* 
-  Remove a random cell (that's not the middle?)
-  Remove its counterpart for symmetry  
-  Call the easiest solver
-  If the easiest solver can't solve the resulting puzzle, backtrack
-  Otherwise go back to beginning
-  */
-
-  // Array to hold removed numbers
-  let removed: any = [];
-  // Iterations, so we can reset if needed
-  let iterations: number = 0;
-  let cost: number = 0;
-  // Make a target cost
-  const targetCost = getRndInteger(4300, 5500);
-  // Remove pairs till we've reached our target
-  while (cost <= targetCost) {
-    iterations++;
-    let firstAddress: number;
-    let secondAddress: number;
-    let firstNumber: number;
-    let secondNumber: number;
-    if (iterations == 40) {
-      iterations = 0;
-      // Reset puzzle
-      puzzle = createFilledPuzzle();
-      // Reset removed
-      removed = [];
-    }
-    firstAddress = getRndInteger(1, 9);
-    secondAddress = getRndInteger(1, 9);
-    // Search for number that hasn't been removed
-    // No need to check counterpart because we remove in pairs
-    // So if one is removed, the other already is too
-    while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".") {
-      firstAddress = getRndInteger(1, 9);
-      secondAddress = getRndInteger(1, 9);
-    }
-
-    // Save number (for backtracking)
-    firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }.number;
-    secondNumber = {
-      ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`],
-    }.number;
-
-    // Remove number
-    puzzle[`r${firstAddress}c${secondAddress}`].number = ".";
-    // Remove counterpart
-    puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = ".";
-    // Add numbers to removed
-    removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
-
-    // Attempt to solve
-    let attemptedPuzzle: any;
-    const attemptedPuzzleObj = hiddenAndNakedSingleSolver(
-      JSON.parse(JSON.stringify(puzzle)),
-      false
-    );
-    attemptedPuzzle = attemptedPuzzleObj.puzzle;
-    cost = attemptedPuzzleObj.cost;
-    // Validate
-    const valid = validatePuzzle(attemptedPuzzle);
-    // If invalid
-    if (!valid) {
-      // Backtrack
-      // Reset first number
-      puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
-      // Reset counterpart
-      puzzle[
-        `r${10 - firstAddress}c${10 - secondAddress}`
-      ].number = secondNumber;
-      // Remove from removed
-      removed.pop();
-    }
-  }
-  return puzzle;
-};
 
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
 export const pointingLockedCandidatesSolver = (puzzle: any) => {
@@ -874,12 +793,13 @@ Master solver method, calls each solver in succesion,
 Increasing complexity when a given solver changes nothing, 
 And returning to start when a solver changes something 
 */
-export const solver = (puzzle: any) => {
+export const solver = (puzzle: any, difficulty?: any) => {
+  difficulty = difficulty ?? "all";
   // First, populate candidates
   puzzle = firstPassCandidateCalculator(puzzle);
   let changes = 0;
   // Holds cost of each method used
-  const cost = { hiddenSingle: 0, pointing: 0 };
+  const cost:any = { hiddenSingle: 0, pointing: 0 };
   do {
     changes = 0;
     // Try naked and hidden candidate solver
@@ -890,23 +810,119 @@ export const solver = (puzzle: any) => {
     cost.hiddenSingle += hiddenSingle.cost;
     // Update changes
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
-    // Then, try pointing candidate solver
-    const pointing = pointingLockedCandidatesSolver(puzzle);
-    // Update puzzle
-    puzzle = pointing.puzzle;
-    // Update cost, initial cost higher than subsequent
-    cost.pointing =
-      cost.pointing > 0
-        ? // Subsequent cost, 200
-          (cost.pointing += pointing.changes * 200)
-        : // First cost, 350, then add any additional changes, times 200
-          350 + (pointing.changes - 1) * 200;
-    // Update changes
-    changes = pointing.changes > 0 ? changes + 1 : changes;
+    // Check difficulty. If easy, stick to above, else continue with more advanced methods
+    if (difficulty != "easy") {
+      // Then, try pointing candidate solver
+      const pointing = pointingLockedCandidatesSolver(puzzle);
+      // Update puzzle
+      puzzle = pointing.puzzle;
+      // Update cost, initial cost higher than subsequent
+      cost.pointing =
+        cost.pointing > 0
+          ? // Subsequent cost, 200
+            (cost.pointing += pointing.changes * 200)
+          : // First cost, 350, then add any additional changes, times 200
+            350 + (pointing.changes - 1) * 200;
+      // Update changes
+      changes = pointing.changes > 0 ? changes + 1 : changes;
+    }
     // Repeat, if any changes were made
   } while (changes > 0);
-  return {puzzle, cost};
+  let totalCost = 0;
+  for (const costType in cost) {
+    if (cost.hasOwnProperty(costType)) {
+      totalCost += cost[costType];    
+    }
+  }
+  return { puzzle, cost: totalCost };
   // Need to keep track of changes for each method
+};
+
+export const createPuzzle = (targetCost?:any) => {
+
+  // If no target cost, default to easy
+  targetCost = targetCost ?? getRndInteger(4300, 5500);
+
+  // First get a filled puzzle
+
+  let puzzle = createFilledPuzzle();
+
+  /* 
+  Remove a random cell (that's not the middle?)
+  Remove its counterpart for symmetry  
+  Call the easiest solver
+  If the easiest solver can't solve the resulting puzzle, backtrack
+  Otherwise go back to beginning
+  */
+
+  // Array to hold removed numbers
+  let removed: any = [];
+  // Iterations, so we can reset if needed
+  let iterations: number = 0;
+  let cost: number = 0;
+  // Make a target cost
+
+  // Remove pairs till we've reached our target
+  while (cost <= targetCost) {
+    iterations++;
+    let firstAddress: number;
+    let secondAddress: number;
+    let firstNumber: number;
+    let secondNumber: number;
+    if (iterations == 40) {
+      iterations = 0;
+      // Reset puzzle
+      puzzle = createFilledPuzzle();
+      // Reset removed
+      removed = [];
+    }
+    firstAddress = getRndInteger(1, 9);
+    secondAddress = getRndInteger(1, 9);
+    // Search for number that hasn't been removed
+    // No need to check counterpart because we remove in pairs
+    // So if one is removed, the other already is too
+    while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".") {
+      firstAddress = getRndInteger(1, 9);
+      secondAddress = getRndInteger(1, 9);
+    }
+
+    // Save number (for backtracking)
+    firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }.number;
+    secondNumber = {
+      ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`],
+    }.number;
+
+    // Remove number
+    puzzle[`r${firstAddress}c${secondAddress}`].number = ".";
+    // Remove counterpart
+    puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = ".";
+    // Add numbers to removed
+    removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
+
+    // Attempt to solve
+    let attemptedPuzzle: any;
+    const attemptedPuzzleObj = solver(
+      JSON.parse(JSON.stringify(puzzle)),
+      targetCost >= 4300 && targetCost <= 5500 ? "easy" : "all"
+    );
+    attemptedPuzzle = attemptedPuzzleObj.puzzle;
+    cost = attemptedPuzzleObj.cost;
+    // Validate
+    const valid = validatePuzzle(attemptedPuzzle);
+    // If invalid
+    if (!valid) {
+      // Backtrack
+      // Reset first number
+      puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
+      // Reset counterpart
+      puzzle[
+        `r${10 - firstAddress}c${10 - secondAddress}`
+      ].number = secondNumber;
+      // Remove from removed
+      removed.pop();
+    }
+  }
+  return puzzle;
 };
 
 export const testSpeed = async (iterations: number) => {
@@ -936,3 +952,4 @@ export const testSpeed = async (iterations: number) => {
 // await printSudokuToConsoleFormatted(easyPuzzle);
 // await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
 // testSpeed(1);
+

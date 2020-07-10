@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
-import { createEasyPuzzle, puzzleToString, firstPassCandidateCalculator } from "./generator.ts";
+import { puzzleToString, firstPassCandidateCalculator, createPuzzle } from "./generator.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -835,7 +835,7 @@ var sudoku = {};
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createEasyPuzzle());
+  sudokuObj.puzzle = puzzleToString((createPuzzle(6900)));
 
   const puzzle = {};
 
@@ -1183,9 +1183,7 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // console.log(newGame);
     if (newGame) {
-      console.log(newGame);
       startNewGame();
-      console.log(sudokuObj);
       for (let client of wss.clients) {
         // Send only to open clients
         if (!client.isClosed) {

@@ -1,7 +1,7 @@
 import {
   createBlankPuzzle,
   fillInRemaining,
-  createEasyPuzzle,
+  createPuzzle,
   printSudokuToConsole,
 } from "./generator.ts";
 import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";
@@ -31,7 +31,7 @@ await bench({
   runs: 20,
   func(b): void {
     b.start();
-    const puzzle = createEasyPuzzle();
+    const puzzle = createPuzzle();
     b.stop();
   },
 });
