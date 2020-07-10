@@ -463,6 +463,7 @@ export default {
           );
         }
       } else if (arrowKeys.includes(key)) {
+        event.preventDefault();
         switch (key) {
           case "ArrowRight":
             move(row, col, 0, 1, "row");
