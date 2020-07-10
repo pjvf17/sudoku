@@ -10,6 +10,7 @@ import {
   hiddenAndNakedSingleSolver,
   parsePuzzle,
   createEasyPuzzle,
+  printSudokuToConsole,
 } from "./generator.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 
@@ -37,22 +38,22 @@ const easyPuzzleString =
   ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
 
 Deno.test({
-  name: "Single candidate and position solver correctly solves easy puzzle",
+  name: "Hidden and naked single solver correctly solves easy puzzle",
   fn(): void {
     const solvedPuzzle =
       "276518349814639527359742618132976854947185263685324971791253486423867195568491732";
     const solvedBySolver = hiddenAndNakedSingleSolver(
       parsePuzzle(easyPuzzleString)
-    );
+    ).puzzle;
     assertEquals(puzzleToString(solvedBySolver), solvedPuzzle);
   },
 });
 
 Deno.test({
-  name: "Easy Puzzle Generator creates puzzle solveable by single candidate and position techniques",
+  name: "Easy Puzzle Generator creates puzzle solveable by hidden and naked single techniques",
   fn():void {
     const easyPuzzle = createEasyPuzzle();
-    const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle);
+    const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle).puzzle;
     assert(validatePuzzle(solvedPuzzle));
   }
 })

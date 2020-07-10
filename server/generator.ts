@@ -457,23 +457,128 @@ export const fillInRemaining: any = (
   return puzzle;
 };
 
-/* 
+export const firstPassCandidateCalculator = (puzzle: any) => {
+  const rows = makeRows(puzzle);
+  const cols = makeCols(puzzle);
+  const squares = makeSquares(puzzle);
+  for (let iteration = 0; iteration < 3; iteration++) {
+    let units: any;
+    switch (iteration) {
+      case 0:
+        units = rows;
+        break;
+      case 1:
+        units = cols;
+        break;
+      case 2:
+        units = squares;
+        break;
+    }
+    // Update candidates for each cell
+    for (const unitAddress in units) {
+      if (units.hasOwnProperty(unitAddress)) {
+        const unit = units[unitAddress];
+        // Create an array of the numbers in the row
 
+        // First, create an array of the values
+        const rowNumbers = Object.values(units[unitAddress])
+          // Second, parse each value as a number
+          .map((el: any) => parseInt(el.number))
+          // Third, filter out any non numbers
+          .filter((el: any) => !isNaN(el));
+
+        // Create an array of numbers from 1 to 9
+        let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+        // For each number in the row
+        unseenNumbers = unseenNumbers.filter((number: any) => {
+          // Return only the numbers not in the row
+          return !rowNumbers.includes(number);
+        });
+        // For each non number in the row, add the unseenNumbers to the candidates array
+        for (const cellAddress in unit) {
+          if (unit.hasOwnProperty(cellAddress)) {
+            if (unit[cellAddress].number == ".") {
+              // If we're not on the first iteration of both the inner and outer loops
+              // Get previous candidates of cell
+              const previousCandidates =
+                iteration == 0
+                  ? Array.from(Array(9), (_, i) => i + 1)
+                  : unit[cellAddress].candidates;
+              // Reset candidates
+              unit[cellAddress].candidates = [];
+              unseenNumbers
+                // Include only what previous candidates also has
+                .filter((number: any) => {
+                  return previousCandidates.includes(number);
+                })
+                // Add each number to the candidates
+                .forEach((number: any) => {
+                  unit[cellAddress].candidates.push(number);
+                });
+            }
+          }
+        }
+      }
+    }
+  }
+  // console.log(rows);
+  return puzzle;
+};
+
+// Updates the candidates in each peer of a cell that has been updated
+export const updatePeerCandidates = (
+  puzzle: any,
+  cell: any,
+  number: number,
+  { rows, cols, squares }: any
+) => {
+  // Assemble peers
+  let row,
+    col,
+    square = [];
+  row = rows[`r${cell.address.r}`];
+  col = cols[`c${cell.address.c}`];
+  square = squares[getSquare(cell)];
+  const peers: any = [
+    ...Object.values(row),
+    ...Object.values(col),
+    ...Object.values(square),
+  ];
+
+  // Loop through peers
+  peers.forEach((peer: any) => {
+    // Only effect empty cells
+    if (peer.number == ".") {
+      // Get index (if any) of number
+      const numberIndex = peer.candidates.indexOf(number);
+      // If candidates includes number
+      if (numberIndex != -1) {
+        // Remove that candidate
+        peer.candidates.splice(numberIndex, 1);
+      }
+    }
+  });
+
+  return puzzle;
+};
+
+/* 
 The following function loops through a puzzle.
-On each iteration, it updates candidates for each cell
-Then it checks if any unit (row, col, square) has only one spot for a given number to go
+On each iteration it checks if any unit (row, col, square) 
+has only one spot for a given number to go.
 Then it checks for any cell that only has one candidate
 Only stopping when no changes have been made in a given iteration
-
 */
-
 export const hiddenAndNakedSingleSolver = (puzzle: any) => {
+  puzzle = firstPassCandidateCalculator(puzzle);
   const rows = makeRows(puzzle);
   const cols = makeCols(puzzle);
   const squares = makeSquares(puzzle);
 
   let iterations = 0;
   let changes = 0;
+  // For calculating cost/difficulty, tracks number of uses total
+  let totalChanges = 0;
 
   do {
     changes = 0;
@@ -491,53 +596,7 @@ export const hiddenAndNakedSingleSolver = (puzzle: any) => {
           units = squares;
           break;
       }
-      // Update candidates for each cell
-      for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
-          const unit = units[unitAddress];
 
-          // Create an array of the numbers in the row
-
-          // First, create an array of the values
-          const rowNumbers = Object.values(units[unitAddress])
-            // Second, parse each value as a number
-            .map((el: any) => parseInt(el.number))
-            // Third, filter out any non numbers
-            .filter((el: any) => !isNaN(el));
-
-          // Create an array of numbers from 1 to 9
-          let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-          // For each number in the row
-          unseenNumbers = unseenNumbers.filter((number: any) => {
-            // Return only the numbers not in the row
-            return !rowNumbers.includes(number);
-          });
-          // For each non number in the row, add the unseenNumbers to the candidates Set
-          for (const cellAddress in unit) {
-            if (unit.hasOwnProperty(cellAddress)) {
-              if (unit[cellAddress].number == ".") {
-                // If we're not on the first iteration of both the inner and outer loops
-                // Get previous candidates of cell
-                const previousCandidates =
-                  iterations == 0 && iteration == 0
-                    ? Array.from(Array(9), (_, i) => i + 1)
-                    : unit[cellAddress].candidates;
-                // Reset candidates
-                unit[cellAddress].candidates = [];
-                unseenNumbers
-                  // Include only what previous candidates also has
-                  .filter((number: any) => {
-                    return previousCandidates.includes(number);
-                  })
-                  // Add each number to the candidates
-                  .forEach((number: any) => {
-                    unit[cellAddress].candidates.push(number);
-                  });
-              }
-            }
-          }
-        }
-      }
       // Find cells where there is only one spot in a unit for a given number
       // And update them
       for (const unitAddress in units) {
@@ -553,18 +612,25 @@ export const hiddenAndNakedSingleSolver = (puzzle: any) => {
           });
           try {
             if (filteredUnitCandidates.length) {
-              // console.log(filteredUnitCandidates);
-
+              // Search for number
               filteredUnitCandidates.forEach((candidate: any) => {
+                // Get cell
                 let cell: any = Object.values(units[unitAddress]).find(
                   (el: any) => {
                     return el.candidates.includes(candidate);
                   }
                 );
                 if (cell) {
+                  // Update number
                   puzzle[
                     `r${cell.address.r}c${cell.address.c}`
                   ].number = candidate;
+                  puzzle = updatePeerCandidates(puzzle, cell, candidate, {
+                    rows,
+                    cols,
+                    squares,
+                  });
+                  // Update changes
                   changes++;
                   // Reset candidates
                   puzzle[
@@ -591,13 +657,19 @@ export const hiddenAndNakedSingleSolver = (puzzle: any) => {
         if (cell.candidates.length == 1) {
           // Set number to candidate
           cell.number = cell.candidates.pop();
+          puzzle = updatePeerCandidates(puzzle, cell, cell.number, {
+            rows,
+            cols,
+            squares,
+          });
           changes++;
         }
       }
     }
+    totalChanges += changes;
     iterations++;
   } while (changes > 0);
-  return puzzle;
+  return { puzzle, cost: totalChanges * 100 };
 };
 
 // Simple function to create a filled puzzle
@@ -626,10 +698,11 @@ export const createEasyPuzzle = () => {
   let removed: any = [];
   // Iterations, so we can reset if needed
   let iterations: number = 0;
-
-  const length = getRndInteger(21, 25);
-  // Remove 21-25 pairs 
-  while (removed.length < length) {
+  let cost: number = 0;
+  // Make a target cost
+  const targetCost = getRndInteger(4300, 5500);
+  // Remove pairs till we've reached our target
+  while (cost < targetCost) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
@@ -666,9 +739,12 @@ export const createEasyPuzzle = () => {
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
 
     // Attempt to solve
-    const attemptedPuzzle = hiddenAndNakedSingleSolver(
+    let attemptedPuzzle: any;
+    const attemptedPuzzleObj = hiddenAndNakedSingleSolver(
       JSON.parse(JSON.stringify(puzzle))
     );
+    attemptedPuzzle = attemptedPuzzleObj.puzzle;
+    cost = attemptedPuzzleObj.cost;
     // Validate
     const valid = validatePuzzle(attemptedPuzzle);
     // If invalid
@@ -684,9 +760,13 @@ export const createEasyPuzzle = () => {
       removed.pop();
     }
   }
-
   return puzzle;
 };
+
+// As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
+// export const pointingLockedCandidatesSolver = (puzzle:any) => {
+
+// }
 
 export const testSpeed = async (iterations: number) => {
   const startTimer = performance.now();
@@ -711,7 +791,7 @@ export const testSpeed = async (iterations: number) => {
   console.log(`On average, it took ${result}ms per puzzle`);
 };
 
-const easyPuzzle = createEasyPuzzle();
-await printSudokuToConsoleFormatted(easyPuzzle);
-await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
+// const easyPuzzle = createEasyPuzzle();
+// await printSudokuToConsoleFormatted(easyPuzzle);
+// await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
 // testSpeed(1);
