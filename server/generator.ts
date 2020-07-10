@@ -772,9 +772,6 @@ export const createEasyPuzzle = () => {
   return puzzle;
 };
 
-export const lockedTestPuzzle =
-  "1......6..32...1...9.18.....5.4..2..6.3.5.7.1..7..9.5.....93.8...9...34..6......5";
-
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
 export const pointingLockedCandidatesSolver = (puzzle: any) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
@@ -869,7 +866,7 @@ export const pointingLockedCandidatesSolver = (puzzle: any) => {
   } while (changes > 0);
 
   // Return puzzle
-  return { puzzle, cost: totalChanges * 300 };
+  return { puzzle, changes: totalChanges };
 };
 
 /* 
@@ -881,26 +878,36 @@ export const solver = (puzzle: any) => {
   // First, populate candidates
   puzzle = firstPassCandidateCalculator(puzzle);
   let changes = 0;
-  let totalCost = 0;
-
+  // Holds cost of each method used
+  const cost = { hiddenSingle: 0, pointing: 0 };
   do {
     changes = 0;
     // Try naked and hidden candidate solver
     const hiddenSingle = hiddenAndNakedSingleSolver(puzzle, true);
+    // Update puzzle
     puzzle = hiddenSingle.puzzle;
-    totalCost += hiddenSingle.cost;
+    // Update cost
+    cost.hiddenSingle += hiddenSingle.cost;
+    // Update changes
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
     // Then, try pointing candidate solver
     const pointing = pointingLockedCandidatesSolver(puzzle);
+    // Update puzzle
     puzzle = pointing.puzzle;
-    totalCost += pointing.cost;
-    changes = pointing.cost > 0 ? changes + 1 : changes;
+    // Update cost, initial cost higher than subsequent
+    cost.pointing =
+      cost.pointing > 0
+        ? // Subsequent cost, 200
+          (cost.pointing += pointing.changes * 200)
+        : // First cost, 350, then add any additional changes, times 200
+          350 + (pointing.changes - 1) * 200;
+    // Update changes
+    changes = pointing.changes > 0 ? changes + 1 : changes;
+    // Repeat, if any changes were made
   } while (changes > 0);
-  return puzzle;
+  return {puzzle, cost};
   // Need to keep track of changes for each method
 };
-
-await printSudokuToConsoleFormatted(solver(parsePuzzle(lockedTestPuzzle)));
 
 export const testSpeed = async (iterations: number) => {
   const startTimer = performance.now();
