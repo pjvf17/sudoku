@@ -28,7 +28,7 @@ await bench({
 
 await bench({
   name: "Create easy puzzle",
-  runs: 100,
+  runs: 20,
   func(b): void {
     b.start();
     const puzzle = createEasyPuzzle();

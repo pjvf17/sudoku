@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
-import { createEasyPuzzle, puzzleToString } from "./generator.ts";
+import { createEasyPuzzle, puzzleToString, firstPassCandidateCalculator } from "./generator.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -864,7 +864,7 @@ const startNewGame = () => {
             false,
             false,
           ],
-          candidates: [],
+          // candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
       } else {
@@ -883,7 +883,7 @@ const startNewGame = () => {
             false,
           ],
           valid: { value: true, reason: null },
-          candidates: [],
+          // candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
       }
@@ -891,7 +891,6 @@ const startNewGame = () => {
       puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
     }
   }
-
   sudokuObj.puzzle = puzzle;
 };
 

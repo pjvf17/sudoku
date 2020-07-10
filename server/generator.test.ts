@@ -43,7 +43,7 @@ Deno.test({
     const solvedPuzzle =
       "276518349814639527359742618132976854947185263685324971791253486423867195568491732";
     const solvedBySolver = hiddenAndNakedSingleSolver(
-      parsePuzzle(easyPuzzleString)
+      parsePuzzle(easyPuzzleString), false
     ).puzzle;
     assertEquals(puzzleToString(solvedBySolver), solvedPuzzle);
   },
@@ -53,7 +53,7 @@ Deno.test({
   name: "Easy Puzzle Generator creates puzzle solveable by hidden and naked single techniques",
   fn():void {
     const easyPuzzle = createEasyPuzzle();
-    const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle).puzzle;
+    const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle, false).puzzle;
     assert(validatePuzzle(solvedPuzzle));
   }
 })
