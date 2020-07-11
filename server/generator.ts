@@ -919,6 +919,7 @@ export const createPuzzle = (difficulty?: any) => {
     const valid = validatePuzzle(attemptedPuzzle);
     // If invalid, or at a greater cost than the max
     if (!valid || cost > targetRange.max) {
+
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -928,6 +929,8 @@ export const createPuzzle = (difficulty?: any) => {
       ].number = secondNumber;
       // Remove from removed
       removed.pop();
+      // Reset cost
+      cost = 0;
     }
   }
   console.log(cost);
