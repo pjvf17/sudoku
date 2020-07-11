@@ -690,7 +690,6 @@ function getRndInteger(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
 export const pointingLockedCandidatesSolver = (puzzle: any) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
@@ -799,7 +798,7 @@ export const solver = (puzzle: any, difficulty?: any) => {
   puzzle = firstPassCandidateCalculator(puzzle);
   let changes = 0;
   // Holds cost of each method used
-  const cost:any = { hiddenSingle: 0, pointing: 0 };
+  const cost: any = { hiddenSingle: 0, pointing: 0 };
   do {
     changes = 0;
     // Try naked and hidden candidate solver
@@ -831,17 +830,26 @@ export const solver = (puzzle: any, difficulty?: any) => {
   let totalCost = 0;
   for (const costType in cost) {
     if (cost.hasOwnProperty(costType)) {
-      totalCost += cost[costType];    
+      totalCost += cost[costType];
     }
   }
   return { puzzle, cost: totalCost };
   // Need to keep track of changes for each method
 };
 
-export const createPuzzle = (targetCost?:any) => {
+export const createPuzzle = (difficulty?: any) => {
+  const targetRanges:any = {
+    easy: { min: 4300, max: 5500 },
+    medium: { min: 5300, max: 6900 },
+    hard: { min: 6500, max: 9300 },
+    insane: { min: 8300, max: 14000 },
+    diabolical: { min: 11000, max: 25000 },
+  };
 
-  // If no target cost, default to easy
-  targetCost = targetCost ?? getRndInteger(4300, 5500);
+  // If no difficulty, default to medium
+  difficulty = difficulty ?? "medium"
+  // Get target range
+  const targetRange = targetRanges[difficulty];
 
   // First get a filled puzzle
 
@@ -863,7 +871,7 @@ export const createPuzzle = (targetCost?:any) => {
   // Make a target cost
 
   // Remove pairs till we've reached our target
-  while (cost <= targetCost) {
+  while (cost <= targetRange.min) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
@@ -876,7 +884,7 @@ export const createPuzzle = (targetCost?:any) => {
       // Reset removed
       removed = [];
     }
-    firstAddress = getRndInteger(1, 9);
+    firstAddress = getRndInteger(1, 9); 
     secondAddress = getRndInteger(1, 9);
     // Search for number that hasn't been removed
     // No need to check counterpart because we remove in pairs
@@ -903,14 +911,14 @@ export const createPuzzle = (targetCost?:any) => {
     let attemptedPuzzle: any;
     const attemptedPuzzleObj = solver(
       JSON.parse(JSON.stringify(puzzle)),
-      targetCost >= 4300 && targetCost <= 5500 ? "easy" : "all"
+      difficulty
     );
     attemptedPuzzle = attemptedPuzzleObj.puzzle;
     cost = attemptedPuzzleObj.cost;
     // Validate
     const valid = validatePuzzle(attemptedPuzzle);
-    // If invalid
-    if (!valid) {
+    // If invalid, or at a greater cost than the max
+    if (!valid || cost > targetRange.max) {
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -922,6 +930,7 @@ export const createPuzzle = (targetCost?:any) => {
       removed.pop();
     }
   }
+  console.log(cost);
   return puzzle;
 };
 
@@ -952,4 +961,3 @@ export const testSpeed = async (iterations: number) => {
 // await printSudokuToConsoleFormatted(easyPuzzle);
 // await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
 // testSpeed(1);
-
