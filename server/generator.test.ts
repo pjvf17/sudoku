@@ -55,7 +55,7 @@ Deno.test({
   name:
     "Easy Puzzle Generator creates puzzle solveable by hidden and naked single techniques",
   fn(): void {
-    const easyPuzzle = createPuzzle();
+    const easyPuzzle = createPuzzle("easy");
     const solvedPuzzle = hiddenAndNakedSingleSolver(easyPuzzle, false).puzzle;
     assert(validatePuzzle(solvedPuzzle));
   },
