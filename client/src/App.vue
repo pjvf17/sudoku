@@ -10,7 +10,11 @@
               :id="`r${rowIndex}c${colIndex}-td-id`"
               :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
               @click="handleClick({row: rowIndex, col: colIndex})"
-              :style="{ 'background-color': checkFocus[`r${rowIndex}c${colIndex}`]}"
+              :style="
+              { 'background-color': ((selfFocus.row == rowIndex 
+              || selfFocus.col == colIndex) 
+              && !checkFocus[`r${rowIndex}c${colIndex}`]) 
+              ? `${color.slice(0,7)}44` : checkFocus[`r${rowIndex}c${colIndex}`]}"
             >
               <!-- <input
                 :value="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number"
@@ -100,7 +104,10 @@
         style="color: white"
       >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
       <button @click="newGame()" class="button">Start New Game</button>
-      <button @click="firstPassCandidateCalculator(sudokuObj.puzzle)" class="button">Fill In Candiadtes? </button>
+      <button
+        @click="firstPassCandidateCalculator(sudokuObj.puzzle)"
+        class="button"
+      >Fill In Candiadtes?</button>
     </div>
   </div>
 </template>
@@ -336,10 +343,15 @@ export default {
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
+          console.log(user.color.slice(0, 6));
           focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
         }
       }
       return focused;
+    });
+
+    const selfFocus = computed(() => {
+      return users.value[id.value].focus;
     });
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
 
@@ -371,7 +383,7 @@ export default {
       );
     };
 
-    const firstPassCandidateCalculator = (puzzle) => {
+    const firstPassCandidateCalculator = puzzle => {
       const rows = makeRows;
       const cols = makeCols;
       const squares = makeSquares;
@@ -391,47 +403,47 @@ export default {
         // Update candidates for each cell
         for (const unitAddress in units) {
           // if (units.hasOwnProperty(unitAddress)) {
-            const unit = units[unitAddress];
-            // Create an array of the numbers in the row
+          const unit = units[unitAddress];
+          // Create an array of the numbers in the row
 
-            // First, create an array of the values
-            const rowNumbers = Object.values(units[unitAddress])
-              // Second, parse each value as a number
-              .map((el) => parseInt(el.number))
-              // Third, filter out any non numbers
-              .filter((el) => !isNaN(el));
+          // First, create an array of the values
+          const rowNumbers = Object.values(units[unitAddress])
+            // Second, parse each value as a number
+            .map(el => parseInt(el.number))
+            // Third, filter out any non numbers
+            .filter(el => !isNaN(el));
 
-            // Create an array of numbers from 1 to 9
-            let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-            // For each number in the row
-            unseenNumbers = unseenNumbers.filter((number) => {
-              // Return only the numbers not in the row
-              return !rowNumbers.includes(number);
-            });
-            // For each non number in the row, add the unseenNumbers to the candidates array
-            for (const cellAddress in unit) {
-              // if (unit.hasOwnProperty(cellAddress)) {
-                if (unit[cellAddress].number == ".") {
-                  // If we're not on the first iteration of both the inner and outer loops
-                  // Get previous candidates of cell
-                  const previousCandidates =
-                    iteration == 0
-                      ? Array.from(Array(9), (_, i) => i + 1)
-                      : unit[cellAddress].candidates;
-                  // Reset candidates
-                  unit[cellAddress].candidates = [];
-                  unseenNumbers
-                    // Include only what previous candidates also has
-                    .filter((number) => {
-                      return previousCandidates.includes(number);
-                    })
-                    // Add each number to the candidates
-                    .forEach((number) => {
-                      unit[cellAddress].candidates.push(number);
-                    });
-                }
-              // }
+          // Create an array of numbers from 1 to 9
+          let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+          // For each number in the row
+          unseenNumbers = unseenNumbers.filter(number => {
+            // Return only the numbers not in the row
+            return !rowNumbers.includes(number);
+          });
+          // For each non number in the row, add the unseenNumbers to the candidates array
+          for (const cellAddress in unit) {
+            // if (unit.hasOwnProperty(cellAddress)) {
+            if (unit[cellAddress].number == ".") {
+              // If we're not on the first iteration of both the inner and outer loops
+              // Get previous candidates of cell
+              const previousCandidates =
+                iteration == 0
+                  ? Array.from(Array(9), (_, i) => i + 1)
+                  : unit[cellAddress].candidates;
+              // Reset candidates
+              unit[cellAddress].candidates = [];
+              unseenNumbers
+                // Include only what previous candidates also has
+                .filter(number => {
+                  return previousCandidates.includes(number);
+                })
+                // Add each number to the candidates
+                .forEach(number => {
+                  unit[cellAddress].candidates.push(number);
+                });
             }
+            // }
+          }
           // }
         }
       }
@@ -577,6 +589,7 @@ export default {
     };
 
     return {
+      selfFocus,
       sudokuObj,
       newGame,
       handleInput,
@@ -660,7 +673,7 @@ td {
   width: 63px;
   height: 63px;
   background-color: $nord5;
-  border: 1px solid #ccc;
+  border: 1px solid darken($color: $nord5, $amount: 10);
   // background-color: var(--color);
 
   input,

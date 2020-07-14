@@ -733,8 +733,6 @@ export const nakedPairSolver = (
           break;
       }
 
-      // Find cells where there is only one spot in a unit for a given number
-      // And update them
       for (const unitAddress in units) {
         if (units.hasOwnProperty(unitAddress)) {
           // Get array of candidate arrays in unit
@@ -805,8 +803,8 @@ export const nakedPairSolver = (
                 }
               }
             }
-            console.log("printing pairsFilteredUnitCandidates");
-            console.log(pairsFilteredUnitCandidates);
+            // console.log("printing pairsFilteredUnitCandidates");
+            // console.log(pairsFilteredUnitCandidates);
           }
 
           // console.log(filteredUnitCandidates.length);
@@ -815,7 +813,122 @@ export const nakedPairSolver = (
     }
   } while (changes > 0);
 
-  printSudokuToConsole(puzzle);
+  // printSudokuToConsole(puzzle);
+  return { puzzle, changes: totalChanges, rows, cols, squares };
+};
+
+export const hiddenPairSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+  let iterations = 0;
+  let changes = 0;
+  // For calculating cost/difficulty, tracks number of uses total
+  let totalChanges = 0;
+
+  do {
+    changes = 0;
+
+    for (let iteration = 0; iteration < 3; iteration++) {
+      let units: any;
+      switch (iteration) {
+        case 0:
+          units = rows;
+          break;
+        case 1:
+          units = cols;
+          break;
+        case 2:
+          units = squares;
+          break;
+      }
+
+      for (const unitAddress in units) {
+        if (units.hasOwnProperty(unitAddress)) {
+          // Get array of candidate arrays in unit
+          const unitCandidates = Object.values(units[unitAddress])
+            // Return stringifiedcandidates of each cell
+            .map((el: any) => el.candidates);
+          // Filter candidates to include only those with two values
+          const filteredUnitCandidates = unitCandidates.filter(
+            (candidateArray: any) => candidateArray.length == 2
+          );
+          // console.log("printing filteredUnitCandidates");
+          // console.log(filteredUnitCandidates);
+          // Stringify to allow comparing
+
+          const stringifiedUnitCandidates = filteredUnitCandidates.map(
+            (el: any) => JSON.stringify(el)
+          );
+
+          // Further filter candidates to where we only have pairs of pairs
+          const pairsFilteredUnitCandidates = stringifiedUnitCandidates
+            // Stringify to allow comparing
+            .filter((el: any) => {
+              // Returns true if there is only one instance of a given number
+              // console.log(el);
+              // console.log(stringifiedUnitCandidates.indexOf(el));
+              // console.log(stringifiedUnitCandidates.lastIndexOf(el));
+              // console.log(
+              //   stringifiedUnitCandidates.indexOf(el) !=
+              //     stringifiedUnitCandidates.lastIndexOf(el)
+              // );
+
+              return (
+                stringifiedUnitCandidates.indexOf(el) !=
+                stringifiedUnitCandidates.lastIndexOf(el)
+              );
+            })
+            // Map them back to arrays
+            .map((el: any) => JSON.parse(el));
+
+          if (pairsFilteredUnitCandidates.length) {
+            // Get pair
+            const pair = pairsFilteredUnitCandidates[0];
+
+            // Loop through unit
+            for (const cellAddress in units[unitAddress]) {
+              if (
+                Object.prototype.hasOwnProperty.call(
+                  units[unitAddress],
+                  cellAddress
+                )
+              ) {
+                const cell = units[unitAddress][cellAddress];
+                // console.log(
+                //   JSON.stringify(cell.candidates) != JSON.stringify(pair)
+                // );
+                // console.log();
+                // Don't alter pair
+                if (JSON.stringify(cell.candidates) != JSON.stringify(pair)) {
+                  // Chack for either candidate
+                  if (cell.candidates.includes(pair[0])) {
+                    // Remove candidate
+                    cell.candidates.splice(cell.candidates.indexOf(pair[0]), 1);
+                  }
+                  if (cell.candidates.includes(pair[1])) {
+                    // Remove candidate
+                    cell.candidates.splice(cell.candidates.indexOf(pair[1]), 1);
+                  }
+                }
+              }
+            }
+            // console.log("printing pairsFilteredUnitCandidates");
+            // console.log(pairsFilteredUnitCandidates);
+          }
+
+          // console.log(filteredUnitCandidates.length);
+        }
+      }
+    }
+  } while (changes > 0);
+
+  // printSudokuToConsole(puzzle);
   return { puzzle, changes: totalChanges, rows, cols, squares };
 };
 
@@ -1164,8 +1277,6 @@ export const solver = (puzzle: any, difficulty?: any) => {
   return { puzzle, totalCost, cost };
   // Need to keep track of changes for each method
 };
-
-await printSudokuToConsoleFormatted(solver(parsePuzzle(nakedPairTest)).puzzle);
 
 export const createPuzzle = (difficulty?: any) => {
   // const startTimer = performance.now();
