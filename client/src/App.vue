@@ -95,8 +95,12 @@
           </tr>
         </tbody>
       </table>
-      <span class="notation-text" style="color: white">{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
+      <span
+        class="notation-text"
+        style="color: white"
+      >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
       <button @click="newGame()" class="button">Start New Game</button>
+      <button @click="firstPassCandidateCalculator(sudokuObj.puzzle)" class="button">Fill In Candiadtes? </button>
     </div>
   </div>
 </template>
@@ -367,6 +371,74 @@ export default {
       );
     };
 
+    const firstPassCandidateCalculator = (puzzle) => {
+      const rows = makeRows;
+      const cols = makeCols;
+      const squares = makeSquares;
+      for (let iteration = 0; iteration < 3; iteration++) {
+        let units;
+        switch (iteration) {
+          case 0:
+            units = rows;
+            break;
+          case 1:
+            units = cols;
+            break;
+          case 2:
+            units = squares;
+            break;
+        }
+        // Update candidates for each cell
+        for (const unitAddress in units) {
+          // if (units.hasOwnProperty(unitAddress)) {
+            const unit = units[unitAddress];
+            // Create an array of the numbers in the row
+
+            // First, create an array of the values
+            const rowNumbers = Object.values(units[unitAddress])
+              // Second, parse each value as a number
+              .map((el) => parseInt(el.number))
+              // Third, filter out any non numbers
+              .filter((el) => !isNaN(el));
+
+            // Create an array of numbers from 1 to 9
+            let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+            // For each number in the row
+            unseenNumbers = unseenNumbers.filter((number) => {
+              // Return only the numbers not in the row
+              return !rowNumbers.includes(number);
+            });
+            // For each non number in the row, add the unseenNumbers to the candidates array
+            for (const cellAddress in unit) {
+              // if (unit.hasOwnProperty(cellAddress)) {
+                if (unit[cellAddress].number == ".") {
+                  // If we're not on the first iteration of both the inner and outer loops
+                  // Get previous candidates of cell
+                  const previousCandidates =
+                    iteration == 0
+                      ? Array.from(Array(9), (_, i) => i + 1)
+                      : unit[cellAddress].candidates;
+                  // Reset candidates
+                  unit[cellAddress].candidates = [];
+                  unseenNumbers
+                    // Include only what previous candidates also has
+                    .filter((number) => {
+                      return previousCandidates.includes(number);
+                    })
+                    // Add each number to the candidates
+                    .forEach((number) => {
+                      unit[cellAddress].candidates.push(number);
+                    });
+                }
+              // }
+            }
+          // }
+        }
+      }
+      console.log(puzzle);
+      return puzzle;
+    };
+
     const handleInput = ({ key, event }) => {
       // console.log(event);
       // console.log(key);
@@ -514,7 +586,8 @@ export default {
       id,
       checkFocus,
       users,
-      notating
+      notating,
+      firstPassCandidateCalculator
     };
   }
 };
@@ -566,7 +639,7 @@ $border: 2px solid black;
 
 .notation-text {
   margin: auto;
-  margin-top: .5em;
+  margin-top: 0.5em;
   width: 30%;
 }
 

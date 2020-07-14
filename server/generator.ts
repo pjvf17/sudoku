@@ -118,10 +118,15 @@ Most of the time, the following function isn't worth it.
 It's best use is for testing other, more targetted validation methods to make sure they work
 */
 
-export const validatePuzzle = (puzzle: any) => {
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
+export const validatePuzzle = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
   // Assume valid
   let valid = true;
   for (const cellAddress in puzzle) {
@@ -315,7 +320,7 @@ export const generateDiagonalSquares = (puzzle: any) => {
 
 export const printSudokuToConsole = (puzzleToPrint: any) => {
   // await Deno.stdout.write(new TextEncoder().encode("\n\n"));
-  let stringToPrint = "";
+  let stringToPrint = "\n\n";
   for (const cellAddress in puzzleToPrint) {
     if (puzzleToPrint.hasOwnProperty(cellAddress)) {
       const cell = puzzleToPrint[cellAddress];
@@ -524,7 +529,7 @@ export const firstPassCandidateCalculator = (puzzle: any) => {
       }
     }
   }
-  return puzzle;
+  return { puzzle, rows, cols, squares };
 };
 
 // Updates the candidates in each peer of a cell that has been updated
@@ -538,6 +543,7 @@ export const updatePeerCandidates = (
   let row,
     col,
     square = [];
+  // console.log(rows, cols, squares);
   row = rows[`r${cell.address.r}`];
   col = cols[`c${cell.address.c}`];
   square = squares[getSquare(cell)];
@@ -573,15 +579,23 @@ Only stopping when no changes have been made in a given iteration
 */
 export const hiddenAndNakedSingleSolver = (
   puzzle: any,
-  candidates?: boolean
+  candidates?: boolean,
+  rows?: any,
+  cols?: any,
+  squares?: any
 ) => {
   // If candidates have not been assigned, assign them. Othrewise don't overwrite
   if (!candidates) {
-    puzzle = firstPassCandidateCalculator(puzzle);
+    const firstPass = firstPassCandidateCalculator(puzzle);
+    puzzle = firstPass.puzzle;
+    rows = firstPass.rows;
+    cols = firstPass.cols;
+    squares = firstPass.squares;
+  } else {
+    rows = rows ?? makeRows(puzzle);
+    cols = cols ?? makeCols(puzzle);
+    squares = squares ?? makeSquares(puzzle);
   }
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
 
   let iterations = 0;
   let changes = 0;
@@ -677,12 +691,132 @@ export const hiddenAndNakedSingleSolver = (
     totalChanges += changes;
     iterations++;
   } while (changes > 0);
-  return { puzzle, cost: totalChanges * 100 };
+  return { puzzle, cost: totalChanges * 100, rows, cols, squares };
 };
 
 // Simple function to create a filled puzzle
 export const createFilledPuzzle = () => {
   return fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+};
+
+export const nakedPairTest =
+  ".6745..2.......61.98...6..5.96.....2.7.24..6.21.6..57.7..1.4.5664.....9..5..6248.";
+
+export const nakedPairSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+  let iterations = 0;
+  let changes = 0;
+  // For calculating cost/difficulty, tracks number of uses total
+  let totalChanges = 0;
+
+  do {
+    changes = 0;
+
+    for (let iteration = 0; iteration < 3; iteration++) {
+      let units: any;
+      switch (iteration) {
+        case 0:
+          units = rows;
+          break;
+        case 1:
+          units = cols;
+          break;
+        case 2:
+          units = squares;
+          break;
+      }
+
+      // Find cells where there is only one spot in a unit for a given number
+      // And update them
+      for (const unitAddress in units) {
+        if (units.hasOwnProperty(unitAddress)) {
+          // Get array of candidate arrays in unit
+          const unitCandidates = Object.values(units[unitAddress])
+            // Return stringifiedcandidates of each cell
+            .map((el: any) => el.candidates);
+          // Filter candidates to include only those with two values
+          const filteredUnitCandidates = unitCandidates.filter(
+            (candidateArray: any) => candidateArray.length == 2
+          );
+          // console.log("printing filteredUnitCandidates");
+          // console.log(filteredUnitCandidates);
+          // Stringify to allow comparing
+
+          const stringifiedUnitCandidates = filteredUnitCandidates.map(
+            (el: any) => JSON.stringify(el)
+          );
+
+          // Further filter candidates to where we only have pairs of pairs
+          const pairsFilteredUnitCandidates = stringifiedUnitCandidates
+            // Stringify to allow comparing
+            .filter((el: any) => {
+              // Returns true if there is only one instance of a given number
+              // console.log(el);
+              // console.log(stringifiedUnitCandidates.indexOf(el));
+              // console.log(stringifiedUnitCandidates.lastIndexOf(el));
+              // console.log(
+              //   stringifiedUnitCandidates.indexOf(el) !=
+              //     stringifiedUnitCandidates.lastIndexOf(el)
+              // );
+
+              return (
+                stringifiedUnitCandidates.indexOf(el) !=
+                stringifiedUnitCandidates.lastIndexOf(el)
+              );
+            })
+            // Map them back to arrays
+            .map((el: any) => JSON.parse(el));
+
+          if (pairsFilteredUnitCandidates.length) {
+            // Get pair
+            const pair = pairsFilteredUnitCandidates[0];
+
+            // Loop through unit
+            for (const cellAddress in units[unitAddress]) {
+              if (
+                Object.prototype.hasOwnProperty.call(
+                  units[unitAddress],
+                  cellAddress
+                )
+              ) {
+                const cell = units[unitAddress][cellAddress];
+                // console.log(
+                //   JSON.stringify(cell.candidates) != JSON.stringify(pair)
+                // );
+                // console.log();
+                // Don't alter pair
+                if (JSON.stringify(cell.candidates) != JSON.stringify(pair)) {
+                  // Chack for either candidate
+                  if (cell.candidates.includes(pair[0])) {
+                    // Remove candidate
+                    cell.candidates.splice(cell.candidates.indexOf(pair[0]), 1);
+                  }
+                  if (cell.candidates.includes(pair[1])) {
+                    // Remove candidate
+                    cell.candidates.splice(cell.candidates.indexOf(pair[1]), 1);
+                  }
+                }
+              }
+            }
+            console.log("printing pairsFilteredUnitCandidates");
+            console.log(pairsFilteredUnitCandidates);
+          }
+
+          // console.log(filteredUnitCandidates.length);
+        }
+      }
+    }
+  } while (changes > 0);
+
+  printSudokuToConsole(puzzle);
+  return { puzzle, changes: totalChanges, rows, cols, squares };
 };
 
 // From https://www.w3schools.com/JS/js_random.asp
@@ -691,11 +825,16 @@ function getRndInteger(min: number, max: number) {
 }
 
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
-export const pointingLockedCandidatesSolver = (puzzle: any) => {
+export const pointingLockedCandidatesSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
   let changes = 0;
   let totalChanges = 0;
   // Look through each square
@@ -784,18 +923,20 @@ export const pointingLockedCandidatesSolver = (puzzle: any) => {
   } while (changes > 0);
 
   // Return puzzle
-  return { puzzle, changes: totalChanges };
+  return { puzzle, changes: totalChanges, rows, cols, squares };
 };
 
-const testClaiming =
-  ".9642...3.283..6..543.....2362841..99712...3.85479321668.9.4321239......41..32...";
-
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
-export const claimingLockedCandidatesSolver = (puzzle: any) => {
+export const claimingLockedCandidatesSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
   let changes = 0;
   let totalChanges = 0;
   // Look through row,
@@ -895,7 +1036,7 @@ export const claimingLockedCandidatesSolver = (puzzle: any) => {
     totalChanges += changes;
   } while (changes > 0);
   // Return puzzle
-  return { puzzle, changes: totalChanges };
+  return { puzzle, changes: totalChanges, rows, cols, squares };
 };
 
 /* 
@@ -904,25 +1045,32 @@ Increasing complexity when a given solver changes nothing,
 And returning to start when a solver changes something 
 */
 
-const methods: any = {
-  hiddenSingle: "easy",
-  pointing: "medium",
-  claiming: "medium",
-};
-
 export const solver = (puzzle: any, difficulty?: any) => {
   difficulty = difficulty ?? "all";
   // First, populate candidates
-  puzzle = firstPassCandidateCalculator(puzzle);
+  const firstPass = firstPassCandidateCalculator(puzzle);
+  puzzle = firstPass.puzzle;
+  let rows = firstPass.rows;
+  let cols = firstPass.cols;
+  let squares = firstPass.squares;
   let changes = 0;
   // Holds cost of each method used
-  const cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0 };
+  const cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0, nakedPair: 0 };
   do {
     changes = 0;
     // Try naked and hidden candidate solver
-    const hiddenSingle = hiddenAndNakedSingleSolver(puzzle, true);
+    const hiddenSingle = hiddenAndNakedSingleSolver(
+      puzzle,
+      true,
+      rows,
+      cols,
+      squares
+    );
     // Update puzzle
     puzzle = hiddenSingle.puzzle;
+    rows = hiddenSingle.rows;
+    cols = hiddenSingle.cols;
+    squares = hiddenSingle.squares;
     // Update cost
     cost.hiddenSingle += hiddenSingle.cost;
     // Update changes
@@ -930,9 +1078,17 @@ export const solver = (puzzle: any, difficulty?: any) => {
     // Check difficulty. If easy, stick to above, else continue with more advanced methods
     if (difficulty != "easy") {
       // Then, try pointing candidate solver
-      const pointing = pointingLockedCandidatesSolver(puzzle);
+      const pointing = pointingLockedCandidatesSolver(
+        puzzle,
+        rows,
+        cols,
+        squares
+      );
       // Update puzzle
       puzzle = pointing.puzzle;
+      rows = pointing.rows;
+      cols = pointing.cols;
+      squares = pointing.squares;
       // Update cost, initial cost higher than subsequent
       if (pointing.changes) {
         cost.pointing =
@@ -944,14 +1100,18 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
-      // If changes made, reset loop
-      if (pointing.changes) {
-        continue;
-      }
-      // Then, try pointing candidate solver
-      const claiming = claimingLockedCandidatesSolver(puzzle);
+      // Try pointing candidate solver
+      const claiming = claimingLockedCandidatesSolver(
+        puzzle,
+        rows,
+        cols,
+        squares
+      );
       // Update puzzle
       puzzle = claiming.puzzle;
+      rows = claiming.rows;
+      cols = claiming.cols;
+      squares = claiming.squares;
       // Update cost, initial cost higher than subsequent
       if (claiming.changes) {
         // console.log(claiming.changes);
@@ -964,6 +1124,33 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
+      // Try naked pair solver
+      const nakedPair = nakedPairSolver(puzzle, rows, cols, squares);
+      // Update puzzle
+      puzzle = nakedPair.puzzle;
+      rows = nakedPair.rows;
+      // console.log(rows);
+      cols = nakedPair.cols;
+      squares = nakedPair.squares;
+      // Update cost, initial cost higher than subsequent
+      if (nakedPair.changes) {
+        // console.log(nakedPair.changes);
+        cost.nakedPair =
+          cost.nakedPair > 0
+            ? // Subsequent cost, 200
+              (cost.nakedPair += nakedPair.changes * 300)
+            : // First cost, 350, then add any additional changes, times 200
+              450 + (nakedPair.changes - 1) * 300;
+      }
+      // Update changes
+      changes = nakedPair.changes > 0 ? changes + 1 : changes;
+      // let totalCost = 0;
+      // for (const costType in cost) {
+      //   if (cost.hasOwnProperty(costType)) {
+      //     totalCost += cost[costType];
+      //   }
+      // }
+      //     return {puzzle, totalCost, cost};
     }
     // Repeat, if any changes were made
   } while (changes > 0);
@@ -978,7 +1165,10 @@ export const solver = (puzzle: any, difficulty?: any) => {
   // Need to keep track of changes for each method
 };
 
+await printSudokuToConsoleFormatted(solver(parsePuzzle(nakedPairTest)).puzzle);
+
 export const createPuzzle = (difficulty?: any) => {
+  // const startTimer = performance.now();
   const targetRanges: any = {
     easy: { min: 4300, max: 5500 },
     medium: { min: 5600, max: 10000 },
@@ -996,26 +1186,19 @@ export const createPuzzle = (difficulty?: any) => {
 
   let puzzle = createFilledPuzzle();
 
-  /* 
-  Remove a random cell (that's not the middle?)
-  Remove its counterpart for symmetry  
-  Call the easiest solver
-  If the easiest solver can't solve the resulting puzzle, backtrack
-  Otherwise go back to beginning
-  */
+  const rows = makeRows(puzzle);
+  const cols = makeCols(puzzle);
+  const squares = makeSquares(puzzle);
 
   // Array to hold removed numbers
   let removed: any = [];
   // Iterations, so we can reset if needed
   let iterations: number = 0;
   let totalCost: number = 0;
-
   const populateAddresses = () => {
     let addresses: any = [];
     for (let rowIndex = 1; rowIndex <= 5; rowIndex++) {
       for (let colIndex = 1; colIndex <= 9; colIndex++) {
-        // console.log(`rowIndex: ${rowIndex}`);
-        // console.log(`colIndex: ${colIndex}`);
         const address = {
           r: rowIndex,
           c: colIndex,
@@ -1037,10 +1220,6 @@ export const createPuzzle = (difficulty?: any) => {
 
   let cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0 };
 
-  // Tracks how long we've stayed at a certain number of pairs
-  let removedCountLength = 0;
-  let removedCount = 0;
-
   // Remove pairs till we've reached our target
   while (totalCost <= targetRange.min) {
     iterations++;
@@ -1050,8 +1229,7 @@ export const createPuzzle = (difficulty?: any) => {
     let secondNumber: number;
 
     if (iterations % 500 == 0) {
-      console.log("resetting " + iterations / 500);
-      // iterations = 0;
+      // console.log("resetting " + iterations / 500);
       // Reset puzzle
       puzzle = createFilledPuzzle();
       // Reset totalCost
@@ -1060,9 +1238,6 @@ export const createPuzzle = (difficulty?: any) => {
       removed = [];
       // Reset triedConfigurations
       triedConfigurations = {};
-      // Reset removedCountTrackers
-      removedCountLength = removed.length;
-      removedCount = 0;
     }
     // Test if triedConfigurations has current config
     if (!triedConfigurations.hasOwnProperty(puzzleToString(puzzle))) {
@@ -1073,8 +1248,6 @@ export const createPuzzle = (difficulty?: any) => {
     // Search for number that hasn't been removed
     // No need to check counterpart because we remove in pairs
     // So if one is removed, the other already is too
-    const start = performance.now();
-
     do {
       // If no addresses left in tried configurations
       while (!triedConfigurations[puzzleToString(puzzle)].length) {
@@ -1087,13 +1260,7 @@ export const createPuzzle = (difficulty?: any) => {
         puzzle[
           `r${10 - toReset.firstAddress}c${10 - toReset.secondAddress}`
         ].number = toReset.secondNumber;
-        // Reset removedCountTrackers
-        removedCountLength = removed.length;
-        removedCount = 0;
       }
-      // console.log(triedConfigurations);
-      // console.log(triedConfigurations[puzzleToString(puzzle)]);
-
       let address = triedConfigurations[puzzleToString(puzzle)].pop();
       firstAddress = address.r;
       secondAddress = address.c;
@@ -1111,8 +1278,6 @@ export const createPuzzle = (difficulty?: any) => {
     puzzle[`r${10 - firstAddress}c${10 - secondAddress}`].number = ".";
     // Add numbers to removed
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
-    
-    // console.log(removed.length);
 
     // Attempt to solve
     let attemptedPuzzle: any;
@@ -1128,10 +1293,6 @@ export const createPuzzle = (difficulty?: any) => {
     const valid = validatePuzzle(attemptedPuzzle);
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
-      if (totalCost > targetRange.max) {
-        console.log(totalCost);
-        console.log(cost);
-      }
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -1139,64 +1300,13 @@ export const createPuzzle = (difficulty?: any) => {
       puzzle[
         `r${10 - firstAddress}c${10 - secondAddress}`
       ].number = secondNumber;
-      // Remove from removed
       removed.pop();
-      // // Update removedCountTrackers
-      // if (removed.length == removedCountLength) {
-      //   removedCount++;
-      // } else {
-      //   removedCountLength = removed.length;
-      //   removedCount = 0;
-      // }
-      // if (removedCount == 10) {
-      //   // Backtrack one further
-      //   const toReset = removed.pop();
-      //   // Reset first number
-      //   puzzle[`r${toReset.firstAddress}c${toReset.secondAddress}`].number =
-      //     toReset.firstNumber;
-      //   // Reset counterpart
-      //   puzzle[
-      //     `r${10 - toReset.firstAddress}c${10 - toReset.secondAddress}`
-      //   ].number = toReset.secondNumber;
-      //   // Reset removedCountTrackers
-      //   removedCountLength = removed.length;
-      //   removedCount = 0;
-      // }
 
-      // console.log(`removedCountLength: ${removedCountLength}`);
-      // console.log(`removedCount: ${removedCount}`);
-      // console.log(`removed: ${removed.length}`);
       // Reset totalCost
       totalCost = 0;
-    } 
-  }
-  console.log(`created puzzle in ${iterations} iterations`);
-  console.log(cost);
-  console.log(totalCost);
-  return puzzle;
-};
-
-export const testSpeed = async (iterations: number) => {
-  const startTimer = performance.now();
-  let count = 0;
-  while (count < iterations) {
-    // Start from first
-    let newPuzzle = fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
-    await printSudokuToConsoleFormatted(newPuzzle);
-    // console.log(validatePuzzle(newPuzzle));
-    // printSudokuToConsole(newPuzzle);
-    count++;
-    if (puzzleToString(newPuzzle).indexOf(".") != -1) {
-      console.log(count);
-
-      await printSudokuToConsoleFormatted(newPuzzle);
-      return;
     }
-    // console.log(count);
   }
-  const endTimer = performance.now();
-  const result = (endTimer - startTimer) / iterations;
-  console.log(`On average, it took ${result}ms per puzzle`);
+  return puzzle;
 };
 
 // const easyPuzzle = createEasyPuzzle();
