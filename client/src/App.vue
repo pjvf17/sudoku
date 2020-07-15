@@ -8,13 +8,20 @@
               v-for="colIndex in 9"
               :key="`r${rowIndex}c${colIndex}-td`"
               :id="`r${rowIndex}c${colIndex}-td-id`"
-              :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
+              :class="[{
+                'border-right': ((colIndex) % 3) == 0, 
+                'border-bottom': ((rowIndex) % 3) == 0, 
+                'border-left': colIndex == 0, 'border-top': rowIndex == 0, 
+                invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value,
+                'highlight-number': highlightNumbers == sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number
+              }]"
               @click="handleClick({row: rowIndex, col: colIndex})"
-              :style="
-              { 'background-color': ((selfFocus.row == rowIndex 
-              || selfFocus.col == colIndex) 
-              && !checkFocus[`r${rowIndex}c${colIndex}`]) 
-              ? `${color.slice(0,7)}44` : checkFocus[`r${rowIndex}c${colIndex}`]}"
+              :style="{ 
+                'background-color': ((selfFocus.row == rowIndex 
+                || selfFocus.col == colIndex) 
+                && !checkFocus[`r${rowIndex}c${colIndex}`]) 
+                ? `${color.slice(0,7)}44` : checkFocus[`r${rowIndex}c${colIndex}`]
+              }"
             >
               <!-- <input
                 :value="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number"
@@ -338,7 +345,6 @@ export default {
     };
 
     const checkFocus = computed(() => {
-      // reset focus
       const focused = {};
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
@@ -348,6 +354,30 @@ export default {
         }
       }
       return focused;
+    });
+
+    // Highlight other instances of numbers you are currently on
+    const highlightNumbers = computed(() => {
+      // Get your user
+      const user = users.value[id.value];
+      console.log("triggered");
+      console.log(toRaw(user));
+      
+      let number = null;
+      // If user is focused
+      if (user.focus.row != null) {
+        // Check if there is a number in the cell
+        if (
+          sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]
+            .number != ""
+        ) {
+          number =
+            sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]
+              .number;
+        }
+      }
+      console.log(number);
+      return number;
     });
 
     const selfFocus = computed(() => {
@@ -600,7 +630,8 @@ export default {
       checkFocus,
       users,
       notating,
-      firstPassCandidateCalculator
+      firstPassCandidateCalculator,
+      highlightNumbers
     };
   }
 };
@@ -717,6 +748,11 @@ td {
 .border-right {
   border-right: $border;
 }
+
+.highlight-number {
+  background-color: darken($color: $nord5, $amount: 15);
+}
+
 .border-left {
   border-left: $border;
 }

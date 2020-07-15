@@ -785,20 +785,21 @@ export const nakedPairSolver = (
                 )
               ) {
                 const cell = units[unitAddress][cellAddress];
-                // console.log(
-                //   JSON.stringify(cell.candidates) != JSON.stringify(pair)
-                // );
-                // console.log();
                 // Don't alter pair
                 if (JSON.stringify(cell.candidates) != JSON.stringify(pair)) {
                   // Chack for either candidate
                   if (cell.candidates.includes(pair[0])) {
                     // Remove candidate
                     cell.candidates.splice(cell.candidates.indexOf(pair[0]), 1);
+                    // Update changes
+                    changes++;
+
                   }
                   if (cell.candidates.includes(pair[1])) {
                     // Remove candidate
                     cell.candidates.splice(cell.candidates.indexOf(pair[1]), 1);
+                    // Update changes
+                    changes++;
                   }
                 }
               }
@@ -806,8 +807,9 @@ export const nakedPairSolver = (
             // console.log("printing pairsFilteredUnitCandidates");
             // console.log(pairsFilteredUnitCandidates);
           }
-
-          // console.log(filteredUnitCandidates.length);
+          // Only count 1 change per unit
+          totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
+          changes = 0;
         }
       }
     }
@@ -1207,9 +1209,9 @@ export const solver = (puzzle: any, difficulty?: any) => {
         cost.pointing =
           cost.pointing > 0
             ? // Subsequent cost, 200
-              (cost.pointing += pointing.changes * 300)
+              (cost.pointing += pointing.changes * 200)
             : // First cost, 350, then add any additional changes, times 300
-              450 + (pointing.changes - 1) * 300;
+              350 + (pointing.changes - 1) * 200;
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
@@ -1231,9 +1233,9 @@ export const solver = (puzzle: any, difficulty?: any) => {
         cost.claiming =
           cost.claiming > 0
             ? // Subsequent cost, 200
-              (cost.claiming += claiming.changes * 300)
+              (cost.claiming += claiming.changes * 250)
             : // First cost, 350, then add any additional changes, times 200
-              450 + (claiming.changes - 1) * 300;
+              400 + (claiming.changes - 1) * 250;
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
@@ -1251,9 +1253,9 @@ export const solver = (puzzle: any, difficulty?: any) => {
         cost.nakedPair =
           cost.nakedPair > 0
             ? // Subsequent cost, 200
-              (cost.nakedPair += nakedPair.changes * 300)
+              (cost.nakedPair += nakedPair.changes * 200)
             : // First cost, 350, then add any additional changes, times 200
-              450 + (nakedPair.changes - 1) * 300;
+              350 + (nakedPair.changes - 1) * 200;
       }
       // Update changes
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
@@ -1282,7 +1284,7 @@ export const createPuzzle = (difficulty?: any) => {
   // const startTimer = performance.now();
   const targetRanges: any = {
     easy: { min: 4300, max: 5500 },
-    medium: { min: 5600, max: 10000 },
+    medium: { min: 5800, max: 10000 },
     hard: { min: 6600, max: 9300 },
     insane: { min: 8300, max: 14000 },
     diabolical: { min: 11000, max: 25000 },
@@ -1404,6 +1406,11 @@ export const createPuzzle = (difficulty?: any) => {
     const valid = validatePuzzle(attemptedPuzzle);
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
+      if (totalCost > targetRange.max) {
+        console.log("\n\n totalcost higher");
+        console.log(totalCost);
+        console.log(cost);
+      }
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -1415,8 +1422,10 @@ export const createPuzzle = (difficulty?: any) => {
 
       // Reset totalCost
       totalCost = 0;
-    }
+    } 
   }
+  console.log(`\n\ntotalCost: ${totalCost}`)
+  console.log(cost);
   return puzzle;
 };
 
