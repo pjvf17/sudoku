@@ -98,7 +98,7 @@ const startNewGame = () => {
 
 startNewGame();
 console.log("\n\n solved:");
-console.log(sudokuObj.solved);
+// console.log(sudokuObj.solved);
 printSudokuToConsole(sudokuObj.puzzle);
 printSudokuToConsole(sudokuObj.solved);
 
