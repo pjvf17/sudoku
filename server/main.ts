@@ -71,7 +71,7 @@ const startNewGame = () => {
         };
       } else {
         formattedCell = {
-          number: ".",
+          number: "",
           given: false,
           pencilMarks: [
             false,
@@ -99,7 +99,7 @@ const startNewGame = () => {
 startNewGame();
 console.log("\n\n solved:");
 // console.log(sudokuObj.solved);
-printSudokuToConsole(sudokuObj.puzzle);
+// printSudokuToConsole(sudokuObj.puzzle);
 printSudokuToConsole(sudokuObj.solved);
 
 // sudokuObj.puzzle = createEasyPuzzle();
