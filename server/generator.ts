@@ -881,14 +881,13 @@ export const hiddenPairSolver = (
                 // Found a pair
                 pairs.push([
                   // Get the index of the found combination
+                  // Plug that into candidate arrays,
                   candidateArrays[
                     seenCombinations.indexOf(
                       JSON.stringify(array.slice(1).flat())
                     )
+                    // Get the first element to get the first number of the pair
                   ][0],
-                  // Plug that into candidate arrays,
-                  // Get the first element to get the first number of the pair
-
                   // Second number of the pair is the index we're currently on
                   candidateArrays[index][0],
                 ]);
@@ -896,16 +895,43 @@ export const hiddenPairSolver = (
               // Stringify to allow comparisions, omit first number
               seenCombinations.push(JSON.stringify(array.slice(1).flat()));
             }
-            // console.log(seenCombinations);
+            // If we have found any hidden pairs
             if (pairs.length) {
-              console.log("\n\n pairs:");
-              console.log(unitAddress);
-              console.log(pairs);
-
+              // console.log("\n\n pairs:");
+              // console.log(unitAddress);
+              // console.log(pairs);
+              // Since it's possible we found more than one pair, loop through pairs
+              pairs.forEach((pair:any) => {
+                // Loop through unit, find the two cells containing the numbers
+                for (const cellAddress in units[unitAddress]) {
+                  if (
+                    Object.prototype.hasOwnProperty.call(
+                      units[unitAddress],
+                      cellAddress
+                    )
+                  ) {
+                    const cell = units[unitAddress][cellAddress];
+                    // Check first if there are more than 2 candidates
+                    // Otherwise we wouldn't be changing anything
+                    // We can safely check just for one
+                    // Because the above code has filtered out alternatives
+                    if (
+                      cell.candidates.length > 2 &&
+                      cell.candidates.includes(pair[0])
+                    ) {
+                      // Set candidates to pair, deleting all others
+                      cell.candidates = pair;
+                      changes++;
+                    }
+                  }
+                }
+                // console.log(changes);
+                // Incease changes by one, if we've made any changes
+                totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
+                // Reset changes for next loop
+                changes = 0;
+              });
             }
-
-            // If we find any, take the first element of each array and combine them, we now have the pair
-            // Remove all other numbers from each array
           }
         }
       }
@@ -1260,10 +1286,10 @@ export const solver = (puzzle: any, difficulty?: any) => {
         // console.log(hiddenPair.changes);
         cost.hiddenPair =
           cost.hiddenPair > 0
-            ? // Subsequent cost, 200
-              (cost.hiddenPair += hiddenPair.changes * 200)
-            : // First cost, 350, then add any additional changes, times 200
-              350 + (hiddenPair.changes - 1) * 200;
+            ? // Subsequent cost, 250
+              (cost.hiddenPair += hiddenPair.changes * 250)
+            : // First cost, 350, then add any additional changes, times 250
+              450 + (hiddenPair.changes - 1) * 250;
       }
       // Update changes
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;
@@ -1437,7 +1463,8 @@ export const createPuzzle = (difficulty?: any) => {
   return puzzle;
 };
 
-await printSudokuToConsoleFormatted(solver(parsePuzzle(hiddenPairTest)).puzzle);
+// await printSudokuToConsoleFormatted(solver(parsePuzzle(hiddenPairTest)).puzzle);
+// console.log(solver(parsePuzzle(hiddenPairTest)).puzzle["r1c7"].candidates);
 
 // const easyPuzzle = createEasyPuzzle();
 // await printSudokuToConsoleFormatted(easyPuzzle);

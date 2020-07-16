@@ -75,6 +75,22 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name:
+    "Solver correctly solves puzzle with pointing locked candidates, naked pairs, and hidden pairs",
+  fn(): void {
+    const testPuzzle =
+      "..5.2......26...57.7.5..3....41...6..5.496.1..8...25....8..4.3.49...51......3.4..";
+    const solvedTestPuzzle =
+      "345729681812643957679581324934158762257496813186372549768914235493265178521837496";
+    // printSudokuToConsole(solver(parsePuzzle(testPuzzle)).puzzle);
+    assert(
+      puzzleToString(solver(parsePuzzle(testPuzzle)).puzzle),
+      solvedTestPuzzle
+    );
+  },
+});
+
 // setTimeout(()=>{
 //     console.log("timeout!");
 // }, 1000000000000000);
