@@ -705,9 +705,6 @@ export const nakedPairTest =
 export const hiddenPairTest =
   "8.12.9....7.....82462..8...59..81...128534967.4.92.518.8.1...3621.8...5....4..8.1";
 
-console.log("\n\n before:");
-await printSudokuToConsoleFormatted(parsePuzzle(hiddenPairTest));
-
 export const nakedPairSolver = (
   puzzle: any,
   rows?: any,
