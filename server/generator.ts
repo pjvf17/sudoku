@@ -702,6 +702,12 @@ export const createFilledPuzzle = () => {
 export const nakedPairTest =
   ".6745..2.......61.98...6..5.96.....2.7.24..6.21.6..57.7..1.4.5664.....9..5..6248.";
 
+export const hiddenPairTest =
+  "8.12.9....7.....82462..8...59..81...128534967.4.92.518.8.1...3621.8...5....4..8.1";
+
+console.log("\n\n before:");
+await printSudokuToConsoleFormatted(parsePuzzle(hiddenPairTest));
+
 export const nakedPairSolver = (
   puzzle: any,
   rows?: any,
@@ -743,27 +749,15 @@ export const nakedPairSolver = (
           const filteredUnitCandidates = unitCandidates.filter(
             (candidateArray: any) => candidateArray.length == 2
           );
-          // console.log("printing filteredUnitCandidates");
-          // console.log(filteredUnitCandidates);
           // Stringify to allow comparing
-
           const stringifiedUnitCandidates = filteredUnitCandidates.map(
             (el: any) => JSON.stringify(el)
           );
 
           // Further filter candidates to where we only have pairs of pairs
           const pairsFilteredUnitCandidates = stringifiedUnitCandidates
-            // Stringify to allow comparing
             .filter((el: any) => {
-              // Returns true if there is only one instance of a given number
-              // console.log(el);
-              // console.log(stringifiedUnitCandidates.indexOf(el));
-              // console.log(stringifiedUnitCandidates.lastIndexOf(el));
-              // console.log(
-              //   stringifiedUnitCandidates.indexOf(el) !=
-              //     stringifiedUnitCandidates.lastIndexOf(el)
-              // );
-
+              // Returns true if there is more than 1 instance of a given pair
               return (
                 stringifiedUnitCandidates.indexOf(el) !=
                 stringifiedUnitCandidates.lastIndexOf(el)
@@ -793,7 +787,6 @@ export const nakedPairSolver = (
                     cell.candidates.splice(cell.candidates.indexOf(pair[0]), 1);
                     // Update changes
                     changes++;
-
                   }
                   if (cell.candidates.includes(pair[1])) {
                     // Remove candidate
@@ -852,79 +845,68 @@ export const hiddenPairSolver = (
 
       for (const unitAddress in units) {
         if (units.hasOwnProperty(unitAddress)) {
-          // Get array of candidate arrays in unit
-          const unitCandidates = Object.values(units[unitAddress])
-            // Return stringifiedcandidates of each cell
-            .map((el: any) => el.candidates);
-          // Filter candidates to include only those with two values
-          const filteredUnitCandidates = unitCandidates.filter(
-            (candidateArray: any) => candidateArray.length == 2
-          );
-          // console.log("printing filteredUnitCandidates");
-          // console.log(filteredUnitCandidates);
-          // Stringify to allow comparing
-
-          const stringifiedUnitCandidates = filteredUnitCandidates.map(
-            (el: any) => JSON.stringify(el)
-          );
-
-          // Further filter candidates to where we only have pairs of pairs
-          const pairsFilteredUnitCandidates = stringifiedUnitCandidates
-            // Stringify to allow comparing
-            .filter((el: any) => {
-              // Returns true if there is only one instance of a given number
-              // console.log(el);
-              // console.log(stringifiedUnitCandidates.indexOf(el));
-              // console.log(stringifiedUnitCandidates.lastIndexOf(el));
-              // console.log(
-              //   stringifiedUnitCandidates.indexOf(el) !=
-              //     stringifiedUnitCandidates.lastIndexOf(el)
-              // );
-
-              return (
-                stringifiedUnitCandidates.indexOf(el) !=
-                stringifiedUnitCandidates.lastIndexOf(el)
-              );
-            })
-            // Map them back to arrays
-            .map((el: any) => JSON.parse(el));
-
-          if (pairsFilteredUnitCandidates.length) {
-            // Get pair
-            const pair = pairsFilteredUnitCandidates[0];
-
-            // Loop through unit
-            for (const cellAddress in units[unitAddress]) {
-              if (
-                Object.prototype.hasOwnProperty.call(
-                  units[unitAddress],
-                  cellAddress
-                )
-              ) {
-                const cell = units[unitAddress][cellAddress];
-                // console.log(
-                //   JSON.stringify(cell.candidates) != JSON.stringify(pair)
-                // );
-                // console.log();
-                // Don't alter pair
-                if (JSON.stringify(cell.candidates) != JSON.stringify(pair)) {
-                  // Chack for either candidate
-                  if (cell.candidates.includes(pair[0])) {
-                    // Remove candidate
-                    cell.candidates.splice(cell.candidates.indexOf(pair[0]), 1);
-                  }
-                  if (cell.candidates.includes(pair[1])) {
-                    // Remove candidate
-                    cell.candidates.splice(cell.candidates.indexOf(pair[1]), 1);
-                  }
-                }
-              }
+          // Keep track of selected candidate arrays for this unit
+          const candidateArrays: any = [];
+          // Go by number
+          for (let number = 1; number <= 9; number++) {
+            // Get array of candidate arrays in unit
+            const unitCandidates = Object.values(units[unitAddress])
+              // Return stringifiedcandidates of each cell
+              .map((el: any) => el.candidates);
+            // Filter candidates by number
+            const filteredUnitCandidates = unitCandidates.filter(
+              (candidateArray: any) => candidateArray.includes(number)
+            );
+            if (filteredUnitCandidates.length == 2) {
+              candidateArrays.push([number, ...filteredUnitCandidates]);
             }
-            // console.log("printing pairsFilteredUnitCandidates");
-            // console.log(pairsFilteredUnitCandidates);
           }
+          if (candidateArrays.length) {
+            // console.log("\n\n Arrays:");
+            // console.log(candidateArrays);
 
-          // console.log(filteredUnitCandidates.length);
+            // Keep track of seen combinations of 1 and 2
+            const seenCombinations: any = [];
+            // Keep track of any hidden pairs we find
+            const pairs: any = [];
+
+            // Now we look through the candidateArrays for items
+            // that have the same arrays at indexes 1 and 2
+            for (let index = 0; index < candidateArrays.length; index++) {
+              const array = candidateArrays[index];
+              // Check if combination already seen
+              if (
+                seenCombinations.includes(JSON.stringify(array.slice(1).flat()))
+              ) {
+                // Found a pair
+                pairs.push([
+                  // Get the index of the found combination
+                  candidateArrays[
+                    seenCombinations.indexOf(
+                      JSON.stringify(array.slice(1).flat())
+                    )
+                  ][0],
+                  // Plug that into candidate arrays,
+                  // Get the first element to get the first number of the pair
+
+                  // Second number of the pair is the index we're currently on
+                  candidateArrays[index][0],
+                ]);
+              }
+              // Stringify to allow comparisions, omit first number
+              seenCombinations.push(JSON.stringify(array.slice(1).flat()));
+            }
+            // console.log(seenCombinations);
+            if (pairs.length) {
+              console.log("\n\n pairs:");
+              console.log(unitAddress);
+              console.log(pairs);
+
+            }
+
+            // If we find any, take the first element of each array and combine them, we now have the pair
+            // Remove all other numbers from each array
+          }
         }
       }
     }
@@ -1170,7 +1152,13 @@ export const solver = (puzzle: any, difficulty?: any) => {
   let squares = firstPass.squares;
   let changes = 0;
   // Holds cost of each method used
-  const cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0, nakedPair: 0 };
+  const cost: any = {
+    hiddenSingle: 0,
+    pointing: 0,
+    claiming: 0,
+    nakedPair: 0,
+    hiddenPair: 0,
+  };
   do {
     changes = 0;
     // Try naked and hidden candidate solver
@@ -1259,6 +1247,26 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
+
+      const hiddenPair = hiddenPairSolver(puzzle, rows, cols, squares);
+      // Update puzzle
+      puzzle = hiddenPair.puzzle;
+      rows = hiddenPair.rows;
+      // console.log(rows);
+      cols = hiddenPair.cols;
+      squares = hiddenPair.squares;
+      // Update cost, initial cost higher than subsequent
+      if (hiddenPair.changes) {
+        // console.log(hiddenPair.changes);
+        cost.hiddenPair =
+          cost.hiddenPair > 0
+            ? // Subsequent cost, 200
+              (cost.hiddenPair += hiddenPair.changes * 200)
+            : // First cost, 350, then add any additional changes, times 200
+              350 + (hiddenPair.changes - 1) * 200;
+      }
+      // Update changes
+      changes = hiddenPair.changes > 0 ? changes + 1 : changes;
       // let totalCost = 0;
       // for (const costType in cost) {
       //   if (cost.hasOwnProperty(costType)) {
@@ -1422,12 +1430,14 @@ export const createPuzzle = (difficulty?: any) => {
 
       // Reset totalCost
       totalCost = 0;
-    } 
+    }
   }
-  console.log(`\n\ntotalCost: ${totalCost}`)
+  console.log(`\n\ntotalCost: ${totalCost}`);
   console.log(cost);
   return puzzle;
 };
+
+await printSudokuToConsoleFormatted(solver(parsePuzzle(hiddenPairTest)).puzzle);
 
 // const easyPuzzle = createEasyPuzzle();
 // await printSudokuToConsoleFormatted(easyPuzzle);
