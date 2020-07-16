@@ -1,6 +1,14 @@
 // @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
-import { puzzleToString, firstPassCandidateCalculator, createPuzzle } from "./generator.ts";
+import {
+  puzzleToString,
+  firstPassCandidateCalculator,
+  createPuzzle,
+  solver,
+  printSudokuToConsoleFormatted,
+  printSudokuToConsole,
+  parsePuzzle,
+} from "./generator.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -28,7 +36,8 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString((createPuzzle("medium")));
+  sudokuObj.puzzle = puzzleToString(createPuzzle("medium"));
+  sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
   const puzzle = {};
 
@@ -62,7 +71,7 @@ const startNewGame = () => {
         };
       } else {
         formattedCell = {
-          number: "",
+          number: ".",
           given: false,
           pencilMarks: [
             false,
@@ -88,6 +97,10 @@ const startNewGame = () => {
 };
 
 startNewGame();
+console.log("\n\n solved:");
+console.log(sudokuObj.solved);
+printSudokuToConsole(sudokuObj.puzzle);
+printSudokuToConsole(sudokuObj.solved);
 
 // sudokuObj.puzzle = createEasyPuzzle();
 

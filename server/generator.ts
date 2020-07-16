@@ -898,7 +898,7 @@ export const hiddenPairSolver = (
               // console.log(unitAddress);
               // console.log(pairs);
               // Since it's possible we found more than one pair, loop through pairs
-              pairs.forEach((pair:any) => {
+              pairs.forEach((pair: any) => {
                 // Loop through unit, find the two cells containing the numbers
                 for (const cellAddress in units[unitAddress]) {
                   if (
@@ -1433,8 +1433,10 @@ export const createPuzzle = (difficulty?: any) => {
     totalCost = attemptedPuzzleObj.totalCost;
     // console.log(totalCost);
     cost = attemptedPuzzleObj.cost;
-    // Validate
-    const valid = validatePuzzle(attemptedPuzzle);
+    // Validate, check if valid, AND check if full
+    const valid =
+      validatePuzzle(attemptedPuzzle) &&
+      puzzleToString(attemptedPuzzle).indexOf(".") == -1;
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
       if (totalCost > targetRange.max) {
