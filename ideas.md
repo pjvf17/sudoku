@@ -11,5 +11,22 @@
 - Populate all candidates with basic rules
   - Per cell option
   - All cells option
-  - Per row/col ? 
+  - Per row/col ?
+- Indication of loading
+- Indication/celebration of complete
+- Timer
+- People
+  - Names
+    - Rename yourself
+    - Nickname others
+  - Recolor yourself
+- Database for puzzles
+  - Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
+- Make an account
+- Game lobby
+  - How??
+- Walkthrough of features
+- Walkthrough of techniques
+  
+
 
