@@ -52,13 +52,13 @@
                   v-for="(pencilMark, index) in sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks"
                   :key="index"
                 >
-                  <!-- <circle
+                  <circle
                     v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                    :class="[{'circle-number': highlightNumbers == index + 1}]"
                     :cy="9+(22*Math.floor(index / 3))"
                     :cx="8.5+(22 * (index % 3))"
                     r="8"
-                    fill="#b4c0d4"
-                  /> -->
+                  />
                   <text
                     v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
                     dominant-baseline="middle"
@@ -718,6 +718,13 @@ td {
   z-index: 3;
   &.bold {
     fill: black;
+  }
+}
+
+circle {
+  fill: transparent;
+  &.circle-number {
+    fill: darken($color: $nord5, $amount: 15);
   }
 }
 
