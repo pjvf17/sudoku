@@ -53,7 +53,7 @@
                   :key="index"
                 >
                   <circle
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
                     :class="[{'circle-number': highlightNumbers == index + 1}]"
                     :cy="9+(22*Math.floor(index / 3))"
                     :cx="8.5+(22 * (index % 3))"
