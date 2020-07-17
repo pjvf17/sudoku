@@ -42,7 +42,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
+  sudokuObj.puzzle = puzzleToString(createPuzzle("easy"));
   sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
   const puzzle = {};
@@ -285,17 +285,17 @@ wss.on("connection", function (ws: WebSocket) {
       moves.push({ pencilMarkUpdate });
     }
     // Recieved undo request
-    if (undo) {
-      console.log("undoing");
-      // Get last move for this player
-      let move = moves.pop();
-      // Check if the move is a number update
-      if (move.numberUpdate) {
-        updateNumber(move.numberUpdate);
-      } else if (move.pencilMarkUpdate) {
-        updatePencilMark(move.pencilMarkUpdate);
-      }
-    }
+    // if (undo) {
+    //   console.log("undoing");
+    //   // Get last move for this player
+    //   let move = moves.pop();
+    //   // Check if the move is a number update
+    //   if (move.numberUpdate) {
+    //     updateNumber(move.numberUpdate);
+    //   } else if (move.pencilMarkUpdate) {
+    //     updatePencilMark(move.pencilMarkUpdate);
+    //   }
+    // }
     // console.log(newGame);
     if (newGame) {
       startNewGame();

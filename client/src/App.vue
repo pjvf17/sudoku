@@ -84,7 +84,9 @@ const socket = new WebSocket(wsUrl);
 /* eslint-disable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
-import { setPuzzle, validateSquare} from "./use/puzzleManagement.js";
+import { setPuzzle, validateSquare } from "./use/puzzleValidation.js";
+import updates from "./use/puzzleUpdates";
+
 /* eslint-enable */
 
 export default {
@@ -134,7 +136,7 @@ export default {
         sudokuObj.value.cols = sentCols;
         sudokuObj.value.squares = sentSquares;
         setPuzzle(sudokuObj);
-        // focused.value = {};
+        updates.setPuzzle(sudokuObj);
       }
       if (sentUsers) {
         users.value = sentUsers;
@@ -153,39 +155,13 @@ export default {
       }
       // update a number
       if (numberUpdate) {
-        let { address, number } = numberUpdate;
-        sudokuObj.value.puzzle[`r${address.r}c${address.c}`].number = number;
-        sudokuObj.value.puzzle[`r${address.r}c${address.c}`] = validateSquare(
-          sudokuObj.value.puzzle[`r${address.r}c${address.c}`]
-        );
+        updates.updateNumber({numberUpdate});
       }
       // update a pencilmark
       if (pencilMarkUpdate) {
-        let { address, pencilMark } = pencilMarkUpdate;
-        if (pencilMark != "delete") {
-          // Toggle mark
-          sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-            pencilMark - 1
-          ] = !sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-            pencilMark - 1
-          ];
-        } else {
-          sudokuObj.value.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-          ];
-        }
+        updates.updatePencilMarks({pencilMarkUpdate});
       }
     };
-
-   
 
     const checkFocus = computed(() => {
       const focused = {};
@@ -251,74 +227,6 @@ export default {
       );
     };
 
-    // const firstPassCandidateCalculator = puzzle => {
-    //   const rows = makeRows;
-    //   const cols = makeCols;
-    //   const squares = makeSquares;
-    //   for (let iteration = 0; iteration < 3; iteration++) {
-    //     let units;
-    //     switch (iteration) {
-    //       case 0:
-    //         units = rows;
-    //         break;
-    //       case 1:
-    //         units = cols;
-    //         break;
-    //       case 2:
-    //         units = squares;
-    //         break;
-    //     }
-    //     // Update candidates for each cell
-    //     for (const unitAddress in units) {
-    //       // if (units.hasOwnProperty(unitAddress)) {
-    //       const unit = units[unitAddress];
-    //       // Create an array of the numbers in the row
-
-    //       // First, create an array of the values
-    //       const rowNumbers = Object.values(units[unitAddress])
-    //         // Second, parse each value as a number
-    //         .map(el => parseInt(el.number))
-    //         // Third, filter out any non numbers
-    //         .filter(el => !isNaN(el));
-
-    //       // Create an array of numbers from 1 to 9
-    //       let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-    //       // For each number in the row
-    //       unseenNumbers = unseenNumbers.filter(number => {
-    //         // Return only the numbers not in the row
-    //         return !rowNumbers.includes(number);
-    //       });
-    //       // For each non number in the row, add the unseenNumbers to the candidates array
-    //       for (const cellAddress in unit) {
-    //         // if (unit.hasOwnProperty(cellAddress)) {
-    //         if (unit[cellAddress].number == "") {
-    //           // If we're not on the first iteration of both the inner and outer loops
-    //           // Get previous candidates of cell
-    //           const previousCandidates =
-    //             iteration == 0
-    //               ? Array.from(Array(9), (_, i) => i + 1)
-    //               : unit[cellAddress].candidates;
-    //           // Reset candidates
-    //           unit[cellAddress].candidates = [];
-    //           unseenNumbers
-    //             // Include only what previous candidates also has
-    //             .filter(number => {
-    //               return previousCandidates.includes(number);
-    //             })
-    //             // Add each number to the candidates
-    //             .forEach(number => {
-    //               unit[cellAddress].candidates.push(number);
-    //             });
-    //         }
-    //         // }
-    //       }
-    //       // }
-    //     }
-    //   }
-    //   console.log(puzzle);
-    //   return puzzle;
-    // };
-
     const handleInput = ({ key, event }) => {
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
@@ -348,61 +256,46 @@ export default {
       ) {
         event.preventDefault();
         if (notating.value) {
-          // Toggle notation for number on local copy
-          sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[
-            key - 1
-          ] = !sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[key - 1];
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
-          socket.send(
-            JSON.stringify({ pencilMarkUpdate: { address, pencilMark: key } })
-          );
+          // Create pencilMarkUpdate object
+          const pencilMarkUpdate = { address, pencilMark: key };
+          // Update local
+          updates.updatePencilMarks({ pencilMarkUpdate });
+          // Update server
+          socket.send(JSON.stringify({ pencilMarkUpdate }));
         } else {
-          // Change local copy of puzzle
-          sudokuObj.value.puzzle[`r${row}c${col}`].number = key;
-          sudokuObj.value.puzzle[`r${row}c${col}`] = validateSquare(
-            sudokuObj.value.puzzle[`r${row}c${col}`]
-          );
-          // Send server update
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
-          socket.send(
-            JSON.stringify({ numberUpdate: { address, number: key } })
-          );
+          // Create numberupdate object
+          const numberUpdate = { address, number: key };
+          // Change local copy of puzzle
+          updates.updateNumber({ numberUpdate });
+          // Send server update
+          socket.send(JSON.stringify({ numberUpdate }));
         }
       } else if (key == "Backspace") {
         event.preventDefault();
 
         // Check if in notation mode
         if (notating.value) {
-          // Toggle notation for number on local copy
-          sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks = [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-          ];
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          // Create pencilMarkUpdate object
+          const pencilMarkUpdate = { address, pencilMark: "delete" };
+          // Update local
+          updates.updatePencilMarks({ pencilMarkUpdate });
+          // Update server
           socket.send(
             JSON.stringify({
-              pencilMarkUpdate: { address, pencilMark: "delete" }
+              pencilMarkUpdate
             })
           );
         } else {
-          // Change local copy of puzzle
-          sudokuObj.value.puzzle[`r${row}c${col}`].number = "";
-          sudokuObj.value.puzzle[`r${row}c${col}`] = validateSquare(
-            sudokuObj.value.puzzle[`r${row}c${col}`]
-          );
-
-          // Send server update
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
-          socket.send(
-            JSON.stringify({ numberUpdate: { address, number: "" } })
-          );
+          // Create numberupdate object
+          const numberUpdate = { address, number: "" };
+          // Change local copy of puzzle
+          updates.updateNumber({ numberUpdate });
+          // Send server update
+          socket.send(JSON.stringify({ numberUpdate }));
         }
       } else if (arrowKeys.includes(key)) {
         event.preventDefault();
