@@ -1226,6 +1226,40 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
+
+      // If changes made, go the beginnig of the loop
+      // In this way, we go progressively through the harder techniques
+      // Only going to the next when the previous ones didn't work
+      if (pointing.changes > 0) {
+        continue;
+      }
+      // Try naked pair solver
+      const nakedPair = nakedPairSolver(puzzle, rows, cols, squares);
+      // Update puzzle
+      puzzle = nakedPair.puzzle;
+      rows = nakedPair.rows;
+      // console.log(rows);
+      cols = nakedPair.cols;
+      squares = nakedPair.squares;
+      // Update cost, initial cost higher than subsequent
+      if (nakedPair.changes) {
+        // console.log(nakedPair.changes);
+        cost.nakedPair =
+          cost.nakedPair > 0
+            ? // Subsequent cost, 200
+              (cost.nakedPair += nakedPair.changes * 200)
+            : // First cost, 350, then add any additional changes, times 200
+              350 + (nakedPair.changes - 1) * 200;
+      }
+      // Update changes
+      changes = nakedPair.changes > 0 ? changes + 1 : changes;
+      // If changes made, go the beginnig of the loop
+      // In this way, we go progressively through the harder techniques
+      // Only going to the next when the previous ones didn't work
+      if (nakedPair.changes > 0) {
+        continue;
+      }
+
       // Try pointing candidate solver
       const claiming = claimingLockedCandidatesSolver(
         puzzle,
@@ -1250,26 +1284,12 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
-      // Try naked pair solver
-      const nakedPair = nakedPairSolver(puzzle, rows, cols, squares);
-      // Update puzzle
-      puzzle = nakedPair.puzzle;
-      rows = nakedPair.rows;
-      // console.log(rows);
-      cols = nakedPair.cols;
-      squares = nakedPair.squares;
-      // Update cost, initial cost higher than subsequent
-      if (nakedPair.changes) {
-        // console.log(nakedPair.changes);
-        cost.nakedPair =
-          cost.nakedPair > 0
-            ? // Subsequent cost, 200
-              (cost.nakedPair += nakedPair.changes * 200)
-            : // First cost, 350, then add any additional changes, times 200
-              350 + (nakedPair.changes - 1) * 200;
+      // If changes made, go the beginnig of the loop
+      // In this way, we go progressively through the harder techniques
+      // Only going to the next when the previous ones didn't work
+      if (claiming.changes > 0) {
+        continue;
       }
-      // Update changes
-      changes = nakedPair.changes > 0 ? changes + 1 : changes;
 
       const hiddenPair = hiddenPairSolver(puzzle, rows, cols, squares);
       // Update puzzle
@@ -1290,6 +1310,13 @@ export const solver = (puzzle: any, difficulty?: any) => {
       }
       // Update changes
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;
+      // If changes made, go the beginnig of the loop
+      // In this way, we go progressively through the harder techniques
+      // Only going to the next when the previous ones didn't work
+      if (hiddenPair.changes > 0) {
+        continue;
+      }
+
       // let totalCost = 0;
       // for (const costType in cost) {
       //   if (cost.hasOwnProperty(costType)) {
@@ -1316,7 +1343,7 @@ export const createPuzzle = (difficulty?: any) => {
   const targetRanges: any = {
     easy: { min: 4300, max: 5500 },
     medium: { min: 5800, max: 6900 },
-    hard: { min: 6600, max: 9300 },
+    hard: { min: 6600, max: 93000 },
     insane: { min: 8300, max: 14000 },
     diabolical: { min: 11000, max: 25000 },
   };
