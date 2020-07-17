@@ -42,7 +42,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createPuzzle("easy"));
+  sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
   sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
   const puzzle = {};

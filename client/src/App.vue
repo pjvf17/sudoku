@@ -155,11 +155,11 @@ export default {
       }
       // update a number
       if (numberUpdate) {
-        updates.updateNumber({numberUpdate});
+        updates.updateNumber({ numberUpdate });
       }
       // update a pencilmark
       if (pencilMarkUpdate) {
-        updates.updatePencilMarks({pencilMarkUpdate});
+        updates.updatePencilMarks({ pencilMarkUpdate });
       }
     };
 
