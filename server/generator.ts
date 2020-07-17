@@ -1315,7 +1315,7 @@ export const createPuzzle = (difficulty?: any) => {
   // const startTimer = performance.now();
   const targetRanges: any = {
     easy: { min: 4300, max: 5500 },
-    medium: { min: 5800, max: 10000 },
+    medium: { min: 5800, max: 6900 },
     hard: { min: 6600, max: 9300 },
     insane: { min: 8300, max: 14000 },
     diabolical: { min: 11000, max: 25000 },
@@ -1439,11 +1439,11 @@ export const createPuzzle = (difficulty?: any) => {
       puzzleToString(attemptedPuzzle).indexOf(".") == -1;
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
-      if (totalCost > targetRange.max) {
-        console.log("\n\n totalcost higher");
-        console.log(totalCost);
-        console.log(cost);
-      }
+      // if (totalCost > targetRange.max) {
+      //   console.log("\n\n totalcost higher");
+      //   console.log(totalCost);
+      //   console.log(cost);
+      // }
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
