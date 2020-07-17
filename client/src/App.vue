@@ -23,22 +23,6 @@
                 ? `${color.slice(0,7)}44` : checkFocus[`r${rowIndex}c${colIndex}`]
               }"
             >
-              <!-- <input
-                :value="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number"
-                @keydown.exact="handleInput({cell: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`], 
-                row: rowIndex, 
-                col: colIndex, 
-                key: $event.key, 
-                $event,
-              })"
-                type="text"
-                :name="`${colIndex}+${rowIndex}`"
-                :id="`${colIndex}+${rowIndex}`"
-                :class="[{'border-right': ((colIndex) % 3) == 0, 'border-bottom': ((rowIndex) % 3) == 0, 'border-left': colIndex == 0, 'border-top': rowIndex == 0, bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value }]"
-                :disabled="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given"
-                @click="handleClick({row: rowIndex, col: colIndex})"
-                :style="{ 'background-color': checkFocus[`r${rowIndex}c${colIndex}`]}"
-              />-->
               <svg class="inputReplacement">
                 <text
                   :class="[{bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value}, 'svgText']"
@@ -53,7 +37,7 @@
                   :key="index"
                 >
                   <circle
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
                     :class="[{'circle-number': highlightNumbers == index + 1}]"
                     :cy="9+(22*Math.floor(index / 3))"
                     :cx="8.5+(22 * (index % 3))"
@@ -424,7 +408,7 @@ export default {
           // For each non number in the row, add the unseenNumbers to the candidates array
           for (const cellAddress in unit) {
             // if (unit.hasOwnProperty(cellAddress)) {
-            if (unit[cellAddress].number == ".") {
+            if (unit[cellAddress].number == "") {
               // If we're not on the first iteration of both the inner and outer loops
               // Get previous candidates of cell
               const previousCandidates =
