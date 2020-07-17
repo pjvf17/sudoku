@@ -48,59 +48,30 @@
                   text-anchor="middle"
                   :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
                 >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
-                <text
-                  v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
-                  x="50%"
-                  y="60%"
-                  dominant-baseline="middle"
-                  text-anchor="middle"
+                <g
+                  v-for="(pencilMark, index) in sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks"
+                  :key="index"
                 >
-                  <tspan
-                    style="font-size: 14px"
-                    y="13"
-                    x="8"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[0] ? 1 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="13"
-                    x="30"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[1] ? 2 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="13"
-                    x="52"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[2] ? 3 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="35"
-                    x="8"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[3] ? 4 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="35"
-                    x="30"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[4] ? 5 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="35"
-                    x="52"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[5] ? 6 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="57"
-                    x="8"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[6] ? 7 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="57"
-                    x="30"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[7] ? 8 : ""}}</tspan>
-                  <tspan
-                    style="font-size: 14px"
-                    y="57"
-                    x="52"
-                  >{{ sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[8] ? 9 : ""}}</tspan>
-                </text>
+                  <!-- <circle
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                    :cy="9+(22*Math.floor(index / 3))"
+                    :cx="8.5+(22 * (index % 3))"
+                    r="8"
+                    fill="#b4c0d4"
+                  /> -->
+                  <text
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
+                    dominant-baseline="middle"
+                    text-anchor="middle"
+                  >
+                    <tspan
+                      style="font-size: 14px"
+                      :y="10+(22*Math.floor(index / 3))"
+                      :x="8+(22 * (index % 3))"
+                      v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                    >{{index+1}}</tspan>
+                  </text>
+                </g>
               </svg>
             </td>
           </tr>
@@ -362,7 +333,7 @@ export default {
       const user = users.value[id.value];
       console.log("triggered");
       console.log(toRaw(user));
-      
+
       let number = null;
       // If user is focused
       if (user.focus.row != null) {
@@ -712,6 +683,7 @@ td {
     margin: 0;
     padding: 0;
     font-size: 40px;
+    line-height: 20px;
     width: 63px;
     height: 63px;
     text-align: center;
@@ -720,6 +692,10 @@ td {
     font-family: Consolea, "Courier New", Courier, monospace;
     caret-color: transparent !important;
     z-index: 3;
+
+    display: block;
+    max-height: 100%;
+
     &:focus {
       outline: none;
       // opacity: 0.5;
