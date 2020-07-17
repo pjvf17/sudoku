@@ -9,6 +9,12 @@ import {
   printSudokuToConsole,
   parsePuzzle,
 } from "./generator.ts";
+import {
+  updateNumber,
+  updatePencilMark,
+  validateSquare,
+  setSudokuObj
+} from "../sudokuManagementFunctions/updates.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -97,140 +103,10 @@ const startNewGame = () => {
 };
 
 startNewGame();
+setSudokuObj(sudokuObj);
+
 console.log("\n\n solved:");
-// console.log(sudokuObj.solved);
-// printSudokuToConsole(sudokuObj.puzzle);
 printSudokuToConsole(sudokuObj.solved);
-
-// sudokuObj.puzzle = createEasyPuzzle();
-
-// console.log(sudoku.print_board(sudokuObj.puzzle));
-
-const makeRows = () => {
-  let rows = {};
-  for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-    rows[`r${rowIndex}`] = [];
-    for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      rows[`r${rowIndex}`].push(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]);
-    }
-  }
-  return rows;
-};
-const makeCols = () => {
-  let cols = {};
-  for (let colIndex = 1; colIndex <= 9; colIndex++) {
-    cols[`c${colIndex}`] = [];
-    for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-      cols[`c${colIndex}`].push(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]);
-    }
-  }
-  return cols;
-};
-
-const getSquare = (cell) => {
-  let s13 = [1, 2, 3];
-  let s46 = [4, 5, 6];
-  let s79 = [7, 8, 9];
-
-  let square;
-  if (cell.address.r >= 1 && cell.address.r <= 3) {
-    square = s13;
-  }
-  if (cell.address.r >= 4 && cell.address.r <= 6) {
-    square = s46;
-  }
-  if (cell.address.r >= 7 && cell.address.r <= 9) {
-    square = s79;
-  }
-  return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
-};
-
-const makeSquares = () => {
-  let squares = {
-    s1: [],
-    s2: [],
-    s3: [],
-    s4: [],
-    s5: [],
-    s6: [],
-    s7: [],
-    s8: [],
-    s9: [],
-  };
-
-  for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-    for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      squares[getSquare(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`])].push(
-        sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]
-      );
-    }
-  }
-
-  // puzzle.squares = squares;
-  // console.log("\n\n squares:");
-  // console.log(squares);
-  return squares;
-};
-
-// sudokuObj = makeSquares(sudokuObj.puzzle);
-// console.log(puzzle);
-
-const getPeers = (cell) => {
-  // Define the three units we're pulling from
-  // console.log(cell);
-  const rows = makeRows();
-  const cols = makeCols();
-  const squares = makeSquares();
-  let row,
-    col,
-    square = [];
-  row = rows[`r${cell.address.r}`];
-  col = cols[`c${cell.address.c}`];
-  square = squares[getSquare(cell)];
-
-  return { row, col, square };
-};
-
-// console.log(getPeers({
-//   number: "7",
-//   given: true,
-//   valid: { value: true, reason: null },
-//   candidates: [],
-//   address: { r: 9, c: 7 }
-// }))
-
-const validateSquare = (cell) => {
-  // Skip givens
-  if (cell.given) {
-    return cell;
-  }
-  const { row, col, square } = getPeers(cell);
-  const peers = [...row, ...col, ...square];
-  // console.log("validateSquare");
-  for (let cellIndex = 0; cellIndex < peers.length; cellIndex++) {
-    // Skip the cell we're checking
-    if (peers[cellIndex].address != cell.address) {
-      if (peers[cellIndex].number == cell.number) {
-        cell.valid.value = false;
-      }
-    }
-    // Stop at first invalid
-    if (!cell.valid.value) {
-      break;
-    }
-  }
-  return cell;
-};
-
-// console.log(
-//   validateSquare({
-//     number: "7",
-//     given: true,
-//     valid: { value: true, reason: null },
-//     candidates: [],
-//     address: { r: 9, c: 7 },
-//   })
-// );
 
 import {
   WebSocket,
@@ -301,33 +177,44 @@ const updateFocus = ({ id, focus }, wss, ws) => {
   }, 180000);
 };
 
-const updateNumber = ({ address, number }) => {
-  sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
-  validateSquare(sudokuObj.puzzle[`r${address.r}c${address.c}`]);
-};
+// const updateNumber = ({ address, number }) => {
+//   // To return original state for undoing
+//   const originalState = { ...sudokuObj.puzzle[`r${address.r}c${address.c}`] };
+//   sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
+//   validateSquare(sudokuObj.puzzle[`r${address.r}c${address.c}`]);
+//   return originalState.number;
+// };
 
-const updatePencilMark = ({ address, pencilMark }) => {
-  if (pencilMark != "delete") {
-    // Toggle mark
-    sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-      pencilMark - 1
-    ] = !sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-      pencilMark - 1
-    ];
-  } else {
-    sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-    ];
-  }
-};
+// const updatePencilMark = ({ address, pencilMark }, pencilMarks?: any) => {
+//   // To return original state for undoing
+//   const originalState = [
+//     ...sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks,
+//   ];
+//   if (pencilMark != "delete") {
+//     // Toggle mark
+//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+//       pencilMark - 1
+//     ] = !sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
+//       pencilMark - 1
+//     ];
+//   } else if (pencilMarks) {
+//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = pencilMarks;
+//   } else {
+//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
+//       false,
+//       false,
+//       false,
+//       false,
+//       false,
+//       false,
+//       false,
+//       false,
+//       false,
+//     ];
+//   }
+//   // Return the original state, for use in undoing
+//   return originalState;
+// };
 
 const wss = new WebSocketServer(8010);
 
@@ -335,6 +222,8 @@ wss.on("connection", function (ws: WebSocket) {
   // Assign color
   let color = getColor(ws);
   let id = v4.generate();
+  // For undoing
+  const moves: any = [];
   // Save to users
   users[id] = {
     id,
@@ -364,9 +253,13 @@ wss.on("connection", function (ws: WebSocket) {
   }
 
   ws.on("message", function (message: any) {
-    const { focusUpdate, numberUpdate, pencilMarkUpdate, newGame } = JSON.parse(
-      message
-    );
+    const {
+      focusUpdate,
+      numberUpdate,
+      pencilMarkUpdate,
+      newGame,
+      undo,
+    } = JSON.parse(message);
 
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -378,14 +271,30 @@ wss.on("connection", function (ws: WebSocket) {
     if (numberUpdate) {
       console.log(numberUpdate);
 
-      updateNumber(numberUpdate);
+      let number = updateNumber(numberUpdate);
+      // Change the number to the former state
+      numberUpdate.number = number;
+      moves.push({ numberUpdate });
     }
     // Recieved pencil mark update
-
     if (pencilMarkUpdate) {
       console.log(pencilMarkUpdate);
-
-      updatePencilMark(pencilMarkUpdate);
+      let pencilMarks = updatePencilMark(pencilMarkUpdate);
+      pencilMarkUpdate.pencilMarks = pencilMarks;
+      pencilMarkUpdate.pencilMark = "delete";
+      moves.push({ pencilMarkUpdate });
+    }
+    // Recieved undo request
+    if (undo) {
+      console.log("undoing");
+      // Get last move for this player
+      let move = moves.pop();
+      // Check if the move is a number update
+      if (move.numberUpdate) {
+        updateNumber(move.numberUpdate);
+      } else if (move.pencilMarkUpdate) {
+        updatePencilMark(move.pencilMarkUpdate);
+      }
     }
     // console.log(newGame);
     if (newGame) {

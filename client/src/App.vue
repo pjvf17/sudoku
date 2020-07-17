@@ -84,6 +84,7 @@ const socket = new WebSocket(wsUrl);
 /* eslint-disable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
+import { setPuzzle, validateSquare} from "./use/puzzleManagement.js";
 /* eslint-enable */
 
 export default {
@@ -132,10 +133,7 @@ export default {
         sudokuObj.value.rows = sentRows;
         sudokuObj.value.cols = sentCols;
         sudokuObj.value.squares = sentSquares;
-        console.log(sentPuzzle);
-        console.log(sentSudokuObj);
-        console.log(getPeers(sudokuObj.value.puzzle["r1c1"]));
-
+        setPuzzle(sudokuObj);
         // focused.value = {};
       }
       if (sentUsers) {
@@ -150,11 +148,8 @@ export default {
       }
       // update focus
       if (focusUpdate) {
-        // console.log(focusUpdate);
         const { id, focus } = focusUpdate;
-        // console.log(users.value[id]);
         users.value[id].focus = focus;
-        // console.log(toRaw(users.value));
       }
       // update a number
       if (numberUpdate) {
@@ -190,121 +185,13 @@ export default {
       }
     };
 
-    const makeRows = computed(() => {
-      let rows = {};
-      for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-        rows[`r${rowIndex}`] = [];
-        for (let colIndex = 1; colIndex <= 9; colIndex++) {
-          rows[`r${rowIndex}`].push(
-            sudokuObj.value.puzzle[`r${rowIndex}c${colIndex}`]
-          );
-        }
-      }
-      return rows;
-    });
-    const makeCols = computed(() => {
-      let cols = {};
-      for (let colIndex = 1; colIndex <= 9; colIndex++) {
-        cols[`c${colIndex}`] = [];
-        for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-          cols[`c${colIndex}`].push(
-            sudokuObj.value.puzzle[`r${rowIndex}c${colIndex}`]
-          );
-        }
-      }
-      return cols;
-    });
-    const getSquare = cell => {
-      let s13 = [1, 2, 3];
-      let s46 = [4, 5, 6];
-      let s79 = [7, 8, 9];
-
-      let square;
-      if (cell.address.r >= 1 && cell.address.r <= 3) {
-        square = s13;
-      }
-      if (cell.address.r >= 4 && cell.address.r <= 6) {
-        square = s46;
-      }
-      if (cell.address.r >= 7 && cell.address.r <= 9) {
-        square = s79;
-      }
-      return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
-    };
-    const makeSquares = computed(() => {
-      let squares = {
-        s1: [],
-        s2: [],
-        s3: [],
-        s4: [],
-        s5: [],
-        s6: [],
-        s7: [],
-        s8: [],
-        s9: []
-      };
-
-      for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-        for (let colIndex = 1; colIndex <= 9; colIndex++) {
-          squares[
-            getSquare(sudokuObj.value.puzzle[`r${rowIndex}c${colIndex}`])
-          ].push(sudokuObj.value.puzzle[`r${rowIndex}c${colIndex}`]);
-        }
-      }
-      return squares;
-    });
-
-    const getPeers = cell => {
-      // Define the three units we're pulling from
-      console.log(cell);
-      // console.log(toRaw(makeCols.value));
-      // console.log(toRaw(makeRows.value));
-      // console.log(toRaw(makeSquares.value));
-      let row,
-        col,
-        square = [];
-      row = makeRows.value[`r${cell.address.r}`];
-      col = makeCols.value[`c${cell.address.c}`];
-      square = makeSquares.value[getSquare(cell)];
-
-      return { row, col, square };
-    };
-
-    const validateSquare = cell => {
-      // Skip givens
-      if (cell.given) {
-        return cell;
-      }
-      const { row, col, square } = getPeers(cell);
-      const peers = [...row, ...col, ...square];
-      // console.log("validateSquare");
-      let valid = true;
-      for (let cellIndex = 0; cellIndex < peers.length; cellIndex++) {
-        // Skip the cell we're checking
-        if (peers[cellIndex].address != cell.address) {
-          if (peers[cellIndex].number == cell.number) {
-            valid = false;
-            cell.valid.value = false;
-          }
-        }
-        // Stop at first invalid
-        if (!valid) {
-          break;
-        }
-      }
-      // If valid is still valid, reset cell
-      if (valid) {
-        cell.valid.value = true;
-      }
-      return cell;
-    };
+   
 
     const checkFocus = computed(() => {
       const focused = {};
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
-          console.log(user.color.slice(0, 6));
           focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
         }
       }
@@ -315,8 +202,6 @@ export default {
     const highlightNumbers = computed(() => {
       // Get your user
       const user = users.value[id.value];
-      console.log("triggered");
-      console.log(toRaw(user));
 
       let number = null;
       // If user is focused
@@ -331,7 +216,6 @@ export default {
               .number;
         }
       }
-      console.log(number);
       return number;
     });
 
@@ -345,7 +229,6 @@ export default {
 
     // make sure to reset the refs before each update
     onBeforeUpdate(() => {
-      // console.log(toRaw(inputs.value));
       inputs.value = {};
     });
 
@@ -368,85 +251,80 @@ export default {
       );
     };
 
-    const firstPassCandidateCalculator = puzzle => {
-      const rows = makeRows;
-      const cols = makeCols;
-      const squares = makeSquares;
-      for (let iteration = 0; iteration < 3; iteration++) {
-        let units;
-        switch (iteration) {
-          case 0:
-            units = rows;
-            break;
-          case 1:
-            units = cols;
-            break;
-          case 2:
-            units = squares;
-            break;
-        }
-        // Update candidates for each cell
-        for (const unitAddress in units) {
-          // if (units.hasOwnProperty(unitAddress)) {
-          const unit = units[unitAddress];
-          // Create an array of the numbers in the row
+    // const firstPassCandidateCalculator = puzzle => {
+    //   const rows = makeRows;
+    //   const cols = makeCols;
+    //   const squares = makeSquares;
+    //   for (let iteration = 0; iteration < 3; iteration++) {
+    //     let units;
+    //     switch (iteration) {
+    //       case 0:
+    //         units = rows;
+    //         break;
+    //       case 1:
+    //         units = cols;
+    //         break;
+    //       case 2:
+    //         units = squares;
+    //         break;
+    //     }
+    //     // Update candidates for each cell
+    //     for (const unitAddress in units) {
+    //       // if (units.hasOwnProperty(unitAddress)) {
+    //       const unit = units[unitAddress];
+    //       // Create an array of the numbers in the row
 
-          // First, create an array of the values
-          const rowNumbers = Object.values(units[unitAddress])
-            // Second, parse each value as a number
-            .map(el => parseInt(el.number))
-            // Third, filter out any non numbers
-            .filter(el => !isNaN(el));
+    //       // First, create an array of the values
+    //       const rowNumbers = Object.values(units[unitAddress])
+    //         // Second, parse each value as a number
+    //         .map(el => parseInt(el.number))
+    //         // Third, filter out any non numbers
+    //         .filter(el => !isNaN(el));
 
-          // Create an array of numbers from 1 to 9
-          let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-          // For each number in the row
-          unseenNumbers = unseenNumbers.filter(number => {
-            // Return only the numbers not in the row
-            return !rowNumbers.includes(number);
-          });
-          // For each non number in the row, add the unseenNumbers to the candidates array
-          for (const cellAddress in unit) {
-            // if (unit.hasOwnProperty(cellAddress)) {
-            if (unit[cellAddress].number == "") {
-              // If we're not on the first iteration of both the inner and outer loops
-              // Get previous candidates of cell
-              const previousCandidates =
-                iteration == 0
-                  ? Array.from(Array(9), (_, i) => i + 1)
-                  : unit[cellAddress].candidates;
-              // Reset candidates
-              unit[cellAddress].candidates = [];
-              unseenNumbers
-                // Include only what previous candidates also has
-                .filter(number => {
-                  return previousCandidates.includes(number);
-                })
-                // Add each number to the candidates
-                .forEach(number => {
-                  unit[cellAddress].candidates.push(number);
-                });
-            }
-            // }
-          }
-          // }
-        }
-      }
-      console.log(puzzle);
-      return puzzle;
-    };
+    //       // Create an array of numbers from 1 to 9
+    //       let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+    //       // For each number in the row
+    //       unseenNumbers = unseenNumbers.filter(number => {
+    //         // Return only the numbers not in the row
+    //         return !rowNumbers.includes(number);
+    //       });
+    //       // For each non number in the row, add the unseenNumbers to the candidates array
+    //       for (const cellAddress in unit) {
+    //         // if (unit.hasOwnProperty(cellAddress)) {
+    //         if (unit[cellAddress].number == "") {
+    //           // If we're not on the first iteration of both the inner and outer loops
+    //           // Get previous candidates of cell
+    //           const previousCandidates =
+    //             iteration == 0
+    //               ? Array.from(Array(9), (_, i) => i + 1)
+    //               : unit[cellAddress].candidates;
+    //           // Reset candidates
+    //           unit[cellAddress].candidates = [];
+    //           unseenNumbers
+    //             // Include only what previous candidates also has
+    //             .filter(number => {
+    //               return previousCandidates.includes(number);
+    //             })
+    //             // Add each number to the candidates
+    //             .forEach(number => {
+    //               unit[cellAddress].candidates.push(number);
+    //             });
+    //         }
+    //         // }
+    //       }
+    //       // }
+    //     }
+    //   }
+    //   console.log(puzzle);
+    //   return puzzle;
+    // };
 
     const handleInput = ({ key, event }) => {
-      // console.log(event);
-      // console.log(key);
-      // console.log(event);
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
       // Address of cursor
       let { row, col } = users.value[id.value].focus;
       // Check for null
-      // console.log(row);
-      // console.log(col);
       if (row == null || col == null) {
         // Set to top right
         row = 1;
@@ -470,11 +348,7 @@ export default {
       ) {
         event.preventDefault();
         if (notating.value) {
-          console.log(row);
-          console.log(col);
           // Toggle notation for number on local copy
-          console.log(sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks);
-
           sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[
             key - 1
           ] = !sudokuObj.value.puzzle[`r${row}c${col}`].pencilMarks[key - 1];
@@ -488,7 +362,6 @@ export default {
           sudokuObj.value.puzzle[`r${row}c${col}`] = validateSquare(
             sudokuObj.value.puzzle[`r${row}c${col}`]
           );
-          console.log(toRaw(sudokuObj.value.puzzle[`r${row}c${col}`]));
           // Send server update
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           socket.send(
@@ -549,6 +422,8 @@ export default {
         }
       } else if (key == "Shift") {
         notating.value = !notating.value;
+      } else if (key.toLowerCase() == "z" && event.metaKey) {
+        socket.send(JSON.stringify({ undo: true }));
       }
     };
 
@@ -569,7 +444,6 @@ export default {
     };
 
     const newGame = () => {
-      console.log("starting new game");
       socket.send(JSON.stringify({ newGame: true }));
     };
 
@@ -585,7 +459,6 @@ export default {
       checkFocus,
       users,
       notating,
-      firstPassCandidateCalculator,
       highlightNumbers
     };
   }
