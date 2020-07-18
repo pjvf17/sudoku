@@ -67,9 +67,9 @@
       >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
       <button @click="newGame()" class="button">Start New Game</button>
       <button
-        @click="firstPassCandidateCalculator(sudokuObj.puzzle)"
+        @click="firstPassCandidateCalculator()"
         class="button"
-      >Fill In Candiadtes?</button>
+      >Fill In Candidates</button>
     </div>
   </div>
 </template>
@@ -84,7 +84,7 @@ const socket = new WebSocket(wsUrl);
 /* eslint-disable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
-import { setPuzzle, validateSquare } from "./use/puzzleValidation.js";
+import { setPuzzle, validateSquare, firstPassCandidateCalculator } from "./use/puzzleValidation.js";
 import updates from "./use/puzzleUpdates";
 
 /* eslint-enable */
@@ -352,7 +352,8 @@ export default {
       checkFocus,
       users,
       notating,
-      highlightNumbers
+      highlightNumbers,
+      firstPassCandidateCalculator
     };
   }
 };

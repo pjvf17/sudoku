@@ -1,4 +1,4 @@
-import {computed, ref } from "vue";
+import { computed, ref, toRaw } from "vue";
 
 let sudokuObj = ref({});
 
@@ -109,70 +109,94 @@ export const validateSquare = (cell) => {
   return cell;
 };
 
-    // const firstPassCandidateCalculator = puzzle => {
-    //   const rows = makeRows;
-    //   const cols = makeCols;
-    //   const squares = makeSquares;
-    //   for (let iteration = 0; iteration < 3; iteration++) {
-    //     let units;
-    //     switch (iteration) {
-    //       case 0:
-    //         units = rows;
-    //         break;
-    //       case 1:
-    //         units = cols;
-    //         break;
-    //       case 2:
-    //         units = squares;
-    //         break;
-    //     }
-    //     // Update candidates for each cell
-    //     for (const unitAddress in units) {
-    //       // if (units.hasOwnProperty(unitAddress)) {
-    //       const unit = units[unitAddress];
-    //       // Create an array of the numbers in the row
+export const firstPassCandidateCalculator = () => {
+  const rows = makeRows.value;
+  const cols = makeCols.value;
+  const squares = makeSquares.value;
 
-    //       // First, create an array of the values
-    //       const rowNumbers = Object.values(units[unitAddress])
-    //         // Second, parse each value as a number
-    //         .map(el => parseInt(el.number))
-    //         // Third, filter out any non numbers
-    //         .filter(el => !isNaN(el));
+  for (const cellAddress in sudokuObj.value.puzzle) {
+    if (
+      Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
+    ) {
+      sudokuObj.value.puzzle[cellAddress].candidates = [];
+      // console.log(toRaw(sudokuObj.value.puzzle[cellAddress]));
+    }
+  }
 
-    //       // Create an array of numbers from 1 to 9
-    //       let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
-    //       // For each number in the row
-    //       unseenNumbers = unseenNumbers.filter(number => {
-    //         // Return only the numbers not in the row
-    //         return !rowNumbers.includes(number);
-    //       });
-    //       // For each non number in the row, add the unseenNumbers to the candidates array
-    //       for (const cellAddress in unit) {
-    //         // if (unit.hasOwnProperty(cellAddress)) {
-    //         if (unit[cellAddress].number == "") {
-    //           // If we're not on the first iteration of both the inner and outer loops
-    //           // Get previous candidates of cell
-    //           const previousCandidates =
-    //             iteration == 0
-    //               ? Array.from(Array(9), (_, i) => i + 1)
-    //               : unit[cellAddress].candidates;
-    //           // Reset candidates
-    //           unit[cellAddress].candidates = [];
-    //           unseenNumbers
-    //             // Include only what previous candidates also has
-    //             .filter(number => {
-    //               return previousCandidates.includes(number);
-    //             })
-    //             // Add each number to the candidates
-    //             .forEach(number => {
-    //               unit[cellAddress].candidates.push(number);
-    //             });
-    //         }
-    //         // }
-    //       }
-    //       // }
-    //     }
-    //   }
-    //   console.log(puzzle);
-    //   return puzzle;
-    // };
+  for (let iteration = 0; iteration < 3; iteration++) {
+    let units;
+    switch (iteration) {
+      case 0:
+        units = rows;
+        break;
+      case 1:
+        units = cols;
+        break;
+      case 2:
+        units = squares;
+        break;
+    }
+    // Update candidates for each cell
+    for (const unitAddress in units) {
+      // if (units.hasOwnProperty(unitAddress)) {
+      const unit = units[unitAddress];
+      // Create an array of the numbers in the row
+
+      // First, create an array of the values
+      const rowNumbers = Object.values(units[unitAddress])
+        // Second, parse each value as a number
+        .map((el) => parseInt(el.number))
+        // Third, filter out any non numbers
+        .filter((el) => !isNaN(el));
+
+      // Create an array of numbers from 1 to 9
+      let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
+      // For each number in the row
+      unseenNumbers = unseenNumbers.filter((number) => {
+        // Return only the numbers not in the row
+        return !rowNumbers.includes(number);
+      });
+      // For each non number in the row, add the unseenNumbers to the candidates array
+      for (const cellAddress in unit) {
+        // if (unit.hasOwnProperty(cellAddress)) {
+        if (unit[cellAddress].number == "") {
+          // If we're not on the first iteration of both the inner and outer loops
+          // Get previous candidates of cell
+          const previousCandidates =
+            iteration == 0
+              ? Array.from(Array(9), (_, i) => i + 1)
+              : unit[cellAddress].candidates;
+          // Reset candidates
+          unit[cellAddress].candidates = [];
+          unseenNumbers
+            // Include only what previous candidates also has
+            .filter((number) => {
+              return previousCandidates.includes(number);
+            })
+            // Add each number to the candidates
+            .forEach((number) => {
+              unit[cellAddress].candidates.push(number);
+            });
+        }
+        // }
+      }
+      // }
+    }
+  }
+
+  // Loop over cells, apply candidates to pencilmarks
+
+  for (const cellAddress in sudokuObj.value.puzzle) {
+    if (
+      Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
+    ) {
+      sudokuObj.value.puzzle[cellAddress].candidates.forEach(candidate => {
+        sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;
+      });
+    }
+  }
+
+  
+
+  console.log(toRaw(sudokuObj.value.puzzle));
+};
