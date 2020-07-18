@@ -1,31 +1,34 @@
-- Undo feature
-- Navigate grid with HJKL and WASD and customize others
-- Hint feature
-- Customization
-  - Colors
-  - Key binds
-  - Number highlighting
-  - row/col highlighting
-- Hold (some key) to skip over numbers or loop around to other side
-- Difficulty Selector
-- Populate all candidates with basic rules
-  - Per cell option
-  - All cells option
-  - Per row/col ?
-- Indication of loading
-- Indication/celebration of complete
-- Timer
-- People
-  - Names
-    - Rename yourself
-    - Nickname others
-  - Recolor yourself
-- Database for puzzles
-  - Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
-- Make an account
-- Game lobby
-  - How??
-- Walkthrough of features
-- Walkthrough of techniques
+- [x] Undo feature
+- [ ] Redo Feature
+- [ ] Numbering of moves
+  - [ ] Use the numbering to check for missed moves from/to server
+- [ ] Navigate grid with HJKL and WASD and customize others
+- [ ] Hint feature
+- [ ] Customization
+  - [ ] Colors
+  - [ ] Key binds
+  - [ ] Number highlighting
+  - [ ] row/col highlighting
+- [ ] Hold (some key) to skip over numbers or loop around to other side
+- [ ] Difficulty Selector
+- [ ] Populate all candidates with basic rules
+  - [ ] Per cell option
+  - [ ] All cells option
+  - [ ] Per row/col ?
+- [ ] Indication of loading
+- [ ] Indication/celebration of complete
+- [ ] Timer
+- [ ] People
+  - [ ] Names
+    - [ ] Rename yourself
+    - [ ] Nickname others
+  - [ ] Recolor yourself
+- [ ] Database for puzzles
+  - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
+- [ ] Make an account
+- [ ] Game lobby
+  - [ ] How??
+- [ ] Walkthrough of features
+- [ ] Walkthrough of techniques
 
 
