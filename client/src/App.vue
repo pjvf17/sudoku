@@ -121,7 +121,9 @@ export default {
         // NumberUpdate, sent whenever someone changes a number
         numberUpdate,
         // PencilMarkUpdate, sent whenever someone changes a pencil mark
-        pencilMarkUpdate
+        pencilMarkUpdate,
+        // Undo request
+        undo
       } = JSON.parse(data);
 
       const {
@@ -141,6 +143,7 @@ export default {
       }
       if (sentUsers) {
         users.value = sentUsers;
+        updates.setUsers(users);
       }
       if (sentColor) {
         color.value = sentColor;
@@ -161,6 +164,10 @@ export default {
       // update a pencilmark
       if (pencilMarkUpdate) {
         updates.updatePencilMarks({ pencilMarkUpdate });
+      }
+      // undo a move
+      if (undo) {
+        updates.undo(undo)
       }
     };
 
@@ -259,7 +266,7 @@ export default {
         if (notating.value) {
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           // Create pencilMarkUpdate object
-          const pencilMarkUpdate = { address, pencilMark: key };
+          const pencilMarkUpdate = { address, pencilMark: key, id: id.value };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
           // Update server
@@ -267,7 +274,7 @@ export default {
         } else {
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           // Create numberupdate object
-          const numberUpdate = { address, number: key };
+          const numberUpdate = { address, number: key, id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
           // Send server update
@@ -280,7 +287,11 @@ export default {
         if (notating.value) {
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           // Create pencilMarkUpdate object
-          const pencilMarkUpdate = { address, pencilMark: "delete" };
+          const pencilMarkUpdate = {
+            address,
+            pencilMark: "delete",
+            id: id.value
+          };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
           // Update server
@@ -292,7 +303,7 @@ export default {
         } else {
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           // Create numberupdate object
-          const numberUpdate = { address, number: "" };
+          const numberUpdate = { address, number: "", id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
           // Send server update
@@ -317,7 +328,9 @@ export default {
       } else if (key == "Shift") {
         notating.value = !notating.value;
       } else if (key.toLowerCase() == "z" && event.metaKey) {
-        socket.send(JSON.stringify({ undo: true }));
+        // Update local
+        updates.undo(id.value);
+        socket.send(JSON.stringify({ undo: id.value }));
       }
     };
 

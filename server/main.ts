@@ -14,7 +14,7 @@ import {
   updatePencilMark,
   validateSquare,
   setSudokuObj
-} from "../sudokuManagementFunctions/updates.ts";
+} from "./updates.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -42,7 +42,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
+  sudokuObj.puzzle = puzzleToString(createPuzzle("easy"));
   sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
   const puzzle = {};
@@ -177,45 +177,6 @@ const updateFocus = ({ id, focus }, wss, ws) => {
   }, 180000);
 };
 
-// const updateNumber = ({ address, number }) => {
-//   // To return original state for undoing
-//   const originalState = { ...sudokuObj.puzzle[`r${address.r}c${address.c}`] };
-//   sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
-//   validateSquare(sudokuObj.puzzle[`r${address.r}c${address.c}`]);
-//   return originalState.number;
-// };
-
-// const updatePencilMark = ({ address, pencilMark }, pencilMarks?: any) => {
-//   // To return original state for undoing
-//   const originalState = [
-//     ...sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks,
-//   ];
-//   if (pencilMark != "delete") {
-//     // Toggle mark
-//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-//       pencilMark - 1
-//     ] = !sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
-//       pencilMark - 1
-//     ];
-//   } else if (pencilMarks) {
-//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = pencilMarks;
-//   } else {
-//     sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
-//       false,
-//       false,
-//       false,
-//       false,
-//       false,
-//       false,
-//       false,
-//       false,
-//       false,
-//     ];
-//   }
-//   // Return the original state, for use in undoing
-//   return originalState;
-// };
-
 const wss = new WebSocketServer(8010);
 
 wss.on("connection", function (ws: WebSocket) {
@@ -231,14 +192,13 @@ wss.on("connection", function (ws: WebSocket) {
     name: null,
     color,
     ws,
+    moves
   };
   // Send users array
   ws.send(JSON.stringify({ users }));
   // Send id to user to use as identification in users array
   ws.send(JSON.stringify({ id }));
   // Send sudokuObj
-  // console.log("sending");
-  // console.log(sudokuObj);
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
@@ -260,42 +220,38 @@ wss.on("connection", function (ws: WebSocket) {
       newGame,
       undo,
     } = JSON.parse(message);
+    console.log(JSON.parse(message));
 
     // Recieved movement/focus update
     if (focusUpdate) {
-      console.log(focusUpdate);
       // update user
       updateFocus(focusUpdate, wss, ws);
     }
     // Recieved number update
     if (numberUpdate) {
-      console.log(numberUpdate);
 
-      let number = updateNumber(numberUpdate);
+      const inverseUpdate = updateNumber(numberUpdate);
       // Change the number to the former state
-      numberUpdate.number = number;
-      moves.push({ numberUpdate });
+      moves.push({ numberUpdate: inverseUpdate });
+
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
-      console.log(pencilMarkUpdate);
-      let pencilMarks = updatePencilMark(pencilMarkUpdate);
-      pencilMarkUpdate.pencilMarks = pencilMarks;
-      pencilMarkUpdate.pencilMark = "delete";
-      moves.push({ pencilMarkUpdate });
+      const inverseUpdate = updatePencilMark(pencilMarkUpdate);
+      moves.push({ pencilMarkUpdate: inverseUpdate });
     }
     // Recieved undo request
-    // if (undo) {
-    //   console.log("undoing");
-    //   // Get last move for this player
-    //   let move = moves.pop();
-    //   // Check if the move is a number update
-    //   if (move.numberUpdate) {
-    //     updateNumber(move.numberUpdate);
-    //   } else if (move.pencilMarkUpdate) {
-    //     updatePencilMark(move.pencilMarkUpdate);
-    //   }
-    // }
+    if (undo) {
+      // Get last move for this player
+      let move = moves.pop();
+      // Check if the move is a number update
+      if (move.numberUpdate) {
+        updateNumber(move.numberUpdate);
+        // Check if it's a pencilMarkUpdate
+      } else if (move.pencilMarkUpdate) {
+        updatePencilMark(move.pencilMarkUpdate);
+      }
+    }
     // console.log(newGame);
     if (newGame) {
       startNewGame();
@@ -318,8 +274,6 @@ wss.on("connection", function (ws: WebSocket) {
   ws.on("close", function (message: any) {
     freeColor(ws);
     freeUser(id);
-    console.log(users);
-    console.log(ws);
     console.log(`socket closed: ${message}`);
     for (let client of wss.clients) {
       if (!client.isClosed) {
