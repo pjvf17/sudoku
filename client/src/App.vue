@@ -66,10 +66,7 @@
         style="color: white"
       >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
       <button @click="newGame()" class="button">Start New Game</button>
-      <button
-        @click="firstPassCandidateCalculator()"
-        class="button"
-      >Fill In Candidates</button>
+      <button @click="firstPassCandidateCalculator()" class="button">Fill In Candidates</button>
     </div>
   </div>
 </template>
@@ -84,7 +81,11 @@ const socket = new WebSocket(wsUrl);
 /* eslint-disable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
-import { setPuzzle, validateSquare, firstPassCandidateCalculator } from "./use/puzzleValidation.js";
+import {
+  setPuzzle,
+  validateSquare,
+  firstPassCandidateCalculator
+} from "./use/puzzleValidation.js";
 import updates from "./use/puzzleUpdates";
 
 /* eslint-enable */
@@ -427,6 +428,8 @@ td {
   height: 63px;
   background-color: $nord5;
   border: 1px solid darken($color: $nord5, $amount: 10);
+  transition: 0.1s ease;
+
   // background-color: var(--color);
 
   input,
@@ -443,7 +446,6 @@ td {
     font-family: Consolea, "Courier New", Courier, monospace;
     caret-color: transparent !important;
     z-index: 3;
-
     display: block;
     max-height: 100%;
 
@@ -473,6 +475,8 @@ td {
 }
 
 circle {
+  transition: 0.1s ease;
+
   fill: transparent;
   &.circle-number {
     fill: darken($color: $nord5, $amount: 15);
