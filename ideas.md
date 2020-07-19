@@ -5,6 +5,9 @@
 - [ ] Redo Feature
 - [ ] Navigate grid with HJKL and WASD and customize others
 - [ ] Hint feature
+  - [x] Backend support for finding and returning a hint
+  - [ ] Request a hint from client for current boardstate
+  - [ ] Display hint on client
 - [ ] Select multiple cells to toggle pencilmarks
 - [ ] Select multiple numbers to highlight
 - [ ] Select specific cells to highlight
@@ -49,7 +52,6 @@
 
 - [ ] Make an account
 - [ ] Game lobby
-  - [ ] How??
 - [ ] Walkthrough of features
 - [ ] Walkthrough of techniques
 
