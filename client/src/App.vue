@@ -84,7 +84,9 @@ import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 import {
   setPuzzle,
   validateSquare,
-  firstPassCandidateCalculator
+  firstPassCandidateCalculator,
+  setId,
+  setSocket
 } from "./use/puzzleValidation.js";
 import updates from "./use/puzzleUpdates";
 
@@ -98,6 +100,7 @@ export default {
 
     socket.onopen = function() {
       console.log("connection established");
+      setSocket(socket);
     };
     const color = ref({});
     const sudokuObj = ref({});
@@ -151,6 +154,7 @@ export default {
       }
       if (sentid) {
         id.value = sentid;
+        setId(id);
       }
       // update focus
       if (focusUpdate) {

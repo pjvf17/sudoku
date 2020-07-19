@@ -1,9 +1,22 @@
+/* eslint-disable */
+
 import { computed, ref, toRaw } from "vue";
+/* eslint-enable */
 
 let sudokuObj = ref({});
+let userId = ref({});
+let socket;
 
 export const setPuzzle = (obj) => {
   sudokuObj = obj;
+};
+
+export const setId = (id) => {
+  userId = id;
+};
+
+export const setSocket = (socketToSet) => {
+  socket = socketToSet;
 };
 
 const makeRows = computed(() => {
@@ -113,15 +126,12 @@ export const firstPassCandidateCalculator = () => {
   const rows = makeRows.value;
   const cols = makeCols.value;
   const squares = makeSquares.value;
-  console.log(rows);
 
   for (const cellAddress in sudokuObj.value.puzzle) {
     if (
       Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
     ) {
       sudokuObj.value.puzzle[cellAddress].candidates = [];
-      // Creates array of 9 false values, resets pencilmMarks
-      sudokuObj.value.puzzle[cellAddress].pencilMarks = Array.from({length: 9}, () => false);
     }
   }
 
@@ -184,16 +194,29 @@ export const firstPassCandidateCalculator = () => {
   }
 
   // Loop over cells, apply candidates to pencilmarks
-
   for (const cellAddress in sudokuObj.value.puzzle) {
     if (
       Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
     ) {
-      sudokuObj.value.puzzle[cellAddress].candidates.forEach(candidate => {
+      // Creates array of 9 false values, resets pencilmMarks
+      sudokuObj.value.puzzle[cellAddress].pencilMarks = Array.from(
+        { length: 9 },
+        () => false
+      );
+      sudokuObj.value.puzzle[cellAddress].candidates.forEach((candidate) => {
         sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;
+        // Send to server
+        const pencilMarkUpdate = {
+          address: sudokuObj.value.puzzle[cellAddress].address,
+          pencilMark: candidate,
+          id: userId.value,
+        };
+        socket.send(
+          JSON.stringify({
+            pencilMarkUpdate,
+          })
+        );
       });
     }
   }
-
-  console.log(toRaw(sudokuObj.value.puzzle));
 };
