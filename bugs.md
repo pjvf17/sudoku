@@ -1,0 +1,1 @@
+- [ ] Naked single solver only supports the finding of one pair at a time

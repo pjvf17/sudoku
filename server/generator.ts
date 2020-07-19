@@ -1099,6 +1099,7 @@ export const nakedPairSolver = (
                 }
               }
             }
+
             // console.log("printing pairsFilteredUnitCandidates");
             // console.log(pairsFilteredUnitCandidates);
           }
