@@ -1103,6 +1103,12 @@ export const nakedPairSolver = (
             // console.log("printing pairsFilteredUnitCandidates");
             // console.log(pairsFilteredUnitCandidates);
           }
+          if (changes > 0) {
+            changesArray.push({
+              pair: pairsFilteredUnitCandidates[0],
+              unitAddress
+            })
+          }
           // Only count 1 change per unit
           totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
           changes = 0;
@@ -1112,7 +1118,7 @@ export const nakedPairSolver = (
   } while (changes > 0);
 
   // printSudokuToConsole(puzzle);
-  return { puzzle, changes: totalChanges, rows, cols, squares };
+  return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
 
 export const hiddenPairSolver = (
@@ -1230,7 +1236,12 @@ export const hiddenPairSolver = (
                     }
                   }
                 }
-                // console.log(changes);
+                if (changes) {
+                  changesArray.push({
+                    pair,
+                    unitAddress
+                  })
+                }
                 // Incease changes by one, if we've made any changes
                 totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
                 // Reset changes for next loop
@@ -1244,7 +1255,7 @@ export const hiddenPairSolver = (
   } while (changes > 0);
 
   // printSudokuToConsole(puzzle);
-  return { puzzle, changes: totalChanges, rows, cols, squares };
+  return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
 
 /* 
@@ -1351,6 +1362,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (nakedPair.changes > 0) {
+        console.log("nakedPair")
+        console.log(nakedPair.changesArray)
         continue;
       }
 
@@ -1383,7 +1396,6 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // Only going to the next when the previous ones didn't work
       if (claiming.changes > 0) {
         console.log("claiming")
-
         console.log(claiming.changesArray)
         continue;
       }
@@ -1411,7 +1423,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (hiddenPair.changes > 0) {
-        // console.log(changeme.changesArray)
+        console.log("hiddenPair")
+        console.log(hiddenPair.changesArray)
         continue;
       }
 
