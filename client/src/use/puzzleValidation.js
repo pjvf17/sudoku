@@ -113,13 +113,15 @@ export const firstPassCandidateCalculator = () => {
   const rows = makeRows.value;
   const cols = makeCols.value;
   const squares = makeSquares.value;
+  console.log(rows);
 
   for (const cellAddress in sudokuObj.value.puzzle) {
     if (
       Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
     ) {
       sudokuObj.value.puzzle[cellAddress].candidates = [];
-      // console.log(toRaw(sudokuObj.value.puzzle[cellAddress]));
+      // Creates array of 9 false values, resets pencilmMarks
+      sudokuObj.value.puzzle[cellAddress].pencilMarks = Array.from({length: 9}, () => false);
     }
   }
 
@@ -158,7 +160,6 @@ export const firstPassCandidateCalculator = () => {
       });
       // For each non number in the row, add the unseenNumbers to the candidates array
       for (const cellAddress in unit) {
-        // if (unit.hasOwnProperty(cellAddress)) {
         if (unit[cellAddress].number == "") {
           // If we're not on the first iteration of both the inner and outer loops
           // Get previous candidates of cell
@@ -178,9 +179,7 @@ export const firstPassCandidateCalculator = () => {
               unit[cellAddress].candidates.push(number);
             });
         }
-        // }
       }
-      // }
     }
   }
 
@@ -195,8 +194,6 @@ export const firstPassCandidateCalculator = () => {
       });
     }
   }
-
-  
 
   console.log(toRaw(sudokuObj.value.puzzle));
 };
