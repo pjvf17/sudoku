@@ -7,45 +7,45 @@ import {
 
 import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";
 
+await bench({
+  name: "Fill in remaining",
+  runs: 100,
+  func(b): void {
+    b.start();
+    fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+    b.stop();
+  },
+});
+
 // await bench({
-//   name: "Fill in remaining",
+//   name: "Solve easy puzzle",
 //   runs: 100,
 //   func(b): void {
 //     b.start();
-//     fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+//     singleCandidateAndPositionSolver(parsePuzzle(easyPuzzleString));
 //     b.stop();
 //   },
 // });
 
-// // await bench({
-// //   name: "Solve easy puzzle",
-// //   runs: 100,
-// //   func(b): void {
-// //     b.start();
-// //     singleCandidateAndPositionSolver(parsePuzzle(easyPuzzleString));
-// //     b.stop();
-// //   },
-// // });
+await bench({
+  name: "Create easy puzzle",
+  runs: 20,
+  func(b): void {
+    b.start();
+    const puzzle = createPuzzle("easy");
+    b.stop();
+  },
+});
 
-// await bench({
-//   name: "Create easy puzzle",
-//   runs: 20,
-//   func(b): void {
-//     b.start();
-//     const puzzle = createPuzzle("easy");
-//     b.stop();
-//   },
-// });
-
-// await bench({
-//   name: "Create medium puzzle",
-//   runs: 20,
-//   func(b): void {
-//     b.start();
-//     const puzzle = createPuzzle("medium");
-//     b.stop();
-//   },
-// });
+await bench({
+  name: "Create medium puzzle",
+  runs: 20,
+  func(b): void {
+    b.start();
+    const puzzle = createPuzzle("medium");
+    b.stop();
+  },
+});
 
 // With reset at 100. And Secondary backtrack, 20 runs: 2313.7ms
 // With reset at 100. No secondary backtrack, 20 runs: 3919.8ms

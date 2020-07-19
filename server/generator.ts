@@ -625,6 +625,34 @@ export const hiddenAndNakedSingleSolver = (
           break;
       }
 
+      // Update any cells where there is only one candidate
+      for (const cellAddress in puzzle) {
+        if (
+          puzzle.hasOwnProperty(cellAddress) &&
+          puzzle[cellAddress].number == "."
+        ) {
+          const cell = puzzle[cellAddress];
+          // If only one candidate
+          if (cell.candidates.length == 1) {
+            // Set number to candidate
+            cell.number = cell.candidates.pop();
+            puzzle = updatePeerCandidates(puzzle, cell, cell.number, {
+              rows,
+              cols,
+              squares,
+            });
+            // Update changes
+            changes++;
+            // Push to changesArray
+            changesArray.push({
+              nakedSingle: {
+                address: { r: cell.address.r, c: cell.address.c },
+                number: cell.number,
+              },
+            });
+          }
+        }
+      }
       // Find cells where there is only one spot in a unit for a given number
       // And update them
       for (const unitAddress in units) {
@@ -683,34 +711,7 @@ export const hiddenAndNakedSingleSolver = (
         }
       }
     }
-    // Update any cells where there is only one candidate
-    for (const cellAddress in puzzle) {
-      if (
-        puzzle.hasOwnProperty(cellAddress) &&
-        puzzle[cellAddress].number == "."
-      ) {
-        const cell = puzzle[cellAddress];
-        // If only one candidate
-        if (cell.candidates.length == 1) {
-          // Set number to candidate
-          cell.number = cell.candidates.pop();
-          puzzle = updatePeerCandidates(puzzle, cell, cell.number, {
-            rows,
-            cols,
-            squares,
-          });
-          // Update changes
-          changes++;
-          // Push to changesArray
-          changesArray.push({
-            nakedSingle: {
-              address: { r: cell.address.r, c: cell.address.c },
-              number: cell.number,
-            },
-          });
-        }
-      }
-    }
+
     totalChanges += changes;
     iterations++;
   } while (changes > 0);
@@ -1106,8 +1107,8 @@ export const nakedPairSolver = (
           if (changes > 0) {
             changesArray.push({
               pair: pairsFilteredUnitCandidates[0],
-              unitAddress
-            })
+              unitAddress,
+            });
           }
           // Only count 1 change per unit
           totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
@@ -1239,8 +1240,8 @@ export const hiddenPairSolver = (
                 if (changes) {
                   changesArray.push({
                     pair,
-                    unitAddress
-                  })
+                    unitAddress,
+                  });
                 }
                 // Incease changes by one, if we've made any changes
                 totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
@@ -1264,7 +1265,7 @@ Increasing complexity when a given solver changes nothing,
 And returning to start when a solver changes something 
 */
 
-export const solver = (puzzle: any, difficulty?: any) => {
+export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
   difficulty = difficulty ?? "all";
   // First, populate candidates
   const firstPass = firstPassCandidateCalculator(puzzle);
@@ -1273,6 +1274,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
   let cols = firstPass.cols;
   let squares = firstPass.squares;
   let changes = 0;
+  // For passing back to hint
+  let change: any;
   // Holds cost of each method used
   const cost: any = {
     hiddenSingle: 0,
@@ -1282,6 +1285,12 @@ export const solver = (puzzle: any, difficulty?: any) => {
     hiddenPair: 0,
   };
   do {
+    // If in hint mode, stop at first changes
+
+    if (hint && changes) {
+      // Locate which technique had the change
+      return change;
+    }
     changes = 0;
     // Try naked and hidden candidate solver
     const hiddenSingle = hiddenAndNakedSingleSolver(
@@ -1302,8 +1311,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
 
     if (hiddenSingle.cost > 0) {
-      console.log("hiddenSingle")
-      console.log(hiddenSingle.changesArray)
+      change = hiddenSingle.changesArray[0];
+      continue;
     }
     // Check difficulty. If easy, stick to above, else continue with more advanced methods
     if (difficulty != "easy") {
@@ -1335,8 +1344,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (pointing.changes > 0) {
-        console.log("pointing")
-        console.log(pointing.changesArray)
+        // Set change to first element of changes
+        change = pointing.changesArray[0];
         continue;
       }
       // Try naked pair solver
@@ -1362,8 +1371,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (nakedPair.changes > 0) {
-        console.log("nakedPair")
-        console.log(nakedPair.changesArray)
+        // Set change to first element of changes
+        change = nakedPair.changesArray[0];
         continue;
       }
 
@@ -1395,8 +1404,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (claiming.changes > 0) {
-        console.log("claiming")
-        console.log(claiming.changesArray)
+        // Set change to first element of changes
+        change = claiming.changesArray[0];
         continue;
       }
 
@@ -1423,8 +1432,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (hiddenPair.changes > 0) {
-        console.log("hiddenPair")
-        console.log(hiddenPair.changesArray)
+        // Set change to first element of changes
+        change = hiddenPair.changesArray[0];
         continue;
       }
 
@@ -1448,9 +1457,6 @@ export const solver = (puzzle: any, difficulty?: any) => {
   return { puzzle, totalCost, cost };
   // Need to keep track of changes for each method
 };
-
-// Find the first spot in a puzzle where you can make an update
-export const hint = (puzzle: any) => {};
 
 export const createPuzzle = (difficulty?: any) => {
   // const startTimer = performance.now();

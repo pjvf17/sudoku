@@ -31,20 +31,20 @@
                   dominant-baseline="middle"
                   text-anchor="middle"
                   :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
-                >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
+                >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == "." ? "" : sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
                 <g
                   v-for="(pencilMark, index) in sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks"
                   :key="index"
                 >
                   <circle
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == '.'"
                     :class="[{'circle-number': highlightNumbers == index + 1}]"
                     :cy="9+(22*Math.floor(index / 3))"
                     :cx="8.5+(22 * (index % 3))"
                     r="8"
                   />
                   <text
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == ''"
+                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == '.'"
                     dominant-baseline="middle"
                     text-anchor="middle"
                   >
@@ -171,7 +171,7 @@ export default {
       }
       // undo a move
       if (undo) {
-        updates.undo(undo)
+        updates.undo(undo);
       }
     };
 
@@ -197,7 +197,7 @@ export default {
         // Check if there is a number in the cell
         if (
           sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]
-            .number != ""
+            .number != "."
         ) {
           number =
             sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]

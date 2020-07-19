@@ -170,7 +170,7 @@ export const firstPassCandidateCalculator = () => {
       });
       // For each non number in the row, add the unseenNumbers to the candidates array
       for (const cellAddress in unit) {
-        if (unit[cellAddress].number == "") {
+        if (unit[cellAddress].number == ".") {
           // If we're not on the first iteration of both the inner and outer loops
           // Get previous candidates of cell
           const previousCandidates =

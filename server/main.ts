@@ -13,7 +13,7 @@ import {
   updateNumber,
   updatePencilMark,
   validateSquare,
-  setSudokuObj
+  setSudokuObj,
 } from "./updates.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
@@ -42,7 +42,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 let sudokuObj = {};
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
+  sudokuObj.puzzle = puzzleToString(createPuzzle("easy"));
   console.log("0\n0\n0\n0\n0");
   sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
@@ -73,12 +73,12 @@ const startNewGame = () => {
             false,
             false,
           ],
-          // candidates: [],
+          candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
       } else {
         formattedCell = {
-          number: "",
+          number: ".",
           given: false,
           pencilMarks: [
             false,
@@ -92,7 +92,7 @@ const startNewGame = () => {
             false,
           ],
           valid: { value: true, reason: null },
-          // candidates: [],
+          candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
       }
@@ -105,6 +105,8 @@ const startNewGame = () => {
 
 startNewGame();
 setSudokuObj(sudokuObj);
+
+console.log(solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true));
 
 console.log("\n\n solved:");
 printSudokuToConsole(sudokuObj.solved);
@@ -193,7 +195,7 @@ wss.on("connection", function (ws: WebSocket) {
     name: null,
     color,
     ws,
-    moves
+    moves,
   };
   // Send users array
   ws.send(JSON.stringify({ users }));
@@ -230,11 +232,9 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
-
       const inverseUpdate = updateNumber(numberUpdate);
       // Change the number to the former state
       moves.push({ numberUpdate: inverseUpdate });
-
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
