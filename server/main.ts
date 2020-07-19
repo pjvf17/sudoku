@@ -43,6 +43,7 @@ let sudokuObj = {};
 
 const startNewGame = () => {
   sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
+  console.log("0\n0\n0\n0\n0");
   sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
 
   const puzzle = {};
@@ -220,7 +221,7 @@ wss.on("connection", function (ws: WebSocket) {
       newGame,
       undo,
     } = JSON.parse(message);
-    console.log(JSON.parse(message));
+    // console.log(JSON.parse(message));
 
     // Recieved movement/focus update
     if (focusUpdate) {

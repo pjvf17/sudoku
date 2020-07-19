@@ -601,21 +601,27 @@ export const hiddenAndNakedSingleSolver = (
   let changes = 0;
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any = [];
 
   do {
     changes = 0;
 
     for (let iteration = 0; iteration < 3; iteration++) {
       let units: any;
+      let unit: any;
       switch (iteration) {
         case 0:
           units = rows;
+          unit = "row";
           break;
         case 1:
           units = cols;
+          unit = "col";
           break;
         case 2:
           units = squares;
+          unit = "square";
           break;
       }
 
@@ -654,6 +660,15 @@ export const hiddenAndNakedSingleSolver = (
                   });
                   // Update changes
                   changes++;
+
+                  // Push to changesArray
+                  changesArray.push({
+                    hiddenSingle: {
+                      address: { r: cell.address.r, c: cell.address.c },
+                      number: candidate,
+                      unit,
+                    },
+                  });
                   // Reset candidates
                   puzzle[
                     `r${cell.address.r}c${cell.address.c}`
@@ -684,14 +699,29 @@ export const hiddenAndNakedSingleSolver = (
             cols,
             squares,
           });
+          // Update changes
           changes++;
+          // Push to changesArray
+          changesArray.push({
+            nakedSingle: {
+              address: { r: cell.address.r, c: cell.address.c },
+              number: cell.number,
+            },
+          });
         }
       }
     }
     totalChanges += changes;
     iterations++;
   } while (changes > 0);
-  return { puzzle, cost: totalChanges * 100, rows, cols, squares };
+  return {
+    puzzle,
+    cost: totalChanges * 100,
+    rows,
+    cols,
+    squares,
+    changesArray,
+  };
 };
 
 // Simple function to create a filled puzzle
@@ -704,6 +734,279 @@ export const nakedPairTest =
 
 export const hiddenPairTest =
   "8.12.9....7.....82462..8...59..81...128534967.4.92.518.8.1...3621.8...5....4..8.1";
+
+// From https://www.w3schools.com/JS/js_random.asp
+function getRndInteger(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
+export const pointingLockedCandidatesSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
+  // puzzle = firstPassCandidateCalculator(puzzle);
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+  let changes = 0;
+  let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any = [];
+  // Look through each square
+  do {
+    changes = 0;
+    for (const squareAddress in squares) {
+      if (squares.hasOwnProperty(squareAddress)) {
+        const square = squares[squareAddress];
+        // Array form 1-9
+        const oneNine = createOneNine();
+        // Loop through each number
+        oneNine.forEach((number: number) => {
+          // Filter cells by those whose candidates contains the number
+          const filteredCells: any = Object.values(square).filter(
+            (cell: any) => {
+              return cell.candidates.includes(number);
+            }
+          );
+          // If cells
+          if (filteredCells.length) {
+            /*
+            We loop through the filtered cells
+            Starting off with a rowcol of "empty"
+            When we discover a cell with either the same col, or the same row, as last cell
+            We set rowcol to row, or col respectively
+            We only do this if rowcol is "empty" meaning that no other thing has been set
+            Or if it's the same (we're assigning rowcol to "col", when it was previously "col")
+           */
+            let rowcol: any = "empty";
+            // Loop through filteredCells
+            for (
+              let cellIndex = 1;
+              cellIndex < filteredCells.length;
+              cellIndex++
+            ) {
+              const cell: any = filteredCells[cellIndex];
+              if (cell.address.c == filteredCells[cellIndex - 1].address.c) {
+                rowcol = rowcol == "empty" || rowcol == "col" ? "col" : null;
+              } else if (
+                cell.address.r == filteredCells[cellIndex - 1].address.r
+              ) {
+                rowcol = rowcol == "empty" || rowcol == "row" ? "row" : null;
+              } else {
+                rowcol = null;
+              }
+            }
+            // If rowcol row or col, we have found pointing candidates
+            if (rowcol == "row" || rowcol == "col") {
+              // Get unit
+              const unit =
+                rowcol == "row"
+                  ? // Only referencing the first element of filtered cells here
+                    // Because each element should share the same row or col
+                    rows[`r${filteredCells[0].address.r}`]
+                  : cols[`c${filteredCells[0].address.c}`];
+
+              // Get an array of addresses in rncn format to not change
+              // (the ones in the current square)
+              const addressesToNotChange = filteredCells.map((cell: any) => {
+                return `r${cell.address.r}c${cell.address.c}`;
+              });
+              // Loop through cells, avoiding those addresses in the current square
+              // Also checking to see if the number we're looking to remove from candidates
+              // Is indeed present
+              for (const cellAddress in unit) {
+                if (unit.hasOwnProperty(cellAddress)) {
+                  if (!addressesToNotChange.includes(cellAddress)) {
+                    if (unit[cellAddress].candidates.includes(number)) {
+                      const cell = unit[cellAddress];
+                      // Remove number from cell candidates
+                      cell.candidates.splice(
+                        cell.candidates.indexOf(number),
+                        1
+                      );
+                      changes++;
+                    }
+                  }
+                }
+              }
+              if (changes) {
+                let rncnAddress = "";
+                // Create address of the form r67c2 or r7c78
+                if (rowcol == "row") {
+                  rncnAddress = rncnAddress.concat(
+                    `r${filteredCells[0].address.r}c${filteredCells[0].address.c}${filteredCells[1].address.c}`
+                  );
+                } else {
+                  rncnAddress = rncnAddress.concat(
+                    `r${filteredCells[0].address.r}${filteredCells[1].address.r}c${filteredCells[0].address.c}`
+                  );
+                }
+                changesArray.push({
+                  rncnAddress,
+                  number,
+                });
+              }
+            }
+          }
+        });
+      }
+    }
+    totalChanges += changes;
+  } while (changes > 0);
+
+  // Return puzzle
+  return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
+};
+
+// As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
+export const claimingLockedCandidatesSolver = (
+  puzzle: any,
+  rows?: any,
+  cols?: any,
+  squares?: any
+) => {
+  // puzzle = firstPassCandidateCalculator(puzzle);
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+  let changes = 0;
+  let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any = [];
+  // Look through row,
+  // Then look through col
+  do {
+    // Reset at beginning of each loop
+    changes = 0;
+    // Loop twice, first time through rows, second time through cols
+    for (let iteration = 0; iteration < 2; iteration++) {
+      let units: any;
+      let unit: any;
+      switch (iteration) {
+        case 0:
+          units = rows;
+          unit = "row";
+          break;
+        case 1:
+          units = cols;
+          unit = "col";
+          break;
+      }
+
+      for (const unitAddress in units) {
+        if (units.hasOwnProperty(unitAddress)) {
+          const unit = units[unitAddress];
+          // Array from 1-9
+          const oneNine = createOneNine();
+          // Loop through each number
+          oneNine.forEach((number: number) => {
+            // Filter cells by those whose candidates contains the number
+            const filteredCells: any = Object.values(unit).filter(
+              (cell: any) => {
+                return cell.candidates.includes(number);
+              }
+            );
+            // If cells
+            if (filteredCells.length) {
+              /*
+            We loop through the filtered cells
+            Starting off with a square of "empty"
+            When we discover a cell with the same square as last cell
+            We set square to the output of getSquare()
+            We only do this if square is "empty" meaning that no other thing has been set
+            Or if it's the same square as previous
+           */
+              let square: any = "empty";
+              // Loop through filteredCells
+              for (
+                // Start at one, so we can compare current and previous
+                let cellIndex = 1;
+                cellIndex < filteredCells.length;
+                cellIndex++
+              ) {
+                const cell: any = filteredCells[cellIndex];
+                // Compare squares
+                if (
+                  getSquare(cell) == getSquare(filteredCells[cellIndex - 1])
+                ) {
+                  // Check if square is empty, or it matches current square, otherwise set to null
+                  square =
+                    square == "empty" || square == getSquare(cell)
+                      ? getSquare(cell)
+                      : null;
+                } else {
+                  square = null;
+                }
+              }
+              // If square not null or empty
+              if (square != null && square != "empty") {
+                // Get an array of addresses in rncn format to not change
+                const addressesToNotChange = filteredCells.map((cell: any) => {
+                  return `r${cell.address.r}c${cell.address.c}`;
+                });
+                // Loop through cells in the square
+                // Checking to see if the number we're looking to remove from candidates
+                // Is indeed present
+                for (const cellAddress in squares[square]) {
+                  if (squares[square].hasOwnProperty(cellAddress)) {
+                    if (!addressesToNotChange.includes(cellAddress)) {
+                      if (
+                        squares[square][cellAddress].candidates.includes(number)
+                      ) {
+                        const cell = squares[square][cellAddress];
+                        // Remove number from cell candidates
+                        cell.candidates.splice(
+                          cell.candidates.indexOf(number),
+                          1
+                        );
+                        changes++;
+                      }
+                    }
+                  }
+                }
+                if (changes) {
+                  // Create address of the form r67c2 or r7c78
+                  let rncnAddress = "";
+                  if (unit == "row") {
+                    rncnAddress = rncnAddress.concat(
+                      `r${filteredCells[0].address.r}c${
+                        filteredCells[0].address.c
+                      }${filteredCells[1].address.c}${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.c
+                          : ""
+                      }`
+                    );
+                  } else {
+                    rncnAddress = rncnAddress.concat(
+                      `r${filteredCells[0].address.r}${
+                        filteredCells[1].address.r
+                      }${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.r
+                          : ""
+                      }c${filteredCells[0].address.c}`
+                    );
+                  }
+                  changesArray.push({
+                    rncnAddress,
+                    number,
+                  });
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    totalChanges += changes;
+  } while (changes > 0);
+  // Return puzzle
+  return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
+};
 
 export const nakedPairSolver = (
   puzzle: any,
@@ -718,6 +1021,8 @@ export const nakedPairSolver = (
   let changes = 0;
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any = [];
 
   do {
     changes = 0;
@@ -822,6 +1127,8 @@ export const hiddenPairSolver = (
   let changes = 0;
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any = [];
 
   do {
     changes = 0;
@@ -939,226 +1246,6 @@ export const hiddenPairSolver = (
   return { puzzle, changes: totalChanges, rows, cols, squares };
 };
 
-// From https://www.w3schools.com/JS/js_random.asp
-function getRndInteger(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
-export const pointingLockedCandidatesSolver = (
-  puzzle: any,
-  rows?: any,
-  cols?: any,
-  squares?: any
-) => {
-  // puzzle = firstPassCandidateCalculator(puzzle);
-  rows = rows ?? makeRows(puzzle);
-  cols = cols ?? makeCols(puzzle);
-  squares = squares ?? makeSquares(puzzle);
-  let changes = 0;
-  let totalChanges = 0;
-  // Look through each square
-  do {
-    changes = 0;
-    for (const squareAddress in squares) {
-      if (squares.hasOwnProperty(squareAddress)) {
-        const square = squares[squareAddress];
-        // Array form 1-9
-        const oneNine = createOneNine();
-        // Loop through each number
-        oneNine.forEach((number: number) => {
-          // Filter cells by those whose candidates contains the number
-          const filteredCells: any = Object.values(square).filter(
-            (cell: any) => {
-              return cell.candidates.includes(number);
-            }
-          );
-          // If cells
-          if (filteredCells.length) {
-            /*
-            We loop through the filtered cells
-            Starting off with a rowcol of "empty"
-            When we discover a cell with either the same col, or the same row, as last cell
-            We set rowcol to row, or col respectively
-            We only do this if rowcol is "empty" meaning that no other thing has been set
-            Or if it's the same (we're assigning rowcol to "col", when it was previously "col")
-           */
-            let rowcol: any = "empty";
-            // Loop through filteredCells
-            for (
-              let cellIndex = 1;
-              cellIndex < filteredCells.length;
-              cellIndex++
-            ) {
-              const cell: any = filteredCells[cellIndex];
-              if (cell.address.c == filteredCells[cellIndex - 1].address.c) {
-                rowcol = rowcol == "empty" || rowcol == "col" ? "col" : null;
-              } else if (
-                cell.address.r == filteredCells[cellIndex - 1].address.r
-              ) {
-                rowcol = rowcol == "empty" || rowcol == "row" ? "row" : null;
-              } else {
-                rowcol = null;
-              }
-            }
-            // If rowcol row or col, we have found pointing candidates
-            if (rowcol == "row" || rowcol == "col") {
-              // Get unit
-              const unit =
-                rowcol == "row"
-                  ? // Only referencing the first element of filtered cells here
-                    // Because each element should share the same row or col
-                    rows[`r${filteredCells[0].address.r}`]
-                  : cols[`c${filteredCells[0].address.c}`];
-
-              // Get an array of addresses in rncn format to not change
-              // (the ones in the current square)
-              const addressesToNotChange = filteredCells.map((cell: any) => {
-                return `r${cell.address.r}c${cell.address.c}`;
-              });
-              // Loop through cells, avoiding those addresses in the current square
-              // Also checking to see if the number we're looking to remove from candidates
-              // Is indeed present
-              for (const cellAddress in unit) {
-                if (unit.hasOwnProperty(cellAddress)) {
-                  if (!addressesToNotChange.includes(cellAddress)) {
-                    if (unit[cellAddress].candidates.includes(number)) {
-                      const cell = unit[cellAddress];
-                      // Remove number from cell candidates
-                      cell.candidates.splice(
-                        cell.candidates.indexOf(number),
-                        1
-                      );
-                      changes++;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-    }
-    totalChanges += changes;
-  } while (changes > 0);
-
-  // Return puzzle
-  return { puzzle, changes: totalChanges, rows, cols, squares };
-};
-
-// As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
-export const claimingLockedCandidatesSolver = (
-  puzzle: any,
-  rows?: any,
-  cols?: any,
-  squares?: any
-) => {
-  // puzzle = firstPassCandidateCalculator(puzzle);
-  rows = rows ?? makeRows(puzzle);
-  cols = cols ?? makeCols(puzzle);
-  squares = squares ?? makeSquares(puzzle);
-  let changes = 0;
-  let totalChanges = 0;
-  // Look through row,
-  // Then look through col
-  do {
-    // Reset at beginning of each loop
-    changes = 0;
-    // Loop twice, first time through rows, second time through cols
-    for (let iteration = 0; iteration < 2; iteration++) {
-      let units: any;
-      switch (iteration) {
-        case 0:
-          units = rows;
-          break;
-        case 1:
-          units = cols;
-          break;
-      }
-
-      for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
-          const unit = units[unitAddress];
-          // Array from 1-9
-          const oneNine = createOneNine();
-          // Loop through each number
-          oneNine.forEach((number: number) => {
-            // Filter cells by those whose candidates contains the number
-            const filteredCells: any = Object.values(unit).filter(
-              (cell: any) => {
-                return cell.candidates.includes(number);
-              }
-            );
-            // If cells
-            if (filteredCells.length) {
-              /*
-            We loop through the filtered cells
-            Starting off with a square of "empty"
-            When we discover a cell with the same square as last cell
-            We set square to the output of getSquare()
-            We only do this if square is "empty" meaning that no other thing has been set
-            Or if it's the same square as previous
-           */
-              let square: any = "empty";
-              // Loop through filteredCells
-              for (
-                // Start at one, so we can compare current and previous
-                let cellIndex = 1;
-                cellIndex < filteredCells.length;
-                cellIndex++
-              ) {
-                const cell: any = filteredCells[cellIndex];
-                // Compare squares
-                if (
-                  getSquare(cell) == getSquare(filteredCells[cellIndex - 1])
-                ) {
-                  // Check if square is empty, or it matches current square, otherwise set to null
-                  square =
-                    square == "empty" || square == getSquare(cell)
-                      ? getSquare(cell)
-                      : null;
-                } else {
-                  square = null;
-                }
-              }
-              // If square not null or empty
-              if (square != null && square != "empty") {
-                // Get an array of addresses in rncn format to not change
-                const addressesToNotChange = filteredCells.map((cell: any) => {
-                  return `r${cell.address.r}c${cell.address.c}`;
-                });
-                // Loop through cells in the square
-                // Checking to see if the number we're looking to remove from candidates
-                // Is indeed present
-                for (const cellAddress in squares[square]) {
-                  if (squares[square].hasOwnProperty(cellAddress)) {
-                    if (!addressesToNotChange.includes(cellAddress)) {
-                      if (
-                        squares[square][cellAddress].candidates.includes(number)
-                      ) {
-                        const cell = squares[square][cellAddress];
-                        // Remove number from cell candidates
-                        cell.candidates.splice(
-                          cell.candidates.indexOf(number),
-                          1
-                        );
-                        changes++;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
-        }
-      }
-    }
-    totalChanges += changes;
-  } while (changes > 0);
-  // Return puzzle
-  return { puzzle, changes: totalChanges, rows, cols, squares };
-};
-
 /* 
 Master solver method, calls each solver in succesion, 
 Increasing complexity when a given solver changes nothing, 
@@ -1201,6 +1288,11 @@ export const solver = (puzzle: any, difficulty?: any) => {
     cost.hiddenSingle += hiddenSingle.cost;
     // Update changes
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
+
+    if (hiddenSingle.cost > 0) {
+      console.log("hiddenSingle")
+      console.log(hiddenSingle.changesArray)
+    }
     // Check difficulty. If easy, stick to above, else continue with more advanced methods
     if (difficulty != "easy") {
       // Then, try pointing candidate solver
@@ -1231,6 +1323,8 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (pointing.changes > 0) {
+        console.log("pointing")
+        console.log(pointing.changesArray)
         continue;
       }
       // Try naked pair solver
@@ -1238,7 +1332,6 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // Update puzzle
       puzzle = nakedPair.puzzle;
       rows = nakedPair.rows;
-      // console.log(rows);
       cols = nakedPair.cols;
       squares = nakedPair.squares;
       // Update cost, initial cost higher than subsequent
@@ -1288,6 +1381,9 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (claiming.changes > 0) {
+        console.log("claiming")
+
+        console.log(claiming.changesArray)
         continue;
       }
 
@@ -1314,6 +1410,7 @@ export const solver = (puzzle: any, difficulty?: any) => {
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (hiddenPair.changes > 0) {
+        // console.log(changeme.changesArray)
         continue;
       }
 
@@ -1337,6 +1434,9 @@ export const solver = (puzzle: any, difficulty?: any) => {
   return { puzzle, totalCost, cost };
   // Need to keep track of changes for each method
 };
+
+// Find the first spot in a puzzle where you can make an update
+export const hint = (puzzle: any) => {};
 
 export const createPuzzle = (difficulty?: any) => {
   // const startTimer = performance.now();
