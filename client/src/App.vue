@@ -65,8 +65,17 @@
         class="notation-text"
         style="color: white"
       >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
-      <button @click="newGame()" class="button">Start New Game</button>
-      <button @click="firstPassCandidateCalculator()" class="button">Fill In Candidates</button>
+      <div class="actions">
+        <BaseButton @click="newGame()" class="button">Start New Game</BaseButton>
+        <div class="popup" v-if="checkNew" ref="popup">
+          <h3 class="title">Are you sure you want to start a new game?</h3>
+          <div class="actions">
+            <BaseButton @mouseup="newGame(true)" class="yes">Start new game</BaseButton>
+            <BaseButton @click="checkNew = false" class="no">Take me back</BaseButton>
+          </div>
+        </div>
+        <BaseButton @click="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
+      </div>
     </div>
   </div>
 </template>
@@ -78,8 +87,10 @@ const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
 console.log(wsUrl);
 
 const socket = new WebSocket(wsUrl);
-/* eslint-disable */
 
+import BaseButton from "./components/Base/BaseButton";
+
+/* eslint-disable */
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 import {
   setPuzzle,
@@ -354,11 +365,49 @@ export default {
       );
     };
 
-    const newGame = () => {
-      socket.send(JSON.stringify({ newGame: true }));
+    const popup = ref(null);
+    const checkNew = ref(false);
+
+    const checkForPopupElementAndDisable = event => {
+      // Check if target is part of popup, otherwise close popup
+      if (
+        checkNew.value &&
+        !(
+          event.target == popup.value ||
+          event.target.parentElement == popup.value ||
+          event.target.parentElement.parentElement == popup.value
+        )
+      ) {
+        checkNew.value = false;
+        // Remove self
+        document.body.removeEventListener(
+          "mousedown",
+          checkForPopupElementAndDisable
+        );
+      }
+    };
+
+    const newGame = check => {
+      console.log("triggered");
+      if (!check) {
+        document.body.addEventListener(
+          "mousedown",
+          checkForPopupElementAndDisable
+        );
+        checkNew.value = true;
+      } else {
+        socket.send(JSON.stringify({ newGame: true }));
+        checkNew.value = false;
+        document.body.removeEventListener(
+          "mousedown",
+          checkForPopupElementAndDisable
+        );
+      }
     };
 
     return {
+      popup,
+      checkNew,
       selfFocus,
       sudokuObj,
       newGame,
@@ -373,6 +422,9 @@ export default {
       highlightNumbers,
       firstPassCandidateCalculator
     };
+  },
+  components: {
+    BaseButton
   }
 };
 </script>
@@ -381,7 +433,6 @@ export default {
 @import "node_modules/nord/src/sass/nord.scss";
 
 body {
-  font-family: Consolea, "Courier New", Courier, monospace;
   margin: 0;
   padding: 0;
 }
@@ -397,17 +448,24 @@ body {
   margin: 0;
   padding: 0;
   background-color: $nord1;
+  font-family: Nunito, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 $border: 2px solid black;
+$box-shadow: 0px 0px 15px 0px
+  rgba(
+    $color: #000000,
+    $alpha: 0.3
+  );
 
 .pane {
   padding: 1em;
   border-radius: 3px;
-  box-shadow: 0px 0px 15px 0px rgba($color: #000000, $alpha: 0.3);
+  box-shadow: $box-shadow;
   margin: auto;
   display: flex;
   flex-direction: column;
+  padding-bottom: 2em;
 }
 
 .button {
@@ -416,7 +474,7 @@ $border: 2px solid black;
   margin-top: 1em;
   padding: 1em;
   border-radius: 3px;
-  box-shadow: 0px 0px 15px 0px rgba($color: #000000, $alpha: 0.3);
+  box-shadow: $box-shadow;
   border: none;
   background-color: $nord6;
 }
@@ -431,6 +489,7 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
   margin: auto;
+  font-family: Consolea, "Courier New", Courier, monospace;
 }
 
 tr {
@@ -524,5 +583,32 @@ circle {
   font-style: normal;
   color: black;
   font-weight: 600;
+}
+
+.actions {
+    display: flex;
+  }
+
+.popup {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  width: 25em;
+  height: 10em;
+  background: $nord2;
+  border-radius: 3px;
+  box-shadow: $box-shadow;
+  margin: auto;
+  padding: 0.5em;
+  padding-bottom: 1em;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  .title {
+    color: $nord4;
+  }
+
+  
 }
 </style>
