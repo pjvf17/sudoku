@@ -202,6 +202,8 @@ wss.on("connection", function (ws: WebSocket) {
   // Send id to user to use as identification in users array
   ws.send(JSON.stringify({ id }));
   // Send sudokuObj
+  // console.log(sudokuObj.puzzle[`r1c2`].pencilMarks);
+
   ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
@@ -223,7 +225,6 @@ wss.on("connection", function (ws: WebSocket) {
       newGame,
       undo,
     } = JSON.parse(message);
-    // console.log(JSON.parse(message));
 
     // Recieved movement/focus update
     if (focusUpdate) {

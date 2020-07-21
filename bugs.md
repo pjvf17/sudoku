@@ -1,2 +1,4 @@
 - [ ] Naked single solver only supports the finding of one pair at a time
 - [x] Sync serverside and clientside so that a blank cell is the same in both places
+- [ ] Popup for new game shows up even when you finished the game
+- [x] Fill in candidates not saving in server

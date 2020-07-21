@@ -23,6 +23,8 @@
 - [ ] Show moves (toggle)
   - [ ] By person
 - [ ] Color numbers by who put them in
+- [ ] Update peers when number put in 
+  - [ ] Update them properly if it's then taken out
 
 ### Serverside and Stability
 

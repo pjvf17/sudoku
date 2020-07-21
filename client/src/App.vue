@@ -74,7 +74,7 @@
             <BaseButton @click="checkNew = false" class="no">Take me back</BaseButton>
           </div>
         </div>
-        <BaseButton @click="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
+        <BaseButton @mouseup="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
       </div>
     </div>
   </div>
@@ -118,6 +118,7 @@ export default {
     const users = ref({});
     const id = ref({});
     const notating = ref(false);
+    const candidates = ref(false);
     // const focused = ref({});
 
     socket.onmessage = function({ data }) {
@@ -257,9 +258,9 @@ export default {
       let { row, col } = users.value[id.value].focus;
       // Check for null
       if (row == null || col == null) {
-        // Set to top right
-        row = 1;
-        col = 1;
+        // Set to middle
+        row = 5;
+        col = 5;
         users.value[id.value].focus = { row, col };
         socket.send(
           JSON.stringify({
@@ -318,7 +319,7 @@ export default {
         } else {
           let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
           // Create numberupdate object
-          const numberUpdate = { address, number: "", id: id.value };
+          const numberUpdate = { address, number: ".", id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
           // Send server update
@@ -420,7 +421,8 @@ export default {
       users,
       notating,
       highlightNumbers,
-      firstPassCandidateCalculator
+      firstPassCandidateCalculator,
+      candidates
     };
   },
   components: {

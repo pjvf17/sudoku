@@ -123,6 +123,7 @@ export const validateSquare = (cell) => {
 };
 
 export const firstPassCandidateCalculator = () => {
+  console.log("firstPassCandidateCalculator");
   const rows = makeRows.value;
   const cols = makeCols.value;
   const squares = makeSquares.value;
