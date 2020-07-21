@@ -123,7 +123,6 @@ export const validateSquare = (cell) => {
 };
 
 export const firstPassCandidateCalculator = () => {
-  console.log("firstPassCandidateCalculator");
   const rows = makeRows.value;
   const cols = makeCols.value;
   const squares = makeSquares.value;
@@ -133,6 +132,11 @@ export const firstPassCandidateCalculator = () => {
       Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
     ) {
       sudokuObj.value.puzzle[cellAddress].candidates = [];
+      // Creates array of 9 false values, resets pencilmMarks
+      sudokuObj.value.puzzle[cellAddress].pencilMarks = Array.from(
+        { length: 9 },
+        () => false
+      );
     }
   }
 
@@ -193,31 +197,29 @@ export const firstPassCandidateCalculator = () => {
       }
     }
   }
-
   // Loop over cells, apply candidates to pencilmarks
   for (const cellAddress in sudokuObj.value.puzzle) {
     if (
       Object.prototype.hasOwnProperty.call(sudokuObj.value.puzzle, cellAddress)
     ) {
-      // Creates array of 9 false values, resets pencilmMarks
-      sudokuObj.value.puzzle[cellAddress].pencilMarks = Array.from(
-        { length: 9 },
-        () => false
-      );
+      // Update pencilmarks
       sudokuObj.value.puzzle[cellAddress].candidates.forEach((candidate) => {
-        sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;
-        // Send to server
-        const pencilMarkUpdate = {
-          address: sudokuObj.value.puzzle[cellAddress].address,
-          pencilMark: candidate,
-          id: userId.value,
-        };
-        socket.send(
-          JSON.stringify({
-            pencilMarkUpdate,
-          })
-        );
+        sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;      
       });
+      // Send to server
+      const pencilMarkUpdate = {
+        address: sudokuObj.value.puzzle[cellAddress].address,
+        // Sending pencilMarks instead of pencilMark means that instead of toggling
+        // This array will replace the previous
+        pencilMarks: sudokuObj.value.puzzle[cellAddress].pencilMarks,
+        id: userId.value,
+      };
+      socket.send(
+        JSON.stringify({
+          pencilMarkUpdate,
+        })
+      );
     }
   }
+  return sudokuObj.value.puzzle;
 };
