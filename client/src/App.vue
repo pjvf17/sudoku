@@ -97,7 +97,8 @@ import {
   validateSquare,
   firstPassCandidateCalculator,
   setId,
-  setSocket
+  setSocket,
+  updatePeerCandidates
 } from "./use/puzzleValidation.js";
 import updates from "./use/puzzleUpdates";
 
@@ -295,6 +296,8 @@ export default {
           updates.updateNumber({ numberUpdate });
           // Send server update
           socket.send(JSON.stringify({ numberUpdate }));
+          // Update peer candidates
+          updatePeerCandidates(sudokuObj.value.puzzle[`r${row}c${col}`]);
         }
       } else if (key == "Backspace") {
         event.preventDefault();

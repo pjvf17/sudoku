@@ -122,6 +122,40 @@ export const validateSquare = (cell) => {
   return cell;
 };
 
+// Adapated from ../server/generator.ts
+
+// Updates the candidates in each peer of a cell that has been updated
+export const updatePeerCandidates = (cell) => {
+  // Assemble peers
+  const { row, col, square } = getPeers(cell);
+  const peers = [
+    ...Object.values(row),
+    ...Object.values(col),
+    ...Object.values(square),
+  ];
+  // Loop through peers
+  peers.forEach((peer) => {
+    // Only effect empty cells
+    if (peer.number == ".") {
+      // Update pencilMarks
+      peer.pencilMarks[cell.number - 1] = false;
+      // Send to server
+      const pencilMarkUpdate = {
+        address: peer.address,
+        // Sending pencilMarks instead of pencilMark means that instead of toggling
+        // This array will replace the previous
+        pencilMarks: peer.pencilMarks,
+        id: userId.value,
+      };
+      socket.send(
+        JSON.stringify({
+          pencilMarkUpdate,
+        })
+      );
+    }
+  });
+};
+
 export const firstPassCandidateCalculator = () => {
   const rows = makeRows.value;
   const cols = makeCols.value;
@@ -204,7 +238,7 @@ export const firstPassCandidateCalculator = () => {
     ) {
       // Update pencilmarks
       sudokuObj.value.puzzle[cellAddress].candidates.forEach((candidate) => {
-        sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;      
+        sudokuObj.value.puzzle[cellAddress].pencilMarks[candidate - 1] = true;
       });
       // Send to server
       const pencilMarkUpdate = {

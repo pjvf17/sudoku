@@ -23,7 +23,7 @@
 - [ ] Show moves (toggle)
   - [ ] By person
 - [ ] Color numbers by who put them in
-- [ ] Update peers when number put in 
+- [x] Update peers when number put in (21/07/2020)
   - [ ] Update them properly if it's then taken out
 
 ### Serverside and Stability
@@ -32,6 +32,11 @@
   - [ ] Use the numbering to check for missed moves from/to server
 - [ ] Database for puzzles
   - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
+- [ ] Type clientside
+- [ ] Interface server and clientside with
+  - [ ] Cell
+  - [ ] Puzzle
+  - [ ] Updates
   
 ### Customization and UI
 
