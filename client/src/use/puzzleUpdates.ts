@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import { setPuzzle, validateSquare } from "./puzzleValidation";
-import { NumberUpdate, Puzzle, PencilMarkUpdate } from "../../../types";
+import { NumberUpdate, Puzzle, PencilMarkUpdate, Users } from "../../../types";
 /* eslint-enable */
 
 interface Ref<T> {
@@ -10,7 +10,7 @@ interface Ref<T> {
 
 const updates = {
   sudokuObj: ref<Puzzle>(),
-  users: ref({}),
+  users: ref<Users>(),
 
   setPuzzle: function(obj: Ref<Puzzle>) {
     this.sudokuObj = obj;
@@ -18,7 +18,7 @@ const updates = {
     setPuzzle(obj);
   },
 
-  setUsers: function(users) {
+  setUsers: function(users: Ref<Users>) {
     this.users = users;
   },
 
@@ -26,7 +26,6 @@ const updates = {
     { numberUpdate }: { numberUpdate: NumberUpdate },
     undo?: boolean
   ) {
-    console.log(toRaw(this.sudokuObj.value));
     let { address, number, id } = numberUpdate;
 
     const originalState = {
@@ -38,7 +37,7 @@ const updates = {
     );
     // If not undoing a move
     if (!undo) {
-      const inverseUpdate = { ...numberUpdate };
+      const inverseUpdate: NumberUpdate = { ...numberUpdate };
       // Update number to original
       inverseUpdate.number = originalState.number;
       // Edit moves
@@ -82,7 +81,7 @@ const updates = {
     }
     // If not undoing a move
     if (!undo) {
-      const inverseUpdate = { ...pencilMarkUpdate };
+      const inverseUpdate: PencilMarkUpdate = { ...pencilMarkUpdate };
       // Update request
       inverseUpdate.pencilMarks = originalState;
       // Update moves

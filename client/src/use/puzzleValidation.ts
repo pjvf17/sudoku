@@ -27,26 +27,30 @@ export const setSocket = (socketToSet: any) => {
 const makeRows: Ref<Units> = computed(() => {
   let rows: Units = {};
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-    // rows[`r${rowIndex}`] = ;
+    // Initialize row
+
+    rows[`r${rowIndex}`] = {};
+
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
       rows[`r${rowIndex}`][`r${rowIndex}c${colIndex}`] =
         sudokuObj.value[`r${rowIndex}c${colIndex}`];
     }
   }
-  console.log(toRaw(rows));
   return rows;
 });
 const makeCols: Ref<Units> = computed(() => {
   let cols: Units = {};
   for (let colIndex = 1; colIndex <= 9; colIndex++) {
+    // Initialize col
+    cols[`c${colIndex}`] = {};
     for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-      cols[`r${rowIndex}`][`r${rowIndex}c${colIndex}`] =
+      cols[`c${colIndex}`][`r${rowIndex}c${colIndex}`] =
         sudokuObj.value[`r${rowIndex}c${colIndex}`];
     }
   }
   return cols;
 });
-const getSquare = (cell: Cell) => {
+const getSquare = (cell: Cell): string => {
   let s13 = [1, 2, 3];
   let s46 = [4, 5, 6];
   let s79 = [7, 8, 9];
@@ -64,7 +68,17 @@ const getSquare = (cell: Cell) => {
   return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
 };
 const makeSquares: Ref<Units> = computed(() => {
-  let squares: Units = {};
+  let squares: Units = {
+    s1: {},
+    s2: {},
+    s3: {},
+    s4: {},
+    s5: {},
+    s6: {},
+    s7: {},
+    s8: {},
+    s9: {},
+  };
 
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
@@ -189,7 +203,7 @@ export const firstPassCandidateCalculator = () => {
       // First, create an array of the values
       const rowNumbers = Object.values(units[unitsAddress])
         // Second, parse each value as a number
-        .map((el:Cell) => Number(el.number))
+        .map((el: Cell) => Number(el.number))
         // Third, filter out any non numbers
         .filter((el) => !isNaN(el));
 

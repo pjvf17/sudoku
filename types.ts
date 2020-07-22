@@ -1,4 +1,3 @@
-
 export interface Address {
   r: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -120,6 +119,20 @@ export interface Units {
 }
 
 export interface Unit {
-  
   [propName: string]: Cell;
+}
+
+export interface User {
+  color: string;
+  focus: {
+    row: number;
+    col: number;
+  };
+  id: string;
+  moves: [PencilMarkUpdate | NumberUpdate];
+  ws: any;
+}
+
+export interface Users {
+  [propName: string]: User;
 }

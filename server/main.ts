@@ -15,6 +15,12 @@ import {
   validateSquare,
   setSudokuObj,
 } from "./updates.ts";
+import {
+  PencilMarkUpdate,
+  NumberUpdate,
+  Users,
+  User
+} from "../types.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -150,7 +156,7 @@ const freeColor = (socket) => {
   }
 };
 
-const users = {};
+const users: Users = {};
 
 const freeUser = (id) => {
   delete users[id];
@@ -180,20 +186,6 @@ const updateFocus = ({ id, focus }, wss, ws) => {
     }
   }, 180000);
 };
-
-// These don't actually do much besides give me a sense of what I'm recieving
-// At some point maybe I'll put them into clientside and get more out of it
-interface NumberUpdate {
-  address: { r: number; c: number };
-  number: number;
-  id: string;
-}
-interface PencilMarkUpdate {
-  address: { r: number; c: number };
-  pencilMark?: number | string;
-  pencilMarks?: [boolean];
-  id: string;
-}
 
 const wss = new WebSocketServer(8010);
 

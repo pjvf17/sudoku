@@ -107,7 +107,8 @@ import {
   PencilMarkUpdate,
   Address,
   Cell,
-  Puzzle
+  Puzzle,
+  Users
 } from "../../types";
 
 /* eslint-enable */
@@ -124,7 +125,7 @@ export default {
     };
     const color = ref({});
     const sudokuObj = ref<Puzzle>(null);
-    const users = ref({});
+    const users = ref<Users>();
     const id = ref<string>();
     const notating = ref<boolean>(false);
     const candidates = ref<boolean>(false);
@@ -153,6 +154,7 @@ export default {
         pencilMarkUpdate: PencilMarkUpdate;
         id: string;
         color: string;
+        users: Users
       } = JSON.parse(data);
 
       const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj

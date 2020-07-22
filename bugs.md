@@ -3,3 +3,4 @@
 - [ ] Popup for new game shows up even when you finished the game
 - [x] Fill in candidates not saving in server
 - [x] Fill in candidates being pressed a second time erasing all candidates (21/07/2020)
+- [ ] Reloading doesn't work
