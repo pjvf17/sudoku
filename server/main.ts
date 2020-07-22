@@ -60,7 +60,6 @@ const startNewGame = () => {
           given: true,
           valid: {
             value: true,
-            reason: null,
           },
           pencilMarks: [
             false,
@@ -91,7 +90,7 @@ const startNewGame = () => {
             false,
             false,
           ],
-          valid: { value: true, reason: null },
+          valid: { value: true },
           candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };

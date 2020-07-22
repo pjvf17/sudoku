@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="pane">
+    <div class="pane" v-if="sudokuObj">
       <table>
         <tbody>
           <tr v-for="rowIndex in 9" :key="rowIndex">
@@ -12,8 +12,8 @@
                 'border-right': ((colIndex) % 3) == 0, 
                 'border-bottom': ((rowIndex) % 3) == 0, 
                 'border-left': colIndex == 0, 'border-top': rowIndex == 0, 
-                invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value,
-                'highlight-number': highlightNumbers == sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number
+                invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid.value,
+                'highlight-number': highlightNumbers == sudokuObj[`r${rowIndex}c${colIndex}`].number
               }]"
               @click="handleClick({row: rowIndex, col: colIndex})"
               :style="{ 
@@ -25,26 +25,26 @@
             >
               <svg class="inputReplacement">
                 <text
-                  :class="[{bold: sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].valid.value}, 'svgText']"
+                  :class="[{bold: sudokuObj[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid.value}, 'svgText']"
                   x="50%"
                   y="60%"
                   dominant-baseline="middle"
                   text-anchor="middle"
                   :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
-                >{{sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == "." ? "" : sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number}}</text>
+                >{{sudokuObj[`r${rowIndex}c${colIndex}`].number == "." ? "" : sudokuObj[`r${rowIndex}c${colIndex}`].number}}</text>
                 <g
-                  v-for="(pencilMark, index) in sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks"
+                  v-for="(pencilMark, index) in sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks"
                   :key="index"
                 >
                   <circle
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == '.'"
+                    v-if="sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj[`r${rowIndex}c${colIndex}`].number == '.'"
                     :class="[{'circle-number': highlightNumbers == index + 1}]"
                     :cy="9+(22*Math.floor(index / 3))"
                     :cx="8.5+(22 * (index % 3))"
                     r="8"
                   />
                   <text
-                    v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].number == '.'"
+                    v-if="sudokuObj[`r${rowIndex}c${colIndex}`].number == '.'"
                     dominant-baseline="middle"
                     text-anchor="middle"
                   >
@@ -52,7 +52,7 @@
                       style="font-size: 14px"
                       :y="10+(22*Math.floor(index / 3))"
                       :x="8+(22 * (index % 3))"
-                      v-if="sudokuObj.puzzle[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
+                      v-if="sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
                     >{{index+1}}</tspan>
                   </text>
                 </g>
@@ -80,7 +80,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 console.log(process.env.VUE_APP_WS_URL);
 
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
@@ -88,10 +88,11 @@ console.log(wsUrl);
 
 const socket = new WebSocket(wsUrl);
 
-import BaseButton from "./components/Base/BaseButton";
+import BaseButton from "./components/Base/BaseButton.vue";
 
 /* eslint-disable */
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
+
 import {
   setPuzzle,
   validateSquare,
@@ -99,8 +100,15 @@ import {
   setId,
   setSocket,
   updatePeerCandidates
-} from "./use/puzzleValidation.js";
+} from "./use/puzzleValidation";
 import updates from "./use/puzzleUpdates";
+import {
+  NumberUpdate,
+  PencilMarkUpdate,
+  Address,
+  Cell,
+  Puzzle
+} from "../../types";
 
 /* eslint-enable */
 
@@ -115,11 +123,11 @@ export default {
       setSocket(socket);
     };
     const color = ref({});
-    const sudokuObj = ref({});
+    const sudokuObj = ref<Puzzle>(null);
     const users = ref({});
-    const id = ref({});
-    const notating = ref(false);
-    const candidates = ref(false);
+    const id = ref<string>();
+    const notating = ref<boolean>(false);
+    const candidates = ref<boolean>(false);
     // const focused = ref({});
 
     socket.onmessage = function({ data }) {
@@ -142,18 +150,12 @@ export default {
         undo
       } = JSON.parse(data);
 
-      const {
-        puzzle: sentPuzzle,
-        sentRows,
-        sentCols,
-        sentSquares
-      } = sentSudokuObj ? sentSudokuObj : {};
+      const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj
+        ? sentSudokuObj
+        : {};
 
       if (sentSudokuObj) {
-        sudokuObj.value.puzzle = sentPuzzle;
-        sudokuObj.value.rows = sentRows;
-        sudokuObj.value.cols = sentCols;
-        sudokuObj.value.squares = sentSquares;
+        sudokuObj.value = sentPuzzle;
         setPuzzle(sudokuObj);
         updates.setPuzzle(sudokuObj);
       }
@@ -171,8 +173,15 @@ export default {
       }
       // update focus
       if (focusUpdate) {
-        const { id, focus } = focusUpdate;
-        users.value[id].focus = focus;
+        try {
+          const { id, focus } = focusUpdate;
+          users.value[id].focus = focus;
+        } catch (err) {
+          console.log(JSON.parse(data));
+          console.log(err);
+          console.log(toRaw(users.value));
+          console.log(toRaw(id.value))
+        }
       }
       // update a number
       if (numberUpdate) {
@@ -209,12 +218,10 @@ export default {
       if (user.focus.row != null) {
         // Check if there is a number in the cell
         if (
-          sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]
-            .number != "."
+          sudokuObj.value[`r${user.focus.row}c${user.focus.col}`].number != "."
         ) {
           number =
-            sudokuObj.value.puzzle[`r${user.focus.row}c${user.focus.col}`]
-              .number;
+            sudokuObj.value[`r${user.focus.row}c${user.focus.col}`].number;
         }
       }
       return number;
@@ -276,12 +283,12 @@ export default {
       }
       // Only allow change of non-givens
       if (
-        !sudokuObj.value.puzzle[`r${row}c${col}`].given &&
+        !sudokuObj.value[`r${row}c${col}`].given &&
         acceptedKeys.includes(key)
       ) {
         event.preventDefault();
         if (notating.value) {
-          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create pencilMarkUpdate object
           const pencilMarkUpdate = { address, pencilMark: key, id: id.value };
           // Update local
@@ -289,7 +296,7 @@ export default {
           // Update server
           socket.send(JSON.stringify({ pencilMarkUpdate }));
         } else {
-          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create numberupdate object
           const numberUpdate = { address, number: key, id: id.value };
           // Change local copy of puzzle
@@ -297,14 +304,14 @@ export default {
           // Send server update
           socket.send(JSON.stringify({ numberUpdate }));
           // Update peer candidates
-          updatePeerCandidates(sudokuObj.value.puzzle[`r${row}c${col}`]);
+          updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
         }
       } else if (key == "Backspace") {
         event.preventDefault();
 
         // Check if in notation mode
         if (notating.value) {
-          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create pencilMarkUpdate object
           const pencilMarkUpdate = {
             address,
@@ -320,7 +327,7 @@ export default {
             })
           );
         } else {
-          let { address } = sudokuObj.value.puzzle[`r${row}c${col}`];
+          let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create numberupdate object
           const numberUpdate = { address, number: ".", id: id.value };
           // Change local copy of puzzle
@@ -332,16 +339,16 @@ export default {
         event.preventDefault();
         switch (key) {
           case "ArrowRight":
-            move(row, col, 0, 1, "row");
+            move(row, col, 0, 1);
             break;
           case "ArrowLeft":
-            move(row, col, 0, -1, "row");
+            move(row, col, 0, -1);
             break;
           case "ArrowDown":
-            move(row, col, 1, 0, "col");
+            move(row, col, 1, 0);
             break;
           case "ArrowUp":
-            move(row, col, -1, 0, "col");
+            move(row, col, -1, 0);
             break;
         }
       } else if (key == "Shift") {
@@ -591,8 +598,8 @@ circle {
 }
 
 .actions {
-    display: flex;
-  }
+  display: flex;
+}
 
 .popup {
   left: 0;
@@ -613,7 +620,5 @@ circle {
   .title {
     color: $nord4;
   }
-
-  
 }
 </style>
