@@ -1,6 +1,7 @@
+
 export interface Address {
-  r: number;
-  c: number;
+  r: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 }
 
 export interface NumberUpdate {
@@ -8,6 +9,7 @@ export interface NumberUpdate {
   number: number | string;
   id: string;
 }
+
 export interface PencilMarkUpdate {
   address: Address;
   pencilMark?: number | string;
@@ -23,6 +25,7 @@ export interface Cell {
   };
   candidates: [number];
   address: Address;
+  pencilMarks: boolean[];
 }
 
 export interface Puzzle {
@@ -108,4 +111,15 @@ export interface Puzzle {
   r9c7: Cell;
   r9c8: Cell;
   r9c9: Cell;
+}
+
+export interface Units {
+  [propName: string]: {
+    [propName: string]: Cell;
+  };
+}
+
+export interface Unit {
+  
+  [propName: string]: Cell;
 }
