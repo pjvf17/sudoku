@@ -148,6 +148,11 @@ export default {
         pencilMarkUpdate,
         // Undo request
         undo
+      }: {
+        numberUpdate: NumberUpdate;
+        pencilMarkUpdate: PencilMarkUpdate;
+        id: string;
+        color: string;
       } = JSON.parse(data);
 
       const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj
@@ -180,7 +185,7 @@ export default {
           console.log(JSON.parse(data));
           console.log(err);
           console.log(toRaw(users.value));
-          console.log(toRaw(id.value))
+          console.log(toRaw(id.value));
         }
       }
       // update a number

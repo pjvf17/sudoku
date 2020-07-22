@@ -5,7 +5,7 @@ export interface Address {
 
 export interface NumberUpdate {
   address: Address;
-  number: number;
+  number: number | string;
   id: string;
 }
 export interface PencilMarkUpdate {
@@ -16,7 +16,7 @@ export interface PencilMarkUpdate {
 }
 
 export interface Cell {
-  number: number;
+  number: number | string;
   given: boolean;
   valid: {
     value: boolean;
@@ -26,6 +26,7 @@ export interface Cell {
 }
 
 export interface Puzzle {
+  [index: string]: Cell;
   r1c1: Cell;
   r1c2: Cell;
   r1c3: Cell;
@@ -105,5 +106,6 @@ export interface Puzzle {
   r9c5: Cell;
   r9c6: Cell;
   r9c7: Cell;
-  r9c8;
+  r9c8: Cell;
+  r9c9: Cell;
 }

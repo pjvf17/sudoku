@@ -1,13 +1,18 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import { setPuzzle, validateSquare } from "./puzzleValidation";
+import { NumberUpdate, Puzzle, PencilMarkUpdate } from "../../../types";
 /* eslint-enable */
 
+interface Ref<T> {
+  value: T;
+}
+
 const updates = {
-  sudokuObj: ref({}),
+  sudokuObj: ref<Puzzle>(),
   users: ref({}),
 
-  setPuzzle: function(obj) {
+  setPuzzle: function(obj: Ref<Puzzle>) {
     this.sudokuObj = obj;
     // Sets puzzle on validation
     setPuzzle(obj);
@@ -17,8 +22,11 @@ const updates = {
     this.users = users;
   },
 
-  updateNumber: function({ numberUpdate }, undo) {
-    console.log(toRaw(this.sudokuObj.value))
+  updateNumber: function(
+    { numberUpdate }: { numberUpdate: NumberUpdate },
+    undo?: boolean
+  ) {
+    console.log(toRaw(this.sudokuObj.value));
     let { address, number, id } = numberUpdate;
 
     const originalState = {
@@ -38,7 +46,10 @@ const updates = {
     }
   },
 
-  updatePencilMarks: function({ pencilMarkUpdate }, undo) {
+  updatePencilMarks: function(
+    { pencilMarkUpdate }: { pencilMarkUpdate: PencilMarkUpdate },
+    undo?: boolean
+  ) {
     let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
     const originalState = [
@@ -49,8 +60,9 @@ const updates = {
       // Toggle mark
       this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
         pencilMark - 1
-      ] = !this.sudokuObj.value[`r${address.r}c${address.c}`]
-        .pencilMarks[pencilMark - 1];
+      ] = !this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
+        pencilMark - 1
+      ];
     } else if (pencilMarks) {
       this.sudokuObj.value[
         `r${address.r}c${address.c}`
@@ -77,7 +89,7 @@ const updates = {
       this.users.value[id].moves.push({ pencilMarkUpdate: inverseUpdate });
     }
   },
-  undo: function(userId) {
+  undo: function(userId: string) {
     // Get last move for this player
     const move = this.users.value[userId].moves.pop();
     // Check if the move is a number update

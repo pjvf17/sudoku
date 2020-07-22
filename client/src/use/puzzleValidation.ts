@@ -1,17 +1,22 @@
 /* eslint-disable */
-
 import { computed, ref, toRaw } from "vue";
+import { Puzzle, Cell } from "../../../types";
+
 /* eslint-enable */
+
+interface Ref<T> {
+  value: T;
+}
 
 let sudokuObj = ref({});
 let userId = ref({});
 let socket;
 
-export const setPuzzle = (obj) => {
+export const setPuzzle = (obj: Ref<Puzzle>) => {
   sudokuObj = obj;
 };
 
-export const setId = (id) => {
+export const setId = (id: Ref<string>) => {
   userId = id;
 };
 
@@ -24,9 +29,7 @@ const makeRows = computed(() => {
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     rows[`r${rowIndex}`] = [];
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      rows[`r${rowIndex}`].push(
-        sudokuObj.value[`r${rowIndex}c${colIndex}`]
-      );
+      rows[`r${rowIndex}`].push(sudokuObj.value[`r${rowIndex}c${colIndex}`]);
     }
   }
   return rows;
@@ -36,9 +39,7 @@ const makeCols = computed(() => {
   for (let colIndex = 1; colIndex <= 9; colIndex++) {
     cols[`c${colIndex}`] = [];
     for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
-      cols[`c${colIndex}`].push(
-        sudokuObj.value[`r${rowIndex}c${colIndex}`]
-      );
+      cols[`c${colIndex}`].push(sudokuObj.value[`r${rowIndex}c${colIndex}`]);
     }
   }
   return cols;
@@ -75,15 +76,15 @@ const makeSquares = computed(() => {
 
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      squares[
-        getSquare(sudokuObj.value[`r${rowIndex}c${colIndex}`])
-      ].push(sudokuObj.value[`r${rowIndex}c${colIndex}`]);
+      squares[getSquare(sudokuObj.value[`r${rowIndex}c${colIndex}`])].push(
+        sudokuObj.value[`r${rowIndex}c${colIndex}`]
+      );
     }
   }
   return squares;
 });
 
-const getPeers = (cell) => {
+const getPeers = (cell: Cell) => {
   let row,
     col,
     square = [];
@@ -94,7 +95,7 @@ const getPeers = (cell) => {
   return { row, col, square };
 };
 
-export const validateSquare = (cell) => {
+export const validateSquare = (cell: Cell) => {
   // Skip givens
   if (cell.given) {
     return cell;
@@ -125,7 +126,7 @@ export const validateSquare = (cell) => {
 // Adapated from ../server/generator.ts
 
 // Updates the candidates in each peer of a cell that has been updated
-export const updatePeerCandidates = (cell) => {
+export const updatePeerCandidates = (cell: Cell) => {
   // Assemble peers
   const { row, col, square } = getPeers(cell);
   const peers = [
@@ -162,9 +163,7 @@ export const firstPassCandidateCalculator = () => {
   const squares = makeSquares.value;
 
   for (const cellAddress in sudokuObj.value) {
-    if (
-      Object.prototype.hasOwnProperty.call(sudokuObj.value, cellAddress)
-    ) {
+    if (Object.prototype.hasOwnProperty.call(sudokuObj.value, cellAddress)) {
       sudokuObj.value[cellAddress].candidates = [];
       // Creates array of 9 false values, resets pencilmMarks
       sudokuObj.value[cellAddress].pencilMarks = Array.from(
@@ -233,11 +232,9 @@ export const firstPassCandidateCalculator = () => {
   }
   // Loop over cells, apply candidates to pencilmarks
   for (const cellAddress in sudokuObj.value) {
-    if (
-      Object.prototype.hasOwnProperty.call(sudokuObj.value, cellAddress)
-    ) {
+    if (Object.prototype.hasOwnProperty.call(sudokuObj.value, cellAddress)) {
       // Update pencilmarks
-      sudokuObj.value[cellAddress].candidates.forEach((candidate) => {
+      sudokuObj.value[cellAddress].candidates.forEach((candidate: number) => {
         sudokuObj.value[cellAddress].pencilMarks[candidate - 1] = true;
       });
       // Send to server
