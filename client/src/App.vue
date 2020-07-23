@@ -101,7 +101,7 @@ import {
   setSocket,
   updatePeerCandidates
 } from "./use/puzzleValidation";
-import updates from "./use/puzzleUpdates";
+import Updates from "./use/puzzleUpdates";
 import {
   NumberUpdate,
   PencilMarkUpdate,
@@ -129,6 +129,7 @@ export default {
     const id = ref<string>();
     const notating = ref<boolean>(false);
     const candidates = ref<boolean>(false);
+    let updates: Updates;
     // const focused = ref({});
 
     socket.onmessage = function({ data }) {
@@ -164,11 +165,11 @@ export default {
       if (sentSudokuObj) {
         sudokuObj.value = sentPuzzle;
         setPuzzle(sudokuObj);
-        updates.setPuzzle(sudokuObj);
+        updates = new Updates(sudokuObj, users);
       }
       if (sentUsers) {
         users.value = sentUsers;
-        updates.setUsers(users);
+        updates.users.value = users.value;
       }
       if (sentColor) {
         color.value = sentColor;

@@ -8,21 +8,17 @@ interface Ref<T> {
   value: T;
 }
 
-const updates = {
-  sudokuObj: ref<Puzzle>(),
-  users: ref<Users>(),
+class Updates {
+  sudokuObj: Ref<Puzzle>;
+  users: Ref<Users>;
 
-  setPuzzle: function(obj: Ref<Puzzle>) {
-    this.sudokuObj = obj;
-    // Sets puzzle on validation
-    setPuzzle(obj);
-  },
-
-  setUsers: function(users: Ref<Users>) {
+  constructor(puzzle: Ref<Puzzle>, users: Ref<Users>) {
+    this.sudokuObj = puzzle;
     this.users = users;
-  },
+    setPuzzle(puzzle);
+  }
 
-  updateNumber: function(
+  updateNumber(
     { numberUpdate }: { numberUpdate: NumberUpdate },
     undo?: boolean
   ) {
@@ -43,9 +39,9 @@ const updates = {
       // Edit moves
       this.users.value[id].moves.push({ numberUpdate: inverseUpdate });
     }
-  },
+  }
 
-  updatePencilMarks: function(
+  updatePencilMarks(
     { pencilMarkUpdate }: { pencilMarkUpdate: PencilMarkUpdate },
     undo?: boolean
   ) {
@@ -58,9 +54,9 @@ const updates = {
     if (pencilMark != "delete" && !pencilMarks) {
       // Toggle mark
       this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
-        pencilMark - 1
+        Number(pencilMark) - 1
       ] = !this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
-        pencilMark - 1
+        Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
       this.sudokuObj.value[
@@ -87,8 +83,8 @@ const updates = {
       // Update moves
       this.users.value[id].moves.push({ pencilMarkUpdate: inverseUpdate });
     }
-  },
-  undo: function(userId: string) {
+  }
+  undo(userId: string) {
     // Get last move for this player
     const move = this.users.value[userId].moves.pop();
     // Check if the move is a number update
@@ -98,7 +94,7 @@ const updates = {
     } else if (move.pencilMarkUpdate) {
       this.updatePencilMarks({ pencilMarkUpdate: move.pencilMarkUpdate }, true);
     }
-  },
-};
+  }
+}
 
-export default updates;
+export default Updates;
