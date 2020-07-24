@@ -34,9 +34,10 @@
   - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
 - [ ] Type clientside
 - [ ] Interface server and clientside with
-  - [ ] Cell
-  - [ ] Puzzle
-  - [ ] Updates
+  - [x] Cell
+  - [x] Puzzle
+  - [x] Updates
+- [ ] Classify puzzleValidation
   
 ### Customization and UI
 

@@ -19,8 +19,9 @@ import {
   PencilMarkUpdate,
   NumberUpdate,
   Users,
-  User
-} from "../types.ts";
+  User,
+  Move
+} from "../client/src/types.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -194,7 +195,7 @@ wss.on("connection", function (ws: WebSocket) {
   let color = getColor(ws);
   let id = v4.generate();
   // For undoing
-  const moves: any = [];
+  const moves: Move[] = [];
   // Save to users
   users[id] = {
     id,
@@ -243,19 +244,19 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
-      const inverseUpdate = updateNumber(numberUpdate);
+      const inverseUpdate:NumberUpdate = updateNumber(numberUpdate);
       // Change the number to the former state
       moves.push({ numberUpdate: inverseUpdate });
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
-      const inverseUpdate = updatePencilMark(pencilMarkUpdate);
+      const inverseUpdate:pencilMarkUpdate = updatePencilMark(pencilMarkUpdate);
       moves.push({ pencilMarkUpdate: inverseUpdate });
     }
     // Recieved undo request
     if (undo) {
       // Get last move for this player
-      let move = moves.pop();
+      let move: Move = moves.pop();
       // Check if the move is a number update
       if (move.numberUpdate) {
         updateNumber(move.numberUpdate);

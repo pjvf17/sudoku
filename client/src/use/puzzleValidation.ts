@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { computed, ref, toRaw } from "vue";
-import { Puzzle, Cell, Units, Unit } from "../../../types.ts";
+import { Puzzle, Cell, Units, Unit } from "../types";
 
 /* eslint-enable */
 

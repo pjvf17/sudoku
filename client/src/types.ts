@@ -122,6 +122,11 @@ export interface Unit {
   [propName: string]: Cell;
 }
 
+interface Move {
+  pencilMarkUpdate?: PencilMarkUpdate
+  numberUpdate?: NumberUpdate
+}
+
 export interface User {
   color: string;
   focus: {
@@ -129,7 +134,7 @@ export interface User {
     col: number;
   };
   id: string;
-  moves: [PencilMarkUpdate | NumberUpdate];
+  moves: Move[];
   ws: any;
 }
 

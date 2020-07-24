@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import { setPuzzle, validateSquare } from "./puzzleValidation";
-import { NumberUpdate, Puzzle, PencilMarkUpdate, Users } from "../../../types";
+import {NumberUpdate, Puzzle, Users, PencilMarkUpdate} from "../types"
 /* eslint-enable */
 
 interface Ref<T> {
@@ -47,7 +47,7 @@ class Updates {
   ) {
     let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
-    const originalState = [
+    const originalState:boolean[] = [
       ...this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks,
     ];
     // If pencilMark not delete, and we don't have pencilMarks obj
@@ -77,7 +77,7 @@ class Updates {
     }
     // If not undoing a move
     if (!undo) {
-      const inverseUpdate: PencilMarkUpdate = { ...pencilMarkUpdate };
+      const inverseUpdate:PencilMarkUpdate = { ...pencilMarkUpdate };
       // Update request
       inverseUpdate.pencilMarks = originalState;
       // Update moves
@@ -85,14 +85,20 @@ class Updates {
     }
   }
   undo(userId: string) {
-    // Get last move for this player
-    const move = this.users.value[userId].moves.pop();
-    // Check if the move is a number update
-    if (move.numberUpdate) {
-      this.updateNumber({ numberUpdate: move.numberUpdate }, true);
-      // Check if it's a pencilMarkUpdate
-    } else if (move.pencilMarkUpdate) {
-      this.updatePencilMarks({ pencilMarkUpdate: move.pencilMarkUpdate }, true);
+    // Check that there is in fact a move to undo
+    if (this.users.value[userId].moves.length) {
+      // Get last move for this player
+      const move = this.users.value[userId].moves.pop();
+      // Check if the move is a number update
+      if (move!.numberUpdate) {
+        this.updateNumber({ numberUpdate: move!.numberUpdate }, true);
+        // Check if it's a pencilMarkUpdate
+      } else if (move!.pencilMarkUpdate) {
+        this.updatePencilMarks(
+          { pencilMarkUpdate: move!.pencilMarkUpdate },
+          true
+        );
+      }
     }
   }
 }
