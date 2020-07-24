@@ -5,5 +5,7 @@
 - [x] Fill in candidates being pressed a second time erasing all candidates (21/07/2020)
 - [x] Reloading doesn't work (? maybe?)
 - [ ] Serverside validation is a bit wonky on reload sometimes
+- [ ] Deno needs to be on for server, off for client
+  - [ ] Fix by manually installing it? https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno
   
 

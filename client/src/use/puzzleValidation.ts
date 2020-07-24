@@ -105,7 +105,7 @@ export const validateSquare = (cell: Cell) => {
     return cell;
   }
   const { row, col, square } = getPeers(cell);
-  const peers = [
+  const peers: Cell[] = [
     ...Object.values(row),
     ...Object.values(col),
     ...Object.values(square),
