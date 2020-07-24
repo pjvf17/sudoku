@@ -7,5 +7,7 @@
 - [ ] Serverside validation is a bit wonky on reload sometimes
 - [ ] Deno needs to be on for server, off for client
   - [ ] Fix by manually installing it? https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno
-  
+  - [x] For now will just enable and disable extension as I switch between server and client (24-07-2020)
 
+
+  

@@ -109,7 +109,7 @@ import {
   Cell,
   Puzzle,
   Users
-} from "../../types";
+} from "./types";
 
 /* eslint-enable */
 
