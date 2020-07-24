@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import { setPuzzle, validateSquare } from "./puzzleValidation";
-import {NumberUpdate, Puzzle, Users, PencilMarkUpdate} from "../types"
+import { NumberUpdate, Puzzle, Users, PencilMarkUpdate } from "../types"
 /* eslint-enable */
 
 interface Ref<T> {
@@ -47,7 +47,7 @@ class Updates {
   ) {
     let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
-    const originalState:boolean[] = [
+    const originalState: boolean[] = [
       ...this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks,
     ];
     // If pencilMark not delete, and we don't have pencilMarks obj
@@ -56,7 +56,7 @@ class Updates {
       this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
       ] = !this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
-        Number(pencilMark) - 1
+      Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
       this.sudokuObj.value[
@@ -77,7 +77,7 @@ class Updates {
     }
     // If not undoing a move
     if (!undo) {
-      const inverseUpdate:PencilMarkUpdate = { ...pencilMarkUpdate };
+      const inverseUpdate: PencilMarkUpdate = { ...pencilMarkUpdate };
       // Update request
       inverseUpdate.pencilMarks = originalState;
       // Update moves

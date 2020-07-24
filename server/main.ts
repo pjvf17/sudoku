@@ -21,7 +21,7 @@ import {
   Users,
   User,
   Move
-} from "../client/src/types.ts";
+} from "../client/src/types.d.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();

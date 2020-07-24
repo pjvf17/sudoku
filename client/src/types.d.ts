@@ -122,7 +122,7 @@ export interface Unit {
   [propName: string]: Cell;
 }
 
-interface Move {
+export interface Move {
   pencilMarkUpdate?: PencilMarkUpdate
   numberUpdate?: NumberUpdate
 }
