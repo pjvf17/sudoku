@@ -1,9 +1,11 @@
 // generator.ts
 
+import { Cell, Puzzle, Units, Unit } from "../client/src/types.d.ts";
+
 // Validation framework
 
-export const makeRows = (puzzle: any) => {
-  let rows: any = {
+export const makeRows = (puzzle: Puzzle) => {
+  let rows: Units = {
     r1: {},
     r2: {},
     r3: {},
@@ -22,8 +24,8 @@ export const makeRows = (puzzle: any) => {
   }
   return rows;
 };
-export const makeCols = (puzzle: any) => {
-  let cols: any = {
+export const makeCols = (puzzle: Puzzle) => {
+  let cols: Units = {
     c1: {},
     c2: {},
     c3: {},
@@ -48,7 +50,7 @@ export const getSquare = (cell: any) => {
   let s46 = [4, 5, 6];
   let s79 = [7, 8, 9];
 
-  let square: any;
+  let square: number[] = [1,2,3];
   if (cell.address.r >= 1 && cell.address.r <= 3) {
     square = s13;
   }
@@ -62,7 +64,7 @@ export const getSquare = (cell: any) => {
 };
 
 export const makeSquares = (puzzle: any) => {
-  let squares: any = {
+  let squares: Units = {
     s1: {},
     s2: {},
     s3: {},
@@ -86,18 +88,17 @@ export const makeSquares = (puzzle: any) => {
 };
 
 export const validateCell = (
-  cell: any,
-  puzzle: any,
-  { rows, cols, squares }: any,
-  number: number
+  cell: Cell,
+  puzzle: Puzzle,
+  { rows, cols, squares }: {rows: Units, cols: Units, squares: Units},
+  number: Cell["number"]
 ) => {
-  let row,
-    col,
-    square = [];
+  let row: Unit, col: Unit, square: Unit;
+
   row = rows[`r${cell.address.r}`];
   col = cols[`c${cell.address.c}`];
   square = squares[getSquare(cell)];
-  const peers: any = [
+  const peers: Cell[] = [
     ...Object.values(row),
     ...Object.values(col),
     ...Object.values(square),
@@ -119,10 +120,10 @@ It's best use is for testing other, more targetted validation methods to make su
 */
 
 export const validatePuzzle = (
-  puzzle: any,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  puzzle: Puzzle,
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -136,11 +137,11 @@ export const validatePuzzle = (
       // Most of this code is the same as in
       // validateCell
 
-      let row = rows[`r${cell.address.r}`];
-      let col = cols[`c${cell.address.c}`];
-      let square = squares[getSquare(cell)];
+      let row:Unit = rows[`r${cell.address.r}`];
+      let col:Unit = cols[`c${cell.address.c}`];
+      let square:Unit = squares[getSquare(cell)];
 
-      const peers: any = [
+      const peers: Cell[] = [
         ...Object.values(row),
         ...Object.values(col),
         ...Object.values(square),
@@ -168,7 +169,7 @@ export const validatePuzzle = (
 };
 
 // From https://stackoverflow.com/a/12646864
-export const shuffleArray = (array: any) => {
+export const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -181,11 +182,11 @@ export const createOneNine = () => {
 };
 
 // Simply calls shuffle array on an array of numbers 1-9
-export const createRandomOneNine = () => {
+export const createRandomOneNine = ():number[] => {
   return shuffleArray(createOneNine());
 };
 
-// start with blank puzzle structure
+// Create blank puzzle
 export const createBlankPuzzle = () => {
   let puzzleString = "";
   let puzzle: any = {};

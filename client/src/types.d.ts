@@ -30,6 +30,7 @@ export interface Cell {
   candidates: number[];
   address: Address;
   pencilMarks: boolean[];
+  untriedNumbers?: number[];
 }
 
 
