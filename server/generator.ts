@@ -1,6 +1,6 @@
 // generator.ts
 
-import { Cell, Puzzle, Units, Unit } from "../client/src/types.d.ts";
+import { Cell, Puzzle, Units, Unit, Address } from "../client/src/types.d.ts";
 
 // Validation framework
 
@@ -45,7 +45,7 @@ export const makeCols = (puzzle: Puzzle) => {
   return cols;
 };
 
-export const getSquare = (cell: any) => {
+export const getSquare = (cell: Cell) => {
   let s13 = [1, 2, 3];
   let s46 = [4, 5, 6];
   let s79 = [7, 8, 9];
@@ -63,7 +63,7 @@ export const getSquare = (cell: any) => {
   return `s${square[Math.floor((cell.address.c - 1) / 3)]}`;
 };
 
-export const makeSquares = (puzzle: any) => {
+export const makeSquares = (puzzle: Puzzle) => {
   let squares: Units = {
     s1: {},
     s2: {},
@@ -89,7 +89,6 @@ export const makeSquares = (puzzle: any) => {
 
 export const validateCell = (
   cell: Cell,
-  puzzle: Puzzle,
   { rows, cols, squares }: {rows: Units, cols: Units, squares: Units},
   number: Cell["number"]
 ) => {
@@ -151,7 +150,7 @@ export const validatePuzzle = (
 
       // The only difference in code is here
       valid =
-        peers.findIndex((el: any) => {
+        peers.findIndex((el: Cell) => {
           // This checks against cell address as well as number,
           // Instead of just number as in validateCell
           return el.number == cell.number && el.address != cell.address;
@@ -187,7 +186,7 @@ export const createRandomOneNine = ():number[] => {
 };
 
 // Create blank puzzle
-export const createBlankPuzzle = () => {
+export const createBlankPuzzle = ():Puzzle => {
   let puzzleString = "";
   let puzzle: any = {};
   for (let i = 0; i < 81; i++) {
@@ -223,7 +222,7 @@ export const createBlankPuzzle = () => {
   return puzzle;
 };
 
-export const parsePuzzle = (puzzleToPorse: any) => {
+export const parsePuzzle = (puzzleToPorse: string):Puzzle => {
   let puzzle: any = {};
 
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
@@ -282,50 +281,12 @@ export const parsePuzzle = (puzzleToPorse: any) => {
   return puzzle;
 };
 
-// Fill in diagonal squares
-export const generateSquare = (square: any, sIndex: number, puzzle: any) => {
-  const numbers = Array.from(Array(9), (_, i) => i + 1);
-  shuffleArray(numbers);
-  for (const rncnAddress in square) {
-    if (square.hasOwnProperty(rncnAddress)) {
-      // Get reference to cell
-      const cell = square[rncnAddress];
-      // Get number, removing each number from the numbers array to make no repeats
-      const number = numbers.pop();
-      // Save number to cell
-      cell.number = number;
-      // Get address from cell
-      const { address } = cell;
-      // Save to puzzle
-      puzzle[`r${address.r}c${address.c}`] = cell;
-
-      square[rncnAddress] = cell;
-    }
-  }
-  return puzzle;
-  //   console.log("square ended: " + sIndex)
-  //   console.log(square);
-};
-
-export const generateDiagonalSquares = (puzzle: any) => {
-  const squares = makeSquares(puzzle);
-  // Make top right square
-  puzzle = generateSquare(squares["s1"], 1, puzzle);
-  // Make middle square
-  puzzle = generateSquare(squares["s5"], 5, puzzle);
-  // Make bottom left square
-  puzzle = generateSquare(squares["s9"], 9, puzzle);
-  // console.log(squares["s1"]);
-  return puzzle;
-};
-
-export const printSudokuToConsole = (puzzleToPrint: any) => {
-  // await Deno.stdout.write(new TextEncoder().encode("\n\n"));
+export const printSudokuToConsole = (puzzleToPrint: Puzzle) => {
   let stringToPrint = "\n\n";
   for (const cellAddress in puzzleToPrint) {
     if (puzzleToPrint.hasOwnProperty(cellAddress)) {
       const cell = puzzleToPrint[cellAddress];
-      stringToPrint = stringToPrint.concat(cell.number);
+      stringToPrint = stringToPrint.concat(String(cell.number));
       // console.log(cell.number);
       if (cell.address.c == 9) {
         console.log(stringToPrint);
@@ -333,10 +294,9 @@ export const printSudokuToConsole = (puzzleToPrint: any) => {
       }
     }
   }
-  // await Deno.stdout.write(new TextEncoder().encode("\n\n"));
 };
 
-export const printSudokuToConsoleFormatted = async (puzzleToPrint: any) => {
+export const printSudokuToConsoleFormatted = async (puzzleToPrint: Puzzle) => {
   await Deno.stdout.write(new TextEncoder().encode("\n\n"));
   for (const cellAddress in puzzleToPrint) {
     if (puzzleToPrint.hasOwnProperty(cellAddress)) {
@@ -350,28 +310,25 @@ export const printSudokuToConsoleFormatted = async (puzzleToPrint: any) => {
   await Deno.stdout.write(new TextEncoder().encode("\n\n"));
 };
 
-export const puzzleToString = (puzzle: any) => {
+export const puzzleToString = (puzzle: Puzzle) => {
   let puzzleString: string = "";
 
   for (const cellAddress in puzzle) {
     if (puzzle.hasOwnProperty(cellAddress)) {
       const cell = puzzle[cellAddress];
       // console.log(cell.number);
-      puzzleString = puzzleString.concat(cell.number);
+      puzzleString = puzzleString.concat(String(cell.number));
     }
   }
 
   return puzzleString;
 };
 
-// console.log(puzzleToString(initalPuzzle));
-
-export const fillInRemaining: any = (
+export const fillInRemaining = (
   address: any,
   puzzle: any,
   addressesComplete: any
-  // triedConfigurations: [string]
-) => {
+):Puzzle => {
   address = JSON.parse(JSON.stringify(address));
   puzzle = JSON.parse(JSON.stringify(puzzle));
   addressesComplete = JSON.parse(JSON.stringify(addressesComplete));
@@ -407,7 +364,6 @@ export const fillInRemaining: any = (
 
         const valid = validateCell(
           puzzle[`r${address.r}c${address.c}`],
-          puzzle,
           { rows, cols, squares },
           number
         );
@@ -1459,7 +1415,7 @@ export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
   // Need to keep track of changes for each method
 };
 
-export const createPuzzle = (difficulty?: any) => {
+export const createPuzzle = (difficulty?: string) => {
   // const startTimer = performance.now();
   const targetRanges: any = {
     easy: { min: 4300, max: 5500 },
@@ -1483,12 +1439,12 @@ export const createPuzzle = (difficulty?: any) => {
   const squares = makeSquares(puzzle);
 
   // Array to hold removed numbers
-  let removed: any = [];
+  let removed: any[] = [];
   // Iterations, so we can reset if needed
   let iterations: number = 0;
   let totalCost: number = 0;
   const populateAddresses = () => {
-    let addresses: any = [];
+    let addresses: Address[] = [];
     for (let rowIndex = 1; rowIndex <= 5; rowIndex++) {
       for (let colIndex = 1; colIndex <= 9; colIndex++) {
         const address = {
@@ -1496,7 +1452,6 @@ export const createPuzzle = (difficulty?: any) => {
           c: colIndex,
         };
         if (rowIndex == 5 && colIndex == 6) {
-          // console.log("break");
           break;
         }
         addresses.push(address);
@@ -1517,8 +1472,8 @@ export const createPuzzle = (difficulty?: any) => {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
-    let firstNumber: number;
-    let secondNumber: number;
+    let firstNumber: Cell["number"];
+    let secondNumber: Cell["number"];
 
     if (iterations % 500 == 0) {
       // console.log("resetting " + iterations / 500);
