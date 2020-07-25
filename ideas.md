@@ -34,6 +34,7 @@
   - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
 - [x] Send all initial values at once
 - [ ] On fill in candidates, send updates in a bundle
+  - [ ] pencilMarkUpdate in array form
 
 ### Typescript
 
@@ -71,5 +72,6 @@
 - [ ] Walkthrough of techniques
 
 
+## Specific function plans
 
-
+Part of updateNumber, on both sides, should be calculating peer candidates, getting an array of pencilMarkUpdates, and adding those to an array inside the update

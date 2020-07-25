@@ -366,6 +366,7 @@ export default {
         }
       } else if (key == "Shift") {
         notating.value = !notating.value;
+        // Check for ctrl/command z : classic undo combo
       } else if (key.toLowerCase() == "z" && event.metaKey) {
         // Update local
         updates.undo(id.value);

@@ -31,12 +31,12 @@ class Updates {
     this.sudokuObj.value[`r${address.r}c${address.c}`] = validateSquare(
       this.sudokuObj.value[`r${address.r}c${address.c}`]
     );
-    // If not undoing a move
+    // If not undoing a move add to moves
     if (!undo) {
       const inverseUpdate: NumberUpdate = { ...numberUpdate };
       // Update number to original
       inverseUpdate.number = originalState.number;
-      // Edit moves
+      // Add to moves
       this.users.value[id].moves.push({ numberUpdate: inverseUpdate });
     }
   }
