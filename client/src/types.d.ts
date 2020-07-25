@@ -1,6 +1,11 @@
 export interface Address {
+  r: number;
+  c: number;
+  /* 
+  This produced errors
   r: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-  c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; 
+  */
 }
 
 export interface NumberUpdate {
@@ -47,8 +52,8 @@ export interface Move {
 export interface User {
   color: string;
   focus: {
-    row: number;
-    col: number;
+    row: number | null;
+    col: number | null;
   };
   id: string;
   moves: Move[];

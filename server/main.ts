@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 import {
   puzzleToString,
@@ -8,6 +7,7 @@ import {
   printSudokuToConsoleFormatted,
   printSudokuToConsole,
   parsePuzzle,
+  createBlankPuzzle,
 } from "./generator.ts";
 import {
   updateNumber,
@@ -20,7 +20,9 @@ import {
   NumberUpdate,
   Users,
   User,
-  Move
+  Move,
+  Puzzle,
+  Cell,
 } from "../client/src/types.d.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
@@ -46,20 +48,19 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
   );
 });
 
-let sudokuObj = {};
+let sudokuObj: { puzzle?: Puzzle; solved: string } = { solved: "" };
 
 const startNewGame = () => {
-  sudokuObj.puzzle = puzzleToString(createPuzzle("hard"));
+  const puzzleString: string = puzzleToString(createPuzzle("hard"));
   console.log("0\n0\n0\n0\n0");
-  sudokuObj.solved = solver(parsePuzzle(sudokuObj.puzzle)).puzzle;
+  sudokuObj.solved = solver(parsePuzzle(puzzleString)).puzzle;
 
-  const puzzle = {};
-
+  let puzzle: Puzzle = createBlankPuzzle();
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
-      const cell = sudokuObj.puzzle.substr(rowIndex * 9 + colIndex, 1);
-      let formattedCell = {};
+      const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
+      let formattedCell: Cell;
       if (cell != ".") {
         // Make a cell object with given equal to true
         formattedCell = {
@@ -123,7 +124,6 @@ import {
   WebSocket,
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
-import { createEasyPuzzle } from "./generator.ts";
 
 const clients: any = new Set();
 
@@ -135,7 +135,7 @@ const colors: any = [
   { value: "#b48ead88", used: false },
 ];
 
-const getColor = (socket) => {
+const getColor = (socket:WebSocket) => {
   let count = 0;
   while (count < colors.length) {
     if (!colors[count].used) {
@@ -146,7 +146,7 @@ const getColor = (socket) => {
   }
 };
 
-const freeColor = (socket) => {
+const freeColor = (socket:WebSocket) => {
   let count = 0;
   while (count < colors.length) {
     if (colors[count].used == socket) {
@@ -159,13 +159,13 @@ const freeColor = (socket) => {
 
 const users: Users = {};
 
-const freeUser = (id) => {
+const freeUser = (id:User["id"]) => {
   delete users[id];
 };
 
-const userTimers = {};
+const userTimers: { [index: string]: any } = {};
 
-const updateFocus = ({ id, focus }, wss, ws) => {
+const updateFocus = ({ id, focus }:{id: User["id"], focus: User["focus"]}, wss:WebSocketServer, ws:WebSocket) => {
   if (userTimers[id]) {
     clearTimeout(userTimers[id]);
   }
@@ -199,8 +199,8 @@ wss.on("connection", function (ws: WebSocket) {
   // Save to users
   users[id] = {
     id,
-    focus: { row: null, col: null },
-    name: null,
+    focus: { row: 1, col: 1 },
+    // name: null,
     color,
     ws,
     moves,
@@ -235,6 +235,8 @@ wss.on("connection", function (ws: WebSocket) {
     }: {
       numberUpdate: NumberUpdate;
       pencilMarkUpdate: PencilMarkUpdate;
+      // Catch the rest until I type them
+      [propName: string]: any
     } = JSON.parse(message);
 
     // Recieved movement/focus update
@@ -244,25 +246,28 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
-      const inverseUpdate:NumberUpdate = updateNumber(numberUpdate);
+      const inverseUpdate: NumberUpdate = updateNumber(numberUpdate);
       // Change the number to the former state
       moves.push({ numberUpdate: inverseUpdate });
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
-      const inverseUpdate:pencilMarkUpdate = updatePencilMark(pencilMarkUpdate);
+      const inverseUpdate: PencilMarkUpdate = updatePencilMark(
+        pencilMarkUpdate
+      );
       moves.push({ pencilMarkUpdate: inverseUpdate });
     }
     // Recieved undo request
-    if (undo) {
+    if (undo && moves.length) {
       // Get last move for this player
-      let move: Move = moves.pop();
+      
+      let move: Move | undefined = moves.pop();
       // Check if the move is a number update
-      if (move.numberUpdate) {
-        updateNumber(move.numberUpdate);
+      if (move!.numberUpdate) {
+        updateNumber(move!.numberUpdate);
         // Check if it's a pencilMarkUpdate
-      } else if (move.pencilMarkUpdate) {
-        updatePencilMark(move.pencilMarkUpdate);
+      } else if (move!.pencilMarkUpdate) {
+        updatePencilMark(move!.pencilMarkUpdate);
       }
     }
     // console.log(newGame);
