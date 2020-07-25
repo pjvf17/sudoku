@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="pane" v-if="sudokuObj">
+    <div class="pane" v-if="!loading">
       <table>
         <tbody>
           <tr v-for="rowIndex in 9" :key="rowIndex">
@@ -84,7 +84,8 @@
 
 console.log(process.env.VUE_APP_WS_URL);
 
-const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
+// const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
+const wsUrl = "ws://localhost:8010";
 console.log(wsUrl);
 
 const socket = new WebSocket(wsUrl);
@@ -124,12 +125,13 @@ export default {
       console.log("connection established");
       setSocket(socket);
     };
-    const color = ref({});
+    const color = ref<string>();
     const sudokuObj = ref<Puzzle>(null);
     const users = ref<Users>();
     const id = ref<string>();
     const notating = ref<boolean>(false);
     const candidates = ref<boolean>(false);
+    const loading = ref(true);
     let updates: Updates;
     // const focused = ref({});
 
@@ -154,9 +156,9 @@ export default {
       }: {
         numberUpdate: NumberUpdate;
         pencilMarkUpdate: PencilMarkUpdate;
-        id: string;
-        color: string;
-        users: Users;
+        sentid: string;
+        sentColor: string;
+        sentUsers: Users;
         // Catch the rest until I type them
         [propName: string]: any
       } = JSON.parse(data);
@@ -169,10 +171,11 @@ export default {
         sudokuObj.value = sentPuzzle;
         setPuzzle(sudokuObj);
         updates = new Updates(sudokuObj, users);
+        loading.value = false;
       }
       if (sentUsers) {
         users.value = sentUsers;
-        updates.users.value = users.value;
+        // updates.users = users;
       }
       if (sentColor) {
         color.value = sentColor;
@@ -443,7 +446,8 @@ export default {
       notating,
       highlightNumbers,
       firstPassCandidateCalculator,
-      candidates
+      candidates,
+      loading
     };
   },
   components: {

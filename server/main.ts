@@ -135,7 +135,7 @@ const colors: any = [
   { value: "#b48ead88", used: false },
 ];
 
-const getColor = (socket:WebSocket) => {
+const getColor = (socket: WebSocket) => {
   let count = 0;
   while (count < colors.length) {
     if (!colors[count].used) {
@@ -146,7 +146,7 @@ const getColor = (socket:WebSocket) => {
   }
 };
 
-const freeColor = (socket:WebSocket) => {
+const freeColor = (socket: WebSocket) => {
   let count = 0;
   while (count < colors.length) {
     if (colors[count].used == socket) {
@@ -159,13 +159,17 @@ const freeColor = (socket:WebSocket) => {
 
 const users: Users = {};
 
-const freeUser = (id:User["id"]) => {
+const freeUser = (id: User["id"]) => {
   delete users[id];
 };
 
 const userTimers: { [index: string]: any } = {};
 
-const updateFocus = ({ id, focus }:{id: User["id"], focus: User["focus"]}, wss:WebSocketServer, ws:WebSocket) => {
+const updateFocus = (
+  { id, focus }: { id: User["id"]; focus: User["focus"] },
+  wss: WebSocketServer,
+  ws: WebSocket
+) => {
   if (userTimers[id]) {
     clearTimeout(userTimers[id]);
   }
@@ -209,12 +213,10 @@ wss.on("connection", function (ws: WebSocket) {
   ws.send(JSON.stringify({ users }));
   // Send id to user to use as identification in users array
   ws.send(JSON.stringify({ id }));
-  // Send sudokuObj
-  // console.log(sudokuObj.puzzle[`r1c2`].pencilMarks);
-
-  ws.send(JSON.stringify({ sudokuObj }));
   // Send color assignment
   ws.send(JSON.stringify({ color }));
+  // Send sudokuObj
+  ws.send(JSON.stringify({ sudokuObj }));
 
   // Send to everyone else, updated users
   // Send to all connected
@@ -236,7 +238,7 @@ wss.on("connection", function (ws: WebSocket) {
       numberUpdate: NumberUpdate;
       pencilMarkUpdate: PencilMarkUpdate;
       // Catch the rest until I type them
-      [propName: string]: any
+      [propName: string]: any;
     } = JSON.parse(message);
 
     // Recieved movement/focus update
@@ -260,7 +262,7 @@ wss.on("connection", function (ws: WebSocket) {
     // Recieved undo request
     if (undo && moves.length) {
       // Get last move for this player
-      
+
       let move: Move | undefined = moves.pop();
       // Check if the move is a number update
       if (move!.numberUpdate) {
