@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 /* eslint disable */
 declare module "*.vue" {
   import { defineComponent } from "vue";

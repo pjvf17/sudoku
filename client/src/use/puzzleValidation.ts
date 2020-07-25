@@ -8,8 +8,8 @@ interface Ref<T> {
   value: T;
 }
 
-let sudokuObj = ref<Puzzle>(null);
-let userId = ref<string>(null);
+let sudokuObj:Ref<Puzzle>;
+let userId:Ref<string>;
 let socket: any;
 
 export const setPuzzle = (obj: Ref<Puzzle>) => {

@@ -12,7 +12,7 @@ export interface NumberUpdate {
 export interface PencilMarkUpdate {
   address: Address;
   pencilMark?: number | string;
-  pencilMarks?: [boolean];
+  pencilMarks?: boolean[];
   id: string;
 }
 
@@ -22,9 +22,41 @@ export interface Cell {
   valid: {
     value: boolean;
   };
-  candidates: [number];
+  candidates: number[];
   address: Address;
   pencilMarks: boolean[];
+}
+
+
+
+export interface Units {
+  [propName: string]: {
+    [propName: string]: Cell;
+  };
+}
+
+export interface Unit {
+  [propName: string]: Cell;
+}
+
+export interface Move {
+  pencilMarkUpdate?: PencilMarkUpdate
+  numberUpdate?: NumberUpdate
+}
+
+export interface User {
+  color: string;
+  focus: {
+    row: number;
+    col: number;
+  };
+  id: string;
+  moves: Move[];
+  ws: any;
+}
+
+export interface Users {
+  [propName: string]: User;
 }
 
 export interface Puzzle {
@@ -110,34 +142,4 @@ export interface Puzzle {
   r9c7: Cell;
   r9c8: Cell;
   r9c9: Cell;
-}
-
-export interface Units {
-  [propName: string]: {
-    [propName: string]: Cell;
-  };
-}
-
-export interface Unit {
-  [propName: string]: Cell;
-}
-
-export interface Move {
-  pencilMarkUpdate?: PencilMarkUpdate
-  numberUpdate?: NumberUpdate
-}
-
-export interface User {
-  color: string;
-  focus: {
-    row: number;
-    col: number;
-  };
-  id: string;
-  moves: Move[];
-  ws: any;
-}
-
-export interface Users {
-  [propName: string]: User;
 }
