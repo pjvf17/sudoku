@@ -32,8 +32,13 @@
   - [ ] Use the numbering to check for missed moves from/to server
 - [ ] Database for puzzles
   - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
-- [ ] Type clientside
-- [ ] Interface server and clientside with
+
+### Typescript
+
+- [x] Type clientside
+- [ ] Type generator.ts
+- [ ] Make class/constructor for puzzle to get around creating an empty object
+- [x] Interface server and clientside with
   - [x] Cell
   - [x] Puzzle
   - [x] Updates

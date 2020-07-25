@@ -81,6 +81,7 @@
 </template>
 
 <script lang="ts">
+
 console.log(process.env.VUE_APP_WS_URL);
 
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
@@ -89,8 +90,8 @@ console.log(wsUrl);
 const socket = new WebSocket(wsUrl);
 
 import BaseButton from "./components/Base/BaseButton.vue";
-
 /* eslint-disable */
+
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 
 import {
@@ -155,7 +156,9 @@ export default {
         pencilMarkUpdate: PencilMarkUpdate;
         id: string;
         color: string;
-        users: Users
+        users: Users;
+        // Catch the rest until I type them
+        [propName: string]: any
       } = JSON.parse(data);
 
       const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj
