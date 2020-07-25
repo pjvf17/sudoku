@@ -32,6 +32,7 @@
   - [ ] Use the numbering to check for missed moves from/to server
 - [ ] Database for puzzles
   - [ ] Keeps track of which you've seen (either through cookies/local storage if you don't have an account, or through the account)
+- [x] Send all initial values at once
 
 ### Typescript
 

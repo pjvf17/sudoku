@@ -210,13 +210,13 @@ wss.on("connection", function (ws: WebSocket) {
     moves,
   };
   // Send users array
-  ws.send(JSON.stringify({ users }));
+  ws.send(JSON.stringify({ users, id, color, sudokuObj }));
   // Send id to user to use as identification in users array
-  ws.send(JSON.stringify({ id }));
-  // Send color assignment
-  ws.send(JSON.stringify({ color }));
-  // Send sudokuObj
-  ws.send(JSON.stringify({ sudokuObj }));
+  // ws.send(JSON.stringify({ id }));
+  // // Send color assignment
+  // ws.send(JSON.stringify({ color }));
+  // // Send sudokuObj
+  // ws.send(JSON.stringify({ sudokuObj }));
 
   // Send to everyone else, updated users
   // Send to all connected

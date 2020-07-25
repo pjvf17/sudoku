@@ -83,9 +83,8 @@
 <script lang="ts">
 
 console.log(process.env.VUE_APP_WS_URL);
-
-// const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
-const wsUrl = "ws://localhost:8010";
+const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
+// const wsUrl = "ws://localhost:8010";
 console.log(wsUrl);
 
 const socket = new WebSocket(wsUrl);
