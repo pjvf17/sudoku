@@ -12,7 +12,7 @@ await bench({
   runs: 100,
   func(b): void {
     b.start();
-    fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+    fillInRemaining();
     b.stop();
   },
 });

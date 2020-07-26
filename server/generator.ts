@@ -709,9 +709,9 @@ function getRndInteger(min: number, max: number) {
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
 export const pointingLockedCandidatesSolver = (
   puzzle: Puzzle,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
   rows = rows ?? makeRows(puzzle);
@@ -720,7 +720,7 @@ export const pointingLockedCandidatesSolver = (
   let changes = 0;
   let totalChanges = 0;
   // Holds changes, especially useful for hint creation
-  let changesArray: any = [];
+  let changesArray: any[] = [];
   // Look through each square
   do {
     changes = 0;
@@ -772,12 +772,12 @@ export const pointingLockedCandidatesSolver = (
                 rowcol == "row"
                   ? // Only referencing the first element of filtered cells here
                   // Because each element should share the same row or col
-                  rows[`r${filteredCells[0].address.r}`]
-                  : cols[`c${filteredCells[0].address.c}`];
+                  rows![`r${filteredCells[0].address.r}`]
+                  : cols![`c${filteredCells[0].address.c}`];
 
               // Get an array of addresses in rncn format to not change
               // (the ones in the current square)
-              const addressesToNotChange = filteredCells.map((cell: any) => {
+              const addressesToNotChange = filteredCells.map((cell: Cell) => {
                 return `r${cell.address.r}c${cell.address.c}`;
               });
               // Loop through cells, avoiding those addresses in the current square
@@ -830,9 +830,9 @@ export const pointingLockedCandidatesSolver = (
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
 export const claimingLockedCandidatesSolver = (
   puzzle: Puzzle,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
   rows = rows ?? makeRows(puzzle);
@@ -849,29 +849,29 @@ export const claimingLockedCandidatesSolver = (
     changes = 0;
     // Loop twice, first time through rows, second time through cols
     for (let iteration = 0; iteration < 2; iteration++) {
-      let units: any;
-      let unit: any;
+      let units: Units = rows;
+      let unitType: string;
       switch (iteration) {
         case 0:
           units = rows;
-          unit = "row";
+          unitType = "row";
           break;
         case 1:
           units = cols;
-          unit = "col";
+          unitType = "col";
           break;
       }
 
       for (const unitAddress in units) {
         if (units.hasOwnProperty(unitAddress)) {
-          const unit = units[unitAddress];
+          const unit:Unit = units[unitAddress];
           // Array from 1-9
           const oneNine = createOneNine();
           // Loop through each number
           oneNine.forEach((number: number) => {
             // Filter cells by those whose candidates contains the number
-            const filteredCells: any = Object.values(unit).filter(
-              (cell: any) => {
+            const filteredCells: Cell[] = Object.values(unit).filter(
+              (cell: Cell) => {
                 return cell.candidates.includes(number);
               }
             );
@@ -885,7 +885,7 @@ export const claimingLockedCandidatesSolver = (
             We only do this if square is "empty" meaning that no other thing has been set
             Or if it's the same square as previous
            */
-              let square: any = "empty";
+              let square:string|null = "empty";
               // Loop through filteredCells
               for (
                 // Start at one, so we can compare current and previous
@@ -916,13 +916,13 @@ export const claimingLockedCandidatesSolver = (
                 // Loop through cells in the square
                 // Checking to see if the number we're looking to remove from candidates
                 // Is indeed present
-                for (const cellAddress in squares[square]) {
-                  if (squares[square].hasOwnProperty(cellAddress)) {
+                for (const cellAddress in squares![square]) {
+                  if (squares![square].hasOwnProperty(cellAddress)) {
                     if (!addressesToNotChange.includes(cellAddress)) {
                       if (
-                        squares[square][cellAddress].candidates.includes(number)
+                        squares![square][cellAddress].candidates.includes(number)
                       ) {
-                        const cell = squares[square][cellAddress];
+                        const cell = squares![square][cellAddress];
                         // Remove number from cell candidates
                         cell.candidates.splice(
                           cell.candidates.indexOf(number),
@@ -936,7 +936,7 @@ export const claimingLockedCandidatesSolver = (
                 if (changes) {
                   // Create address of the form r67c2 or r7c78
                   let rncnAddress = "";
-                  if (unit == "row") {
+                  if (unitType == "row") {
                     rncnAddress = rncnAddress.concat(
                       `r${filteredCells[0].address.r}c${filteredCells[0].address.c
                       }${filteredCells[1].address.c}${filteredCells.length == 3
@@ -972,9 +972,9 @@ export const claimingLockedCandidatesSolver = (
 
 export const nakedPairSolver = (
   puzzle: Puzzle,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -984,13 +984,13 @@ export const nakedPairSolver = (
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
   // Holds changes, especially useful for hint creation
-  let changesArray: any = [];
+  let changesArray: any[] = [];
 
   do {
     changes = 0;
 
     for (let iteration = 0; iteration < 3; iteration++) {
-      let units: any;
+      let units:Units = rows;
       switch (iteration) {
         case 0:
           units = rows;
@@ -1085,9 +1085,9 @@ export const nakedPairSolver = (
 
 export const hiddenPairSolver = (
   puzzle: Puzzle,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -1097,13 +1097,13 @@ export const hiddenPairSolver = (
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
   // Holds changes, especially useful for hint creation
-  let changesArray: any = [];
+  let changesArray: any[] = [];
 
   do {
     changes = 0;
 
     for (let iteration = 0; iteration < 3; iteration++) {
-      let units: any;
+      let units: Units = rows;
       switch (iteration) {
         case 0:
           units = rows;
@@ -1531,14 +1531,13 @@ export const createPuzzle = (difficulty?: string) => {
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
 
     // Attempt to solve
-    let attemptedPuzzle: any;
+    let attemptedPuzzle: Puzzle;
     const attemptedPuzzleObj = solver(
       JSON.parse(JSON.stringify(puzzle)),
       difficulty
     );
     attemptedPuzzle = attemptedPuzzleObj.puzzle;
     totalCost = attemptedPuzzleObj.totalCost;
-    // console.log(totalCost);
     cost = attemptedPuzzleObj.cost;
     // Validate, check if valid, AND check if full
     const valid =
@@ -1569,10 +1568,4 @@ export const createPuzzle = (difficulty?: string) => {
   return puzzle;
 };
 
-// await printSudokuToConsoleFormatted(solver(parsePuzzle(hiddenPairTest)).puzzle);
-// console.log(solver(parsePuzzle(hiddenPairTest)).puzzle["r1c7"].candidates);
 
-// const easyPuzzle = createEasyPuzzle();
-// await printSudokuToConsoleFormatted(easyPuzzle);
-// await printSudokuToConsoleFormatted(hiddenAndNakedSingleSolver(easyPuzzle));
-// testSpeed(1);

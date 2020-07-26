@@ -18,7 +18,7 @@ import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 Deno.test({
   name: "Fill in remaining creates a filled puzzle",
   fn(): void {
-    let newPuzzle = fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+    let newPuzzle = fillInRemaining();
     assert(puzzleToString(newPuzzle).indexOf(".") == -1);
   },
 });
@@ -27,7 +27,7 @@ Deno.test({
   name: "Fill in remaining creates a valid puzzle",
   fn(): void {
     assert(
-      validatePuzzle(fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []))
+      validatePuzzle(fillInRemaining())
     );
   },
 });
