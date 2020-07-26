@@ -125,8 +125,6 @@ import {
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
 
-const clients: any = new Set();
-
 const colors: any = [
   { value: "#bf616a88", used: false },
   { value: "#d0877088", used: false },
