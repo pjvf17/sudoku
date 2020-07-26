@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
-import { setPuzzle, validateSquare } from "./puzzleValidation";
+import Validation from "./puzzleValidation";
 import { NumberUpdate, Puzzle, Users, PencilMarkUpdate } from "../types"
 /* eslint-enable */
 
@@ -11,11 +11,12 @@ interface Ref<T> {
 class Updates {
   sudokuObj: Ref<Puzzle>;
   users: Ref<Users>;
+  validation:Validation;
 
-  constructor(puzzle: Ref<Puzzle>, users: Ref<Users>) {
+  constructor(puzzle: Ref<Puzzle>, users: Ref<Users>, validationClass:Validation) {
     this.sudokuObj = puzzle;
     this.users = users;
-    setPuzzle(puzzle);
+    this.validation = validationClass;
   }
 
   updateNumber(
@@ -28,7 +29,7 @@ class Updates {
       ...this.sudokuObj.value[`r${address.r}c${address.c}`],
     };
     this.sudokuObj.value[`r${address.r}c${address.c}`].number = number;
-    this.sudokuObj.value[`r${address.r}c${address.c}`] = validateSquare(
+    this.sudokuObj.value[`r${address.r}c${address.c}`] = this.validation.validateSquare(
       this.sudokuObj.value[`r${address.r}c${address.c}`]
     );
     // If not undoing a move add to moves

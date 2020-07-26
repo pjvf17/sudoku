@@ -48,7 +48,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
   );
 });
 
-let sudokuObj: { puzzle?: Puzzle; solved: string } = { solved: "" };
+let sudokuObj: { puzzle?: Puzzle; solved?: Puzzle } = {};
 
 const startNewGame = () => {
   const puzzleString: string = puzzleToString(createPuzzle("hard"));
@@ -118,7 +118,7 @@ console.log(
 );
 
 console.log("\n\n solved:");
-printSudokuToConsole(sudokuObj.solved);
+printSudokuToConsole(sudokuObj.solved as Puzzle);
 
 import {
   WebSocket,

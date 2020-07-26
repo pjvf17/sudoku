@@ -50,7 +50,7 @@ export const getSquare = (cell: Cell) => {
   let s46 = [4, 5, 6];
   let s79 = [7, 8, 9];
 
-  let square: number[] = [1,2,3];
+  let square: number[] = [1, 2, 3];
   if (cell.address.r >= 1 && cell.address.r <= 3) {
     square = s13;
   }
@@ -89,7 +89,7 @@ export const makeSquares = (puzzle: Puzzle) => {
 
 export const validateCell = (
   cell: Cell,
-  { rows, cols, squares }: {rows: Units, cols: Units, squares: Units},
+  { rows, cols, squares }: { rows: Units, cols: Units, squares: Units },
   number: Cell["number"]
 ) => {
   let row: Unit, col: Unit, square: Unit;
@@ -136,9 +136,9 @@ export const validatePuzzle = (
       // Most of this code is the same as in
       // validateCell
 
-      let row:Unit = rows[`r${cell.address.r}`];
-      let col:Unit = cols[`c${cell.address.c}`];
-      let square:Unit = squares[getSquare(cell)];
+      let row: Unit = rows[`r${cell.address.r}`];
+      let col: Unit = cols[`c${cell.address.c}`];
+      let square: Unit = squares[getSquare(cell)];
 
       const peers: Cell[] = [
         ...Object.values(row),
@@ -181,12 +181,12 @@ export const createOneNine = () => {
 };
 
 // Simply calls shuffle array on an array of numbers 1-9
-export const createRandomOneNine = ():number[] => {
+export const createRandomOneNine = (): number[] => {
   return shuffleArray(createOneNine());
 };
 
 // Create blank puzzle
-export const createBlankPuzzle = ():Puzzle => {
+export const createBlankPuzzle = (): Puzzle => {
   let puzzleString = "";
   let puzzle: any = {};
   for (let i = 0; i < 81; i++) {
@@ -222,7 +222,7 @@ export const createBlankPuzzle = ():Puzzle => {
   return puzzle;
 };
 
-export const parsePuzzle = (puzzleToPorse: string):Puzzle => {
+export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
   let puzzle: any = {};
 
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
@@ -324,14 +324,10 @@ export const puzzleToString = (puzzle: Puzzle) => {
   return puzzleString;
 };
 
-export const fillInRemaining = (
-  address: any,
-  puzzle: any,
-  addressesComplete: any
-):Puzzle => {
-  address = JSON.parse(JSON.stringify(address));
-  puzzle = JSON.parse(JSON.stringify(puzzle));
-  addressesComplete = JSON.parse(JSON.stringify(addressesComplete));
+export const fillInRemaining = (): Puzzle => {
+  let address: Address = { r: 1, c: 1 };
+  let puzzle = createBlankPuzzle();
+  let addressesComplete: Address[] = [];
   let rows = makeRows(puzzle);
   let squares = makeSquares(puzzle);
   // const cols = makeCols(puzzle);
@@ -350,15 +346,15 @@ export const fillInRemaining = (
       addressesComplete = [];
     }
     // Check to see if there are untriedNumbers
-    if (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
+    if (puzzle[`r${address.r}c${address.c}`].untriedNumbers!.length != 0) {
       // While there are numbers left
-      while (puzzle[`r${address.r}c${address.c}`].untriedNumbers.length != 0) {
+      while (puzzle[`r${address.r}c${address.c}`].untriedNumbers!.length != 0) {
         // Try an untried number
 
         // Get number, removing each number from the untriedNumbers array to make no repeats
-        const number = puzzle[
+        const number = Number(puzzle[
           `r${address.r}c${address.c}`
-        ].untriedNumbers.pop();
+        ].untriedNumbers!.pop());
 
         const cols = makeCols(puzzle);
 
@@ -368,7 +364,6 @@ export const fillInRemaining = (
           number
         );
 
-        //   console.log(puzzle[`r${address.r}c${address.c}`].number);
         // Validate cell
         // If invalid
         if (!valid) {
@@ -408,9 +403,8 @@ export const fillInRemaining = (
       ].untriedNumbers = createRandomOneNine();
       if (addressesComplete.length) {
         // Remove last address from address complete array
-        address = addressesComplete.pop();
+        address = (addressesComplete.pop() as Address);
         // Reset the number at the address we're backtracking to
-
         puzzle[`r${address.r}c${address.c}`].number = ".";
       } else {
         // If nothing to backtrack to, give up
@@ -422,7 +416,7 @@ export const fillInRemaining = (
   return puzzle;
 };
 
-export const firstPassCandidateCalculator = (puzzle: any) => {
+export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
   const rows = makeRows(puzzle);
   const cols = makeCols(puzzle);
   const squares = makeSquares(puzzle);
@@ -491,15 +485,21 @@ export const firstPassCandidateCalculator = (puzzle: any) => {
 
 // Updates the candidates in each peer of a cell that has been updated
 export const updatePeerCandidates = (
-  puzzle: any,
-  cell: any,
-  number: number,
-  { rows, cols, squares }: any
+  puzzle: Puzzle,
+  cell: Cell,
+  number: Cell["number"],
+  { rows,
+    cols,
+    squares }: {
+      rows: Units,
+      cols: Units,
+      squares: Units
+    }
 ) => {
   // Assemble peers
-  let row,
-    col,
-    square = [];
+  let row: Unit,
+    col: Unit,
+    square: Unit;
   // console.log(rows, cols, squares);
   row = rows[`r${cell.address.r}`];
   col = cols[`c${cell.address.c}`];
@@ -535,11 +535,11 @@ Then it checks for any cell that only has one candidate
 Only stopping when no changes have been made in a given iteration
 */
 export const hiddenAndNakedSingleSolver = (
-  puzzle: any,
+  puzzle: Puzzle,
   candidates?: boolean,
-  rows?: any,
-  cols?: any,
-  squares?: any
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
 ) => {
   // If candidates have not been assigned, assign them. Othrewise don't overwrite
   if (!candidates) {
@@ -548,11 +548,11 @@ export const hiddenAndNakedSingleSolver = (
     rows = firstPass.rows;
     cols = firstPass.cols;
     squares = firstPass.squares;
-  } else {
-    rows = rows ?? makeRows(puzzle);
-    cols = cols ?? makeCols(puzzle);
-    squares = squares ?? makeSquares(puzzle);
   }
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+
 
   let iterations = 0;
   let changes = 0;
@@ -592,7 +592,7 @@ export const hiddenAndNakedSingleSolver = (
           // If only one candidate
           if (cell.candidates.length == 1) {
             // Set number to candidate
-            cell.number = cell.candidates.pop();
+            cell.number = (cell!.candidates.pop() as number);
             puzzle = updatePeerCandidates(puzzle, cell, cell.number, {
               rows,
               cols,
@@ -638,10 +638,18 @@ export const hiddenAndNakedSingleSolver = (
                   puzzle[
                     `r${cell.address.r}c${cell.address.c}`
                   ].number = candidate;
+
+                  const rowsToSend: Units = rows as Units;
+                  const colsToSend: Units = cols as Units;
+                  const squaresToSend: Units = squares as Units;
+
+
+
+
                   puzzle = updatePeerCandidates(puzzle, cell, candidate, {
-                    rows,
-                    cols,
-                    squares,
+                    rows: rowsToSend,
+                    cols: colsToSend,
+                    squares: squaresToSend,
                   });
                   // Update changes
                   changes++;
@@ -684,7 +692,7 @@ export const hiddenAndNakedSingleSolver = (
 
 // Simple function to create a filled puzzle
 export const createFilledPuzzle = () => {
-  return fillInRemaining({ r: 1, c: 1 }, createBlankPuzzle(), []);
+  return fillInRemaining();
 };
 
 export const nakedPairTest =
@@ -700,7 +708,7 @@ function getRndInteger(min: number, max: number) {
 
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc1
 export const pointingLockedCandidatesSolver = (
-  puzzle: any,
+  puzzle: Puzzle,
   rows?: any,
   cols?: any,
   squares?: any
@@ -763,8 +771,8 @@ export const pointingLockedCandidatesSolver = (
               const unit =
                 rowcol == "row"
                   ? // Only referencing the first element of filtered cells here
-                    // Because each element should share the same row or col
-                    rows[`r${filteredCells[0].address.r}`]
+                  // Because each element should share the same row or col
+                  rows[`r${filteredCells[0].address.r}`]
                   : cols[`c${filteredCells[0].address.c}`];
 
               // Get an array of addresses in rncn format to not change
@@ -821,7 +829,7 @@ export const pointingLockedCandidatesSolver = (
 
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
 export const claimingLockedCandidatesSolver = (
-  puzzle: any,
+  puzzle: Puzzle,
   rows?: any,
   cols?: any,
   squares?: any
@@ -930,22 +938,18 @@ export const claimingLockedCandidatesSolver = (
                   let rncnAddress = "";
                   if (unit == "row") {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}c${
-                        filteredCells[0].address.c
-                      }${filteredCells[1].address.c}${
-                        filteredCells.length == 3
-                          ? filteredCells[2].address.c
-                          : ""
+                      `r${filteredCells[0].address.r}c${filteredCells[0].address.c
+                      }${filteredCells[1].address.c}${filteredCells.length == 3
+                        ? filteredCells[2].address.c
+                        : ""
                       }`
                     );
                   } else {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}${
-                        filteredCells[1].address.r
-                      }${
-                        filteredCells.length == 3
-                          ? filteredCells[2].address.r
-                          : ""
+                      `r${filteredCells[0].address.r}${filteredCells[1].address.r
+                      }${filteredCells.length == 3
+                        ? filteredCells[2].address.r
+                        : ""
                       }c${filteredCells[0].address.c}`
                     );
                   }
@@ -967,7 +971,7 @@ export const claimingLockedCandidatesSolver = (
 };
 
 export const nakedPairSolver = (
-  puzzle: any,
+  puzzle: Puzzle,
   rows?: any,
   cols?: any,
   squares?: any
@@ -1080,7 +1084,7 @@ export const nakedPairSolver = (
 };
 
 export const hiddenPairSolver = (
-  puzzle: any,
+  puzzle: Puzzle,
   rows?: any,
   cols?: any,
   squares?: any
@@ -1152,10 +1156,10 @@ export const hiddenPairSolver = (
                   // Get the index of the found combination
                   // Plug that into candidate arrays,
                   candidateArrays[
-                    seenCombinations.indexOf(
-                      JSON.stringify(array.slice(1).flat())
-                    )
-                    // Get the first element to get the first number of the pair
+                  seenCombinations.indexOf(
+                    JSON.stringify(array.slice(1).flat())
+                  )
+                  // Get the first element to get the first number of the pair
                   ][0],
                   // Second number of the pair is the index we're currently on
                   candidateArrays[index][0],
@@ -1222,7 +1226,7 @@ Increasing complexity when a given solver changes nothing,
 And returning to start when a solver changes something 
 */
 
-export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
+export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   difficulty = difficulty ?? "all";
   // First, populate candidates
   const firstPass = firstPassCandidateCalculator(puzzle);
@@ -1290,9 +1294,9 @@ export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
         cost.pointing =
           cost.pointing > 0
             ? // Subsequent cost, 200
-              (cost.pointing += pointing.changes * 200)
+            (cost.pointing += pointing.changes * 200)
             : // First cost, 350, then add any additional changes, times 300
-              350 + (pointing.changes - 1) * 200;
+            350 + (pointing.changes - 1) * 200;
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
@@ -1318,9 +1322,9 @@ export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
         cost.nakedPair =
           cost.nakedPair > 0
             ? // Subsequent cost, 200
-              (cost.nakedPair += nakedPair.changes * 200)
+            (cost.nakedPair += nakedPair.changes * 200)
             : // First cost, 350, then add any additional changes, times 200
-              350 + (nakedPair.changes - 1) * 200;
+            350 + (nakedPair.changes - 1) * 200;
       }
       // Update changes
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
@@ -1351,9 +1355,9 @@ export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
         cost.claiming =
           cost.claiming > 0
             ? // Subsequent cost, 200
-              (cost.claiming += claiming.changes * 250)
+            (cost.claiming += claiming.changes * 250)
             : // First cost, 350, then add any additional changes, times 200
-              400 + (claiming.changes - 1) * 250;
+            400 + (claiming.changes - 1) * 250;
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
@@ -1379,9 +1383,9 @@ export const solver = (puzzle: any, difficulty?: any, hint?: boolean) => {
         cost.hiddenPair =
           cost.hiddenPair > 0
             ? // Subsequent cost, 250
-              (cost.hiddenPair += hiddenPair.changes * 250)
+            (cost.hiddenPair += hiddenPair.changes * 250)
             : // First cost, 350, then add any additional changes, times 250
-              450 + (hiddenPair.changes - 1) * 250;
+            450 + (hiddenPair.changes - 1) * 250;
       }
       // Update changes
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;

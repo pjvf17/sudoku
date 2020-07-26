@@ -81,7 +81,6 @@
 </template>
 
 <script lang="ts">
-
 console.log(process.env.VUE_APP_WS_URL);
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
 // const wsUrl = "ws://localhost:8010";
@@ -94,14 +93,7 @@ import BaseButton from "./components/Base/BaseButton.vue";
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 
-import {
-  setPuzzle,
-  validateSquare,
-  firstPassCandidateCalculator,
-  setId,
-  setSocket,
-  updatePeerCandidates
-} from "./use/puzzleValidation";
+import Validation from "./use/puzzleValidation";
 import Updates from "./use/puzzleUpdates";
 import {
   NumberUpdate,
@@ -109,7 +101,7 @@ import {
   Address,
   Cell,
   Puzzle,
-  Users
+  Users,
 } from "./types";
 
 /* eslint-enable */
@@ -120,21 +112,21 @@ export default {
       socket.close(1000, "logging off");
     });
 
-    socket.onopen = function() {
+    socket.onopen = function () {
       console.log("connection established");
-      setSocket(socket);
     };
     const color = ref<string>();
-    const sudokuObj = ref<Puzzle>(null);
+    const sudokuObj = ref<Puzzle>();
     const users = ref<Users>();
     const id = ref<string>();
     const notating = ref<boolean>(false);
     const candidates = ref<boolean>(false);
     const loading = ref(true);
-    let updates: Updates;
+    const validation = new Validation(sudokuObj, id, socket);
+    const updates: Updates = new Updates(sudokuObj, users, validation);
     // const focused = ref({});
 
-    socket.onmessage = function({ data }) {
+    socket.onmessage = function ({ data }) {
       const {
         // Color assignment, sent once
         color: sentColor,
@@ -151,7 +143,7 @@ export default {
         // PencilMarkUpdate, sent whenever someone changes a pencil mark
         pencilMarkUpdate,
         // Undo request
-        undo
+        undo,
       }: {
         numberUpdate: NumberUpdate;
         pencilMarkUpdate: PencilMarkUpdate;
@@ -159,7 +151,7 @@ export default {
         sentColor: string;
         sentUsers: Users;
         // Catch the rest until I type them
-        [propName: string]: any
+        [propName: string]: any;
       } = JSON.parse(data);
 
       const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj
@@ -168,8 +160,6 @@ export default {
 
       if (sentSudokuObj) {
         sudokuObj.value = sentPuzzle;
-        setPuzzle(sudokuObj);
-        updates = new Updates(sudokuObj, users);
         loading.value = false;
       }
       if (sentUsers) {
@@ -182,7 +172,6 @@ export default {
       }
       if (sentid) {
         id.value = sentid;
-        setId(id);
       }
       // update focus
       if (focusUpdate) {
@@ -266,8 +255,8 @@ export default {
         JSON.stringify({
           focusUpdate: {
             id: id.value,
-            focus: { row, col }
-          }
+            focus: { row, col },
+          },
         })
       );
     };
@@ -287,8 +276,8 @@ export default {
           JSON.stringify({
             focusUpdate: {
               id: id.value,
-              focus: { row, col }
-            }
+              focus: { row, col },
+            },
           })
         );
         // end function
@@ -317,7 +306,7 @@ export default {
           // Send server update
           socket.send(JSON.stringify({ numberUpdate }));
           // Update peer candidates
-          updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
+          validation.updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
         }
       } else if (key == "Backspace") {
         event.preventDefault();
@@ -329,14 +318,14 @@ export default {
           const pencilMarkUpdate = {
             address,
             pencilMark: "delete",
-            id: id.value
+            id: id.value,
           };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
           // Update server
           socket.send(
             JSON.stringify({
-              pencilMarkUpdate
+              pencilMarkUpdate,
             })
           );
         } else {
@@ -374,7 +363,7 @@ export default {
       }
     };
 
-    document.body.addEventListener("keydown", function() {
+    document.body.addEventListener("keydown", function () {
       handleInput({ key: event.key, event });
     });
 
@@ -384,8 +373,8 @@ export default {
         JSON.stringify({
           focusUpdate: {
             id: id.value,
-            focus: { row: row, col: col }
-          }
+            focus: { row: row, col: col },
+          },
         })
       );
     };
@@ -393,7 +382,7 @@ export default {
     const popup = ref(null);
     const checkNew = ref(false);
 
-    const checkForPopupElementAndDisable = event => {
+    const checkForPopupElementAndDisable = (event) => {
       // Check if target is part of popup, otherwise close popup
       if (
         checkNew.value &&
@@ -412,7 +401,7 @@ export default {
       }
     };
 
-    const newGame = check => {
+    const newGame = (check) => {
       console.log("triggered");
       if (!check) {
         document.body.addEventListener(
@@ -429,6 +418,9 @@ export default {
         );
       }
     };
+
+    const firstPassCandidateCalculator =
+      validation.firstPassCandidateCalculator;
 
     return {
       popup,
@@ -447,12 +439,12 @@ export default {
       highlightNumbers,
       firstPassCandidateCalculator,
       candidates,
-      loading
+      loading,
     };
   },
   components: {
-    BaseButton
-  }
+    BaseButton,
+  },
 };
 </script>
 
@@ -482,7 +474,7 @@ $border: 2px solid black;
 $box-shadow: 0px 0px 15px 0px
   rgba(
     $color: #000000,
-    $alpha: 0.3
+    $alpha: 0.3,
   );
 
 .pane {

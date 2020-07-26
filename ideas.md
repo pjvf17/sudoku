@@ -39,13 +39,13 @@
 ### Typescript
 
 - [x] Type clientside
-- [ ] Type generator.ts
+- [x] Type generator.ts
 - [ ] Make class/constructor for puzzle to get around creating an empty object
 - [x] Interface server and clientside with
   - [x] Cell
   - [x] Puzzle
   - [x] Updates
-- [ ] Classify puzzleValidation
+- [x] Classify puzzleValidation (26-07-2020)
   
 ### Customization and UI
 

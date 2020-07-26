@@ -12,6 +12,7 @@ export interface NumberUpdate {
   address: Address;
   number: number | string;
   id: string;
+  associatedPencilMarkUpdates?: PencilMarkUpdate[];
 }
 
 export interface PencilMarkUpdate {
