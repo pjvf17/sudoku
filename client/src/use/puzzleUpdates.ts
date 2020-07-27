@@ -133,7 +133,7 @@ class Updates {
       this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
       ] = !this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
-        Number(pencilMark) - 1
+      Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
       this.sudokuObj.value[
@@ -159,12 +159,13 @@ class Updates {
       inverseUpdate.pencilMarks = originalState;
       // Update moves
       this.users.value[id].moves.push({ pencilMarkUpdate: inverseUpdate });
+      // If not from server
+      if (!remote) {
+        // Send to server
+        this.socket.send(JSON.stringify({ pencilMarkUpdate }));
+      }
     }
-    // If not from server
-    if (!remote) {
-      // Send to server
-      this.socket.send(JSON.stringify({ pencilMarkUpdate }));
-    }
+
   }
   undo(userId: string) {
     // Check that there is in fact a move to undo

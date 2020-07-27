@@ -1,4 +1,6 @@
 let sudokuObj: any;
+import { NumberUpdate, Puzzle, Users, Unit, PencilMarkUpdate, Cell, Units } from "../client/src/types.d.ts";
+
 
 export const setSudokuObj = (obj: any) => {
   sudokuObj = obj;
@@ -26,12 +28,12 @@ export const makeCols = () => {
   return cols;
 };
 
-export const getSquare = (cell: any) => {
-  let s13: any = [1, 2, 3];
-  let s46: any = [4, 5, 6];
-  let s79: any = [7, 8, 9];
+export const getSquare = (cell: Cell) => {
+  let s13 = [1, 2, 3];
+  let s46 = [4, 5, 6];
+  let s79 = [7, 8, 9];
 
-  let square: any;
+  let square = s13;
   if (cell.address.r >= 1 && cell.address.r <= 3) {
     square = s13;
   }
@@ -45,37 +47,36 @@ export const getSquare = (cell: any) => {
 };
 
 export const makeSquares = () => {
-  let squares: any = {
-    s1: [],
-    s2: [],
-    s3: [],
-    s4: [],
-    s5: [],
-    s6: [],
-    s7: [],
-    s8: [],
-    s9: [],
+  let squares: Units = {
+    s1: {},
+    s2: {},
+    s3: {},
+    s4: {},
+    s5: {},
+    s6: {},
+    s7: {},
+    s8: {},
+    s9: {},
   };
 
   for (let rowIndex = 1; rowIndex <= 9; rowIndex++) {
     for (let colIndex = 1; colIndex <= 9; colIndex++) {
-      squares[getSquare(sudokuObj.puzzle[`r${rowIndex}c${colIndex}`])].push(
-        sudokuObj.puzzle[`r${rowIndex}c${colIndex}`]
-      );
+      squares[getSquare(sudokuObj.value[`r${rowIndex}c${colIndex}`])][
+        `r${rowIndex}c${colIndex}`
+      ] = sudokuObj.value[`r${rowIndex}c${colIndex}`];
     }
   }
-
   return squares;
 };
 
-export const getPeers = (cell: any) => {
+export const getPeers = (cell: Cell) => {
   // Define the three units we're pulling from
-  const rows: any = makeRows();
-  const cols: any = makeCols();
-  const squares: any = makeSquares();
-  let row: any,
-    col: any,
-    square: any = [];
+  const rows: Units = makeRows();
+  const cols: Units = makeCols();
+  const squares: Units = makeSquares();
+  let row: Unit,
+    col: Unit,
+    square: Unit;
   row = rows[`r${cell.address.r}`];
   col = cols[`c${cell.address.c}`];
   square = squares[getSquare(cell)];
@@ -83,33 +84,42 @@ export const getPeers = (cell: any) => {
   return { row, col, square };
 };
 
-export const validateSquare = (cell: any) => {
+export const validateSquare = (cell: Cell) => {
   // Skip givens
   if (cell.given) {
     return cell;
   }
-  const { row, col, square }: any = getPeers(cell);
-  const peers: any = [...row, ...col, ...square];
-  // console.log("validateSquare");
+  const { row, col, square } = getPeers(cell);
+  const peers: Cell[] = [
+    ...Object.values(row),
+    ...Object.values(col),
+    ...Object.values(square),
+  ];
+  let valid = true;
   for (let cellIndex = 0; cellIndex < peers.length; cellIndex++) {
     // Skip the cell we're checking
     if (peers[cellIndex].address != cell.address) {
       if (peers[cellIndex].number == cell.number) {
+        valid = false;
         cell.valid.value = false;
       }
     }
     // Stop at first invalid
-    if (!cell.valid.value) {
+    if (!valid) {
       break;
     }
+  }
+  // If valid is still valid, reset cell
+  if (valid) {
+    cell.valid.value = true;
   }
   return cell;
 };
 
-export const updateNumber = (numberUpdate: any) => {
+export const updateNumber = (numberUpdate: NumberUpdate) => {
   const { address, number } = numberUpdate;
   // To return original state for undoing
-  const originalState: any = {
+  const originalState: NumberUpdate = {
     ...sudokuObj.puzzle[`r${address.r}c${address.c}`],
   };
   sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
@@ -120,6 +130,48 @@ export const updateNumber = (numberUpdate: any) => {
   // Update number to original
   numberUpdate.number = originalState.number;
   return numberUpdate;
+};
+
+// Updates the candidates in each peer of a cell that has been updated
+export const updatePeerCandidates = (cell: Cell) => {
+  // Assemble peers
+  const { row, col, square } = getPeers(cell);
+  const peers: Cell[] = [
+    ...Object.values(row),
+    ...Object.values(col),
+    ...Object.values(square),
+  ];
+  // Array to return to updateNumber
+  const pencilMarkUpdates: PencilMarkUpdate[] = [];
+  // Loop through peers
+  peers.forEach((peer) => {
+    // Only effect empty cells and cells that have the number in pencilMarks
+    if (peer.number == "." && peer.pencilMarks[Number(cell.number) - 1]) {
+      // Keep original
+      const originalState: boolean[] = [
+        ...sudokuObj.value[`r${peer.address.r}c${peer.address.c}`]
+          .pencilMarks,
+      ];
+      // Update pencilMarks on local
+      peer.pencilMarks[Number(cell.number) - 1] = false;
+      // Assemble Inverse Update
+      const inverseUpdate: PencilMarkUpdate = {
+        address: peer.address,
+        // Sending pencilMarks instead of pencilMark means that instead of toggling
+        // This array will replace the previous
+        pencilMarks: originalState,
+        id: this.validation.userId.value,
+      };
+      // Push update to array
+      pencilMarkUpdates.push(inverseUpdate);
+      // this.socket.send(
+      //   JSON.stringify({
+      //     pencilMarkUpdate,
+      //   })
+      // );
+    }
+  });
+  return pencilMarkUpdates;
 };
 
 export const updatePencilMark = (pencilMarkUpdate: any) => {
