@@ -238,6 +238,7 @@ wss.on("connection", function (ws: WebSocket) {
       // Catch the rest until I type them
       [propName: string]: any;
     } = JSON.parse(message);
+    console.log(message);
 
     // Recieved movement/focus update
     if (focusUpdate) {

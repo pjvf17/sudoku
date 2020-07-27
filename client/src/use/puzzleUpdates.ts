@@ -33,7 +33,7 @@ class Updates {
     // Denotes whether this update is from the server
     remote = false
   ) {
-    let { address, number, id } = numberUpdate;
+    let { address, number, id, associatedPencilMarkUpdates } = numberUpdate;
 
     const originalState = {
       ...this.sudokuObj.value[`r${address.r}c${address.c}`],
@@ -46,16 +46,30 @@ class Updates {
     );
     // If not undoing a move add to moves
     if (!undo) {
+      // If no associated PencilMarkUpdates, assemble them
+      associatedPencilMarkUpdates =
+        associatedPencilMarkUpdates ??
+        this.updatePeerCandidates(
+          this.sudokuObj.value[`r${address.r}c${address.c}`]
+        );
+
       const inverseUpdate: NumberUpdate = { ...numberUpdate };
+      // Update numberUpdate
+      inverseUpdate.associatedPencilMarkUpdates = associatedPencilMarkUpdates;
       // Update number to original
       inverseUpdate.number = originalState.number;
       // Add to moves
       this.users.value[id].moves.push({ numberUpdate: inverseUpdate });
-    }
-    // If not from server, send to server
-    if (!remote) {
-      // Send server update
-      this.socket.send(JSON.stringify({ numberUpdate }));
+      // If not from server, send to server
+      if (!remote) {
+        // Send server update
+        this.socket.send(JSON.stringify({ numberUpdate }));
+      }
+    } else {
+      // Undo each pencilMarkUpdate
+      associatedPencilMarkUpdates?.forEach((pencilMarkUpdate) => {
+        this.updatePencilMarks({ pencilMarkUpdate }, true);
+      });
     }
   }
 
@@ -72,25 +86,30 @@ class Updates {
     const pencilMarkUpdates: PencilMarkUpdate[] = [];
     // Loop through peers
     peers.forEach((peer) => {
-      // Only effect empty cells
-      if (peer.number == ".") {
-        // Update pencilMarks
+      // Only effect empty cells and cells that have the number in pencilMarks
+      if (peer.number == "." && peer.pencilMarks[Number(cell.number) - 1]) {
+        // Keep original
+        const originalState: boolean[] = [
+          ...this.sudokuObj.value[`r${peer.address.r}c${peer.address.c}`]
+            .pencilMarks,
+        ];
+        // Update pencilMarks on local
         peer.pencilMarks[Number(cell.number) - 1] = false;
-        // Assemble Update
-        const pencilMarkUpdate: PencilMarkUpdate = {
+        // Assemble Inverse Update
+        const inverseUpdate: PencilMarkUpdate = {
           address: peer.address,
           // Sending pencilMarks instead of pencilMark means that instead of toggling
           // This array will replace the previous
-          pencilMarks: peer.pencilMarks,
+          pencilMarks: originalState,
           id: this.validation.userId.value,
         };
         // Push update to array
-        pencilMarkUpdates.push(pencilMarkUpdate);
-        this.socket.send(
-          JSON.stringify({
-            pencilMarkUpdate,
-          })
-        );
+        pencilMarkUpdates.push(inverseUpdate);
+        // this.socket.send(
+        //   JSON.stringify({
+        //     pencilMarkUpdate,
+        //   })
+        // );
       }
     });
     return pencilMarkUpdates;
@@ -157,6 +176,7 @@ class Updates {
         this.updateNumber({ numberUpdate: move!.numberUpdate }, true);
         // Check if it's a pencilMarkUpdate
       } else if (move!.pencilMarkUpdate) {
+        console.log("sending");
         this.updatePencilMarks(
           { pencilMarkUpdate: move!.pencilMarkUpdate },
           true

@@ -320,11 +320,11 @@ export default {
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
           // Update server
-          socket.send(
-            JSON.stringify({
-              pencilMarkUpdate,
-            })
-          );
+          // socket.send(
+          //   JSON.stringify({
+          //     pencilMarkUpdate,
+          //   })
+          // );
         } else {
           let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create numberupdate object
