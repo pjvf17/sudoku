@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import Validation from "./puzzleValidation";
-import { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../types"
+import { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../types";
 /* eslint-enable */
 
 interface Ref<T> {
@@ -11,17 +11,27 @@ interface Ref<T> {
 class Updates {
   sudokuObj: Ref<Puzzle>;
   users: Ref<Users>;
-  validation:Validation;
+  socket: WebSocket;
+  validation: Validation;
 
-  constructor(puzzle: Ref<Puzzle>, users: Ref<Users>, validationClass:Validation) {
+  constructor(
+    puzzle: Ref<Puzzle>,
+    users: Ref<Users>,
+    ws: WebSocket,
+    validationClass: Validation
+  ) {
     this.sudokuObj = puzzle;
     this.users = users;
+    this.socket = ws;
     this.validation = validationClass;
   }
 
   updateNumber(
     { numberUpdate }: { numberUpdate: NumberUpdate },
-    undo?: boolean
+    // Denotes if we're undoing a move
+    undo = false,
+    // Denotes whether this update is from the server
+    remote = false
   ) {
     let { address, number, id } = numberUpdate;
 
@@ -29,7 +39,9 @@ class Updates {
       ...this.sudokuObj.value[`r${address.r}c${address.c}`],
     };
     this.sudokuObj.value[`r${address.r}c${address.c}`].number = number;
-    this.sudokuObj.value[`r${address.r}c${address.c}`] = this.validation.validateSquare(
+    this.sudokuObj.value[
+      `r${address.r}c${address.c}`
+    ] = this.validation.validateSquare(
       this.sudokuObj.value[`r${address.r}c${address.c}`]
     );
     // If not undoing a move add to moves
@@ -39,6 +51,11 @@ class Updates {
       inverseUpdate.number = originalState.number;
       // Add to moves
       this.users.value[id].moves.push({ numberUpdate: inverseUpdate });
+    }
+    // If not from server, send to server
+    if (!remote) {
+      // Send server update
+      this.socket.send(JSON.stringify({ numberUpdate }));
     }
   }
 
@@ -59,8 +76,8 @@ class Updates {
       if (peer.number == ".") {
         // Update pencilMarks
         peer.pencilMarks[Number(cell.number) - 1] = false;
-        // Send to server
-        const pencilMarkUpdate = {
+        // Assemble Update
+        const pencilMarkUpdate: PencilMarkUpdate = {
           address: peer.address,
           // Sending pencilMarks instead of pencilMark means that instead of toggling
           // This array will replace the previous
@@ -69,11 +86,11 @@ class Updates {
         };
         // Push update to array
         pencilMarkUpdates.push(pencilMarkUpdate);
-        // socket.send(
-        //   JSON.stringify({
-        //     pencilMarkUpdate,
-        //   })
-        // );
+        this.socket.send(
+          JSON.stringify({
+            pencilMarkUpdate,
+          })
+        );
       }
     });
     return pencilMarkUpdates;
@@ -81,7 +98,10 @@ class Updates {
 
   updatePencilMarks(
     { pencilMarkUpdate }: { pencilMarkUpdate: PencilMarkUpdate },
-    undo?: boolean
+    // Denotes if we're undoing a move
+    undo = false,
+    // Denotes whether this update is from the server
+    remote = false
   ) {
     let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
@@ -94,7 +114,7 @@ class Updates {
       this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
       ] = !this.sudokuObj.value[`r${address.r}c${address.c}`].pencilMarks[
-      Number(pencilMark) - 1
+        Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
       this.sudokuObj.value[
@@ -120,6 +140,11 @@ class Updates {
       inverseUpdate.pencilMarks = originalState;
       // Update moves
       this.users.value[id].moves.push({ pencilMarkUpdate: inverseUpdate });
+    }
+    // If not from server
+    if (!remote) {
+      // Send to server
+      this.socket.send(JSON.stringify({ pencilMarkUpdate }));
     }
   }
   undo(userId: string) {

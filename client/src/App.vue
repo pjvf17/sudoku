@@ -123,7 +123,7 @@ export default {
     const candidates = ref<boolean>(false);
     const loading = ref(true);
     const validation = new Validation(sudokuObj, id, socket);
-    const updates: Updates = new Updates(sudokuObj, users, validation);
+    const updates: Updates = new Updates(sudokuObj, users, socket, validation);
     // const focused = ref({});
 
     socket.onmessage = function ({ data }) {
@@ -187,11 +187,11 @@ export default {
       }
       // update a number
       if (numberUpdate) {
-        updates.updateNumber({ numberUpdate });
+        updates.updateNumber({ numberUpdate }, false, true);
       }
       // update a pencilmark
       if (pencilMarkUpdate) {
-        updates.updatePencilMarks({ pencilMarkUpdate });
+        updates.updatePencilMarks({ pencilMarkUpdate }, false, true);
       }
       // undo a move
       if (undo) {
@@ -295,16 +295,13 @@ export default {
           const pencilMarkUpdate = { address, pencilMark: key, id: id.value };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
-          // Update server
-          socket.send(JSON.stringify({ pencilMarkUpdate }));
+          
         } else {
           let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create numberupdate object
           const numberUpdate = { address, number: key, id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
-          // Send server update
-          socket.send(JSON.stringify({ numberUpdate }));
           // Update peer candidates
           updates.updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
         }
@@ -334,8 +331,6 @@ export default {
           const numberUpdate = { address, number: ".", id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
-          // Send server update
-          socket.send(JSON.stringify({ numberUpdate }));
         }
       } else if (arrowKeys.includes(key)) {
         event.preventDefault();
