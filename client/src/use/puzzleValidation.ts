@@ -128,42 +128,6 @@ class Validation {
   };
 
   // Adapated from ../server/generator.ts
-  // Updates the candidates in each peer of a cell that has been updated
-  updatePeerCandidates = (cell: Cell) => {
-    // Assemble peers
-    const { row, col, square } = this.getPeers(cell);
-    const peers: Cell[] = [
-      ...Object.values(row),
-      ...Object.values(col),
-      ...Object.values(square),
-    ];
-    // Array to return to updateNumber
-    const pencilMarkUpdates: PencilMarkUpdate[] = [];
-    // Loop through peers
-    peers.forEach((peer) => {
-      // Only effect empty cells
-      if (peer.number == ".") {
-        // Update pencilMarks
-        peer.pencilMarks[Number(cell.number) - 1] = false;
-        // Send to server
-        const pencilMarkUpdate = {
-          address: peer.address,
-          // Sending pencilMarks instead of pencilMark means that instead of toggling
-          // This array will replace the previous
-          pencilMarks: peer.pencilMarks,
-          id: this.userId.value,
-        };
-        // Push update to array
-        pencilMarkUpdates.push(pencilMarkUpdate);
-        // socket.send(
-        //   JSON.stringify({
-        //     pencilMarkUpdate,
-        //   })
-        // );
-      }
-    });
-    return pencilMarkUpdates;
-  };
 
   firstPassCandidateCalculator = () => {
     const rows = this.makeRows.value;

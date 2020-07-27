@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, toRaw } from "vue";
 import Validation from "./puzzleValidation";
-import { NumberUpdate, Puzzle, Users, PencilMarkUpdate } from "../types"
+import { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../types"
 /* eslint-enable */
 
 interface Ref<T> {
@@ -41,6 +41,43 @@ class Updates {
       this.users.value[id].moves.push({ numberUpdate: inverseUpdate });
     }
   }
+
+  // Updates the candidates in each peer of a cell that has been updated
+  updatePeerCandidates = (cell: Cell) => {
+    // Assemble peers
+    const { row, col, square } = this.validation.getPeers(cell);
+    const peers: Cell[] = [
+      ...Object.values(row),
+      ...Object.values(col),
+      ...Object.values(square),
+    ];
+    // Array to return to updateNumber
+    const pencilMarkUpdates: PencilMarkUpdate[] = [];
+    // Loop through peers
+    peers.forEach((peer) => {
+      // Only effect empty cells
+      if (peer.number == ".") {
+        // Update pencilMarks
+        peer.pencilMarks[Number(cell.number) - 1] = false;
+        // Send to server
+        const pencilMarkUpdate = {
+          address: peer.address,
+          // Sending pencilMarks instead of pencilMark means that instead of toggling
+          // This array will replace the previous
+          pencilMarks: peer.pencilMarks,
+          id: this.validation.userId.value,
+        };
+        // Push update to array
+        pencilMarkUpdates.push(pencilMarkUpdate);
+        // socket.send(
+        //   JSON.stringify({
+        //     pencilMarkUpdate,
+        //   })
+        // );
+      }
+    });
+    return pencilMarkUpdates;
+  };
 
   updatePencilMarks(
     { pencilMarkUpdate }: { pencilMarkUpdate: PencilMarkUpdate },

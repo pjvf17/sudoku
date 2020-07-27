@@ -306,7 +306,7 @@ export default {
           // Send server update
           socket.send(JSON.stringify({ numberUpdate }));
           // Update peer candidates
-          validation.updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
+          updates.updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
         }
       } else if (key == "Backspace") {
         event.preventDefault();
