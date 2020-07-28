@@ -186,43 +186,6 @@ export const createRandomOneNine = (): number[] => {
   return shuffleArray(createOneNine());
 };
 
-// Create blank puzzle
-export const createBlankPuzzle = (): Puzzle => {
-  let puzzleString = "";
-  let puzzle: any = {};
-  for (let i = 0; i < 81; i++) {
-    puzzleString = puzzleString.concat(".");
-  }
-
-  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-    for (let colIndex = 0; colIndex < 9; colIndex++) {
-      // console.log(rowIndex*9+colIndex)
-      const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
-      puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = {
-        number: ".",
-        given: false,
-        pencilMarks: [
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
-        valid: true,
-        candidates: [],
-        address: { r: rowIndex + 1, c: colIndex + 1 },
-        untriedNumbers: createRandomOneNine(),
-      };
-    }
-  }
-
-  return puzzle;
-};
-
 export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
   let puzzle: any = {};
 

@@ -40,7 +40,7 @@
 
 - [x] Type clientside
 - [x] Type generator.ts
-- [ ] Make class/constructor for puzzle to get around creating an empty object
+- [x] Make class/constructor for puzzle to get around creating an empty object
 - [x] Interface server and clientside with
   - [x] Cell
   - [x] Puzzle

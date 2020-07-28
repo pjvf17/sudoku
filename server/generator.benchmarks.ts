@@ -1,8 +1,6 @@
 import {
-  createBlankPuzzle,
   fillInRemaining,
   createPuzzle,
-  printSudokuToConsole,
 } from "./generator.ts";
 
 import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";

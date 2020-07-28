@@ -1,16 +1,10 @@
 import {
-  createBlankPuzzle,
   fillInRemaining,
-  makeCols,
-  makeRows,
-  makeSquares,
-  getSquare,
   puzzleToString,
   validatePuzzle,
   hiddenAndNakedSingleSolver,
   parsePuzzle,
   createPuzzle,
-  printSudokuToConsole,
   solver,
 } from "./generator.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
