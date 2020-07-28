@@ -24,7 +24,7 @@
   - [ ] By person
 - [ ] Color numbers by who put them in
 - [x] Update peers when number put in (21/07/2020)
-  - [ ] Update them properly if it's then taken out
+  - [x] Update them properly if it's then taken out (28/07/2020)
 
 ### Serverside and Stability
 
