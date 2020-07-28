@@ -1,6 +1,7 @@
 // generator.ts
 
 import { Cell, Puzzle, Units, Unit, Address } from "../client/src/types.d.ts";
+import BlankPuzzle from "./createBlankPuzzle.ts";
 
 // Validation framework
 
@@ -185,6 +186,7 @@ export const createRandomOneNine = (): number[] => {
   return shuffleArray(createOneNine());
 };
 
+
 // Create blank puzzle
 export const createBlankPuzzle = (): Puzzle => {
   let puzzleString = "";
@@ -324,7 +326,7 @@ export const puzzleToString = (puzzle: Puzzle) => {
 
 export const fillInRemaining = (): Puzzle => {
   let address: Address = { r: 1, c: 1 };
-  let puzzle = createBlankPuzzle();
+  let puzzle:Puzzle = new BlankPuzzle();
   let addressesComplete: Address[] = [];
   let rows = makeRows(puzzle);
   let squares = makeSquares(puzzle);
@@ -335,7 +337,7 @@ export const fillInRemaining = (): Puzzle => {
   while (address.c < 10 && address.r < 10) {
     count++;
     if (count == 600) {
-      puzzle = createBlankPuzzle();
+      puzzle = new BlankPuzzle();
       // puzzle = generateDiagonalSquares(puzzle);
       rows = makeRows(puzzle);
       squares = makeSquares(puzzle);

@@ -49,7 +49,7 @@
   
 ### Customization and UI
 
-- [ ] Are you sure? When starting new game when not finished
+- [x] Are you sure? When starting new game when not finished
 - [ ] Customization
   - [ ] Colors
   - [ ] Key binds

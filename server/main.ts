@@ -56,7 +56,7 @@ const startNewGame = () => {
   console.log("0\n0\n0\n0\n0");
   sudokuObj.solved = solver(parsePuzzle(puzzleString)).puzzle;
 
-  let puzzle: Puzzle = createBlankPuzzle();
+  let puzzle: Puzzle = new BlankPuzzle();
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
@@ -123,6 +123,7 @@ import {
   WebSocket,
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
+import BlankPuzzle from "./createBlankPuzzle.ts";
 
 const colors: any = [
   { value: "#bf616a88", used: false },
