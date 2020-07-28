@@ -1,20 +1,11 @@
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 import {
   puzzleToString,
-  firstPassCandidateCalculator,
   createPuzzle,
   solver,
-  printSudokuToConsoleFormatted,
   printSudokuToConsole,
   parsePuzzle,
-  createBlankPuzzle,
 } from "./generator.ts";
-// import {
-//   updateNumber,
-//   updatePencilMark,
-//   validateSquare,
-//   setSudokuObj,
-// } from "./updates.ts";
 import Validation from "./serverSidePuzzleValidation.ts";
 import Updates from "./serverSidePuzzleUpdates.ts";
 import {
@@ -44,69 +35,21 @@ app.use(async (context) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${hostname ?? "localhost"
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
     }:${port}`
   );
 });
 
-let sudokuObj: { puzzle?: Puzzle; solved?: Puzzle } = {};
+let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
+  puzzle: new BlankPuzzle(),
+};
 
 const startNewGame = () => {
   const puzzleString: string = puzzleToString(createPuzzle("hard"));
   console.log("0\n0\n0\n0\n0");
   sudokuObj.solved = solver(parsePuzzle(puzzleString)).puzzle;
-
-  let puzzle: Puzzle = new BlankPuzzle();
-  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-    for (let colIndex = 0; colIndex < 9; colIndex++) {
-      // console.log(rowIndex*9+colIndex)
-      const cell = puzzleString.substr(rowIndex * 9 + colIndex, 1);
-      let formattedCell: Cell;
-      if (cell != ".") {
-        // Make a cell object with given equal to true
-        formattedCell = {
-          number: cell,
-          given: true,
-          valid: true,
-          pencilMarks: [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-          ],
-          candidates: [],
-          address: { r: rowIndex + 1, c: colIndex + 1 },
-        };
-      } else {
-        formattedCell = {
-          number: ".",
-          given: false,
-          pencilMarks: [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-          ],
-          valid: true,
-          candidates: [],
-          address: { r: rowIndex + 1, c: colIndex + 1 },
-        };
-      }
-      // Convert to rncn notation indexed from 1
-      puzzle[`r${rowIndex + 1}c${colIndex + 1}`] = formattedCell;
-    }
-  }
-  sudokuObj.puzzle = puzzle;
+  sudokuObj.puzzle = parsePuzzle(puzzleString);
 };
 
 startNewGame();
@@ -207,7 +150,12 @@ wss.on("connection", function (ws: WebSocket) {
     ws,
     moves,
   };
-  const updates = new Updates(sudokuObj.puzzle as Puzzle, users, validation, id);
+  const updates = new Updates(
+    sudokuObj.puzzle as Puzzle,
+    users,
+    validation,
+    id
+  );
   // Send starting info
   ws.send(JSON.stringify({ users, id, color, sudokuObj }));
   // Send to everyone else updated users
@@ -231,7 +179,6 @@ wss.on("connection", function (ws: WebSocket) {
       // Catch the rest until I type them
       [propName: string]: any;
     } = JSON.parse(message);
-    console.log(message);
 
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -244,9 +191,7 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
-      updates.updatePencilMarks(
-        {pencilMarkUpdate}
-      );
+      updates.updatePencilMarks({ pencilMarkUpdate });
     }
     // Recieved undo request
     if (undo) {

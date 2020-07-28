@@ -238,7 +238,6 @@ export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
           number: cell,
           given: true,
           valid: true,
-
           pencilMarks: [
             false,
             false,
