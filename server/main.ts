@@ -176,8 +176,15 @@ wss.on("connection", function (ws: WebSocket) {
       // Catch the rest until I type them
       [propName: string]: any;
     } = JSON.parse(message);
+    
     if (hint) {
-      console.log(solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true))
+      const hintResponse = solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true);
+      for (let client of wss.clients) {
+        // Send only to open clients including sender
+        if (!client.isClosed) {
+          client.send(JSON.stringify({hint: hintResponse}));
+        }
+      }
     }
     // Recieved movement/focus update
     if (focusUpdate) {
@@ -205,7 +212,7 @@ wss.on("connection", function (ws: WebSocket) {
           client.send(JSON.stringify({ sudokuObj }));
         }
       }
-    } else {
+    } else if (!hint) {
       // Send to all connected
       for (let client of wss.clients) {
         // Send only to open clients, and not the one who sent a message
@@ -213,7 +220,8 @@ wss.on("connection", function (ws: WebSocket) {
           client.send(message);
         }
       }
-    }
+    } 
+    
   });
   ws.on("close", function (message: any) {
     freeColor(ws);

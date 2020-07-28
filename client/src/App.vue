@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div class="pane" v-if="!loading">
+      
       <table>
         <tbody>
           <tr v-for="rowIndex in 9" :key="rowIndex">
@@ -65,6 +66,9 @@
         class="notation-text"
         style="color: white"
       >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
+      <div style="color: white" class="hint" v-if="hint">
+        {{hint}}
+      </div>
       <div class="actions">
         <BaseButton @click="newGame()" class="button">Start New Game</BaseButton>
         <div class="popup" v-if="checkNew" ref="popup">
@@ -125,6 +129,7 @@ export default {
     const loading = ref(true);
     const validation = new Validation(sudokuObj, id, socket);
     const updates: Updates = new Updates(sudokuObj, users, socket, validation);
+    const hint:any = ref(false);
     // const focused = ref({});
 
     socket.onmessage = function ({ data }) {
@@ -145,6 +150,8 @@ export default {
         pencilMarkUpdate,
         // Undo request
         undo,
+        // Hint
+        hint: sentHint,
       }: {
         numberUpdate: NumberUpdate;
         pencilMarkUpdate: PencilMarkUpdate;
@@ -155,6 +162,10 @@ export default {
         [propName: string]: any;
       } = JSON.parse(data);
 
+      if (sentHint) {
+        console.log(sentHint);
+        hint.value = sentHint;
+      }
       const { puzzle: sentPuzzle }: { puzzle: Puzzle } = sentSudokuObj
         ? sentSudokuObj
         : {};
@@ -439,7 +450,8 @@ export default {
       firstPassCandidateCalculator,
       candidates,
       loading,
-      requestHint
+      requestHint,
+      hint
     };
   },
   components: {

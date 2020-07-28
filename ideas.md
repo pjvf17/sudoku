@@ -5,7 +5,7 @@
 - [ ] Redo Feature
 - [ ] Navigate grid with HJKL and WASD and customize others
 - [ ] Hint feature
-  - [ ] Currently the issue is that the server and client don't populate the candidates array, which is what is used by each of the solvers
+  - [x] Currently the issue is that the server and client don't populate the candidates array, which is what is used by each of the solvers (Solved by creating a parsePencilMarksToCandidates function 28/07/2020)
   - [ ] Backend support for finding and returning a hint
   - [ ] Request a hint from client for current boardstate
   - [ ] Display hint on client

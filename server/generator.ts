@@ -1241,7 +1241,6 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   };
   do {
     // If in hint mode, stop at first changes
-
     if (hint && changes) {
       // Locate which technique had the change
       return change;
