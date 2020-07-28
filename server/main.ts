@@ -66,7 +66,7 @@ import {
   WebSocket,
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
-import BlankPuzzle from "./createBlankPuzzle.ts";
+import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 const colors: any = [
   { value: "#bf616a88", used: false },

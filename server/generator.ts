@@ -1,7 +1,7 @@
 // generator.ts
 
 import { Cell, Puzzle, Units, Unit, Address } from "../client/src/types.d.ts";
-import BlankPuzzle from "./createBlankPuzzle.ts";
+import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 // Validation framework
 
@@ -90,7 +90,7 @@ export const makeSquares = (puzzle: Puzzle) => {
 
 export const validateCell = (
   cell: Cell,
-  { rows, cols, squares }: { rows: Units, cols: Units, squares: Units },
+  { rows, cols, squares }: { rows: Units; cols: Units; squares: Units },
   number: Cell["number"]
 ) => {
   let row: Unit, col: Unit, square: Unit;
@@ -185,7 +185,6 @@ export const createOneNine = () => {
 export const createRandomOneNine = (): number[] => {
   return shuffleArray(createOneNine());
 };
-
 
 // Create blank puzzle
 export const createBlankPuzzle = (): Puzzle => {
@@ -325,7 +324,7 @@ export const puzzleToString = (puzzle: Puzzle) => {
 
 export const fillInRemaining = (): Puzzle => {
   let address: Address = { r: 1, c: 1 };
-  let puzzle:Puzzle = new BlankPuzzle();
+  let puzzle: Puzzle = new BlankPuzzle();
   let addressesComplete: Address[] = [];
   let rows = makeRows(puzzle);
   let squares = makeSquares(puzzle);
@@ -351,9 +350,9 @@ export const fillInRemaining = (): Puzzle => {
         // Try an untried number
 
         // Get number, removing each number from the untriedNumbers array to make no repeats
-        const number = Number(puzzle[
-          `r${address.r}c${address.c}`
-        ].untriedNumbers!.pop());
+        const number = Number(
+          puzzle[`r${address.r}c${address.c}`].untriedNumbers!.pop()
+        );
 
         const cols = makeCols(puzzle);
 
@@ -402,7 +401,7 @@ export const fillInRemaining = (): Puzzle => {
       ].untriedNumbers = createRandomOneNine();
       if (addressesComplete.length) {
         // Remove last address from address complete array
-        address = (addressesComplete.pop() as Address);
+        address = addressesComplete.pop() as Address;
         // Reset the number at the address we're backtracking to
         puzzle[`r${address.r}c${address.c}`].number = ".";
       } else {
@@ -487,18 +486,18 @@ export const updatePeerCandidates = (
   puzzle: Puzzle,
   cell: Cell,
   number: Cell["number"],
-  { rows,
+  {
+    rows,
     cols,
-    squares }: {
-      rows: Units,
-      cols: Units,
-      squares: Units
-    }
+    squares,
+  }: {
+    rows: Units;
+    cols: Units;
+    squares: Units;
+  }
 ) => {
   // Assemble peers
-  let row: Unit,
-    col: Unit,
-    square: Unit;
+  let row: Unit, col: Unit, square: Unit;
   // console.log(rows, cols, squares);
   row = rows[`r${cell.address.r}`];
   col = cols[`c${cell.address.c}`];
@@ -552,7 +551,6 @@ export const hiddenAndNakedSingleSolver = (
   cols = cols ?? makeCols(puzzle);
   squares = squares ?? makeSquares(puzzle);
 
-
   let iterations = 0;
   let changes = 0;
   // For calculating cost/difficulty, tracks number of uses total
@@ -591,7 +589,7 @@ export const hiddenAndNakedSingleSolver = (
           // If only one candidate
           if (cell.candidates.length == 1) {
             // Set number to candidate
-            cell.number = (cell!.candidates.pop() as number);
+            cell.number = cell!.candidates.pop() as number;
             puzzle = updatePeerCandidates(puzzle, cell, cell.number, {
               rows,
               cols,
@@ -641,9 +639,6 @@ export const hiddenAndNakedSingleSolver = (
                   const rowsToSend: Units = rows as Units;
                   const colsToSend: Units = cols as Units;
                   const squaresToSend: Units = squares as Units;
-
-
-
 
                   puzzle = updatePeerCandidates(puzzle, cell, candidate, {
                     rows: rowsToSend,
@@ -770,8 +765,8 @@ export const pointingLockedCandidatesSolver = (
               const unit =
                 rowcol == "row"
                   ? // Only referencing the first element of filtered cells here
-                  // Because each element should share the same row or col
-                  rows![`r${filteredCells[0].address.r}`]
+                    // Because each element should share the same row or col
+                    rows![`r${filteredCells[0].address.r}`]
                   : cols![`c${filteredCells[0].address.c}`];
 
               // Get an array of addresses in rncn format to not change
@@ -919,7 +914,9 @@ export const claimingLockedCandidatesSolver = (
                   if (squares![square].hasOwnProperty(cellAddress)) {
                     if (!addressesToNotChange.includes(cellAddress)) {
                       if (
-                        squares![square][cellAddress].candidates.includes(number)
+                        squares![square][cellAddress].candidates.includes(
+                          number
+                        )
                       ) {
                         const cell = squares![square][cellAddress];
                         // Remove number from cell candidates
@@ -937,18 +934,22 @@ export const claimingLockedCandidatesSolver = (
                   let rncnAddress = "";
                   if (unitType == "row") {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}c${filteredCells[0].address.c
-                      }${filteredCells[1].address.c}${filteredCells.length == 3
-                        ? filteredCells[2].address.c
-                        : ""
+                      `r${filteredCells[0].address.r}c${
+                        filteredCells[0].address.c
+                      }${filteredCells[1].address.c}${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.c
+                          : ""
                       }`
                     );
                   } else {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}${filteredCells[1].address.r
-                      }${filteredCells.length == 3
-                        ? filteredCells[2].address.r
-                        : ""
+                      `r${filteredCells[0].address.r}${
+                        filteredCells[1].address.r
+                      }${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.r
+                          : ""
                       }c${filteredCells[0].address.c}`
                     );
                   }
@@ -1155,10 +1156,10 @@ export const hiddenPairSolver = (
                   // Get the index of the found combination
                   // Plug that into candidate arrays,
                   candidateArrays[
-                  seenCombinations.indexOf(
-                    JSON.stringify(array.slice(1).flat())
-                  )
-                  // Get the first element to get the first number of the pair
+                    seenCombinations.indexOf(
+                      JSON.stringify(array.slice(1).flat())
+                    )
+                    // Get the first element to get the first number of the pair
                   ][0],
                   // Second number of the pair is the index we're currently on
                   candidateArrays[index][0],
@@ -1293,9 +1294,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.pointing =
           cost.pointing > 0
             ? // Subsequent cost, 200
-            (cost.pointing += pointing.changes * 200)
+              (cost.pointing += pointing.changes * 200)
             : // First cost, 350, then add any additional changes, times 300
-            350 + (pointing.changes - 1) * 200;
+              350 + (pointing.changes - 1) * 200;
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
@@ -1321,9 +1322,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.nakedPair =
           cost.nakedPair > 0
             ? // Subsequent cost, 200
-            (cost.nakedPair += nakedPair.changes * 200)
+              (cost.nakedPair += nakedPair.changes * 200)
             : // First cost, 350, then add any additional changes, times 200
-            350 + (nakedPair.changes - 1) * 200;
+              350 + (nakedPair.changes - 1) * 200;
       }
       // Update changes
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
@@ -1354,9 +1355,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.claiming =
           cost.claiming > 0
             ? // Subsequent cost, 200
-            (cost.claiming += claiming.changes * 250)
+              (cost.claiming += claiming.changes * 250)
             : // First cost, 350, then add any additional changes, times 200
-            400 + (claiming.changes - 1) * 250;
+              400 + (claiming.changes - 1) * 250;
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
@@ -1382,9 +1383,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.hiddenPair =
           cost.hiddenPair > 0
             ? // Subsequent cost, 250
-            (cost.hiddenPair += hiddenPair.changes * 250)
+              (cost.hiddenPair += hiddenPair.changes * 250)
             : // First cost, 350, then add any additional changes, times 250
-            450 + (hiddenPair.changes - 1) * 250;
+              450 + (hiddenPair.changes - 1) * 250;
       }
       // Update changes
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;
@@ -1566,5 +1567,3 @@ export const createPuzzle = (difficulty?: string) => {
   console.log(cost);
   return puzzle;
 };
-
-
