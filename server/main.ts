@@ -55,10 +55,6 @@ const startNewGame = () => {
 startNewGame();
 const validation = new Validation(sudokuObj.puzzle as Puzzle);
 
-console.log(
-  solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true)
-);
-
 console.log("\n\n solved:");
 printSudokuToConsole(sudokuObj.solved as Puzzle);
 
@@ -173,13 +169,16 @@ wss.on("connection", function (ws: WebSocket) {
       pencilMarkUpdate,
       newGame,
       undo,
+      hint
     }: {
       numberUpdate: NumberUpdate;
       pencilMarkUpdate: PencilMarkUpdate;
       // Catch the rest until I type them
       [propName: string]: any;
     } = JSON.parse(message);
-
+    if (hint) {
+      console.log(solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true))
+    }
     // Recieved movement/focus update
     if (focusUpdate) {
       // update user

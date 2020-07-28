@@ -186,13 +186,13 @@ export const createRandomOneNine = (): number[] => {
   return shuffleArray(createOneNine());
 };
 
-export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
-  let puzzle: any = {};
+export const parsePuzzle = (puzzleToParse: string): Puzzle => {
+  let puzzle: Puzzle = new BlankPuzzle();
 
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
-      const cell = puzzleToPorse.substr(rowIndex * 9 + colIndex, 1);
+      const cell = puzzleToParse.substr(rowIndex * 9 + colIndex, 1);
       let formattedCell: Cell;
       if (cell != ".") {
         // Make a cell object with given equal to true
@@ -1183,6 +1183,27 @@ export const hiddenPairSolver = (
   return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
 
+export const parsePencilMarksToCandidates = (puzzle: Puzzle) => {
+  for (const cellIndex in puzzle) {
+    if (Object.prototype.hasOwnProperty.call(puzzle, cellIndex)) {
+      const cell = puzzle[cellIndex];
+      if (cell.number == ".") {
+        for (
+          let pencilMarkIndex = 0;
+          pencilMarkIndex < cell.pencilMarks.length;
+          pencilMarkIndex++
+        ) {
+          const pencilMark = cell.pencilMarks[pencilMarkIndex];
+          if (pencilMark) {
+            cell.candidates.push(pencilMarkIndex + 1);
+          }
+        }
+      }
+    }
+  }
+  return puzzle;
+};
+
 /* 
 Master solver method, calls each solver in succesion, 
 Increasing complexity when a given solver changes nothing, 
@@ -1192,11 +1213,21 @@ And returning to start when a solver changes something
 export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   difficulty = difficulty ?? "all";
   // First, populate candidates
-  const firstPass = firstPassCandidateCalculator(puzzle);
-  puzzle = firstPass.puzzle;
-  let rows = firstPass.rows;
-  let cols = firstPass.cols;
-  let squares = firstPass.squares;
+  let rows = makeRows(puzzle);
+  let cols = makeCols(puzzle);
+  let squares = makeSquares(puzzle);
+  // If not going for a hint
+  if (!hint) {
+    // Populate candidates
+    const firstPass = firstPassCandidateCalculator(puzzle);
+    puzzle = firstPass.puzzle;
+    rows = firstPass.rows;
+    cols = firstPass.cols;
+    squares = firstPass.squares;
+  } else {
+    puzzle = parsePencilMarksToCandidates(puzzle);
+  }
+
   let changes = 0;
   // For passing back to hint
   let change: any;
@@ -1269,7 +1300,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       // Only going to the next when the previous ones didn't work
       if (pointing.changes > 0) {
         // Set change to first element of changes
-        change = pointing.changesArray[0];
+        change = { pointing: pointing.changesArray[0] };
         continue;
       }
       // Try naked pair solver
@@ -1296,7 +1327,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       // Only going to the next when the previous ones didn't work
       if (nakedPair.changes > 0) {
         // Set change to first element of changes
-        change = nakedPair.changesArray[0];
+        change = { nakedPair: nakedPair.changesArray[0] };
         continue;
       }
 
@@ -1329,7 +1360,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       // Only going to the next when the previous ones didn't work
       if (claiming.changes > 0) {
         // Set change to first element of changes
-        change = claiming.changesArray[0];
+        change = { claiming: claiming.changesArray[0] };
         continue;
       }
 
@@ -1357,7 +1388,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       // Only going to the next when the previous ones didn't work
       if (hiddenPair.changes > 0) {
         // Set change to first element of changes
-        change = hiddenPair.changesArray[0];
+        change = { hiddenPair: hiddenPair.changesArray[0] };
         continue;
       }
 

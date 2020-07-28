@@ -5,7 +5,8 @@
 - [ ] Redo Feature
 - [ ] Navigate grid with HJKL and WASD and customize others
 - [ ] Hint feature
-  - [x] Backend support for finding and returning a hint
+  - [ ] Currently the issue is that the server and client don't populate the candidates array, which is what is used by each of the solvers
+  - [ ] Backend support for finding and returning a hint
   - [ ] Request a hint from client for current boardstate
   - [ ] Display hint on client
 - [ ] Select multiple cells to toggle pencilmarks

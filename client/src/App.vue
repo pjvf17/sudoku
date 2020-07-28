@@ -74,6 +74,7 @@
             <BaseButton @click="checkNew = false" class="no">Take me back</BaseButton>
           </div>
         </div>
+        <BaseButton @mouseup="requestHint()">Hint</BaseButton>
         <BaseButton @mouseup="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
       </div>
     </div>
@@ -295,7 +296,6 @@ export default {
           const pencilMarkUpdate = { address, pencilMark: key, id: id.value };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
-          
         } else {
           let { address } = sudokuObj.value[`r${row}c${col}`];
           // Create numberupdate object
@@ -417,6 +417,10 @@ export default {
     const firstPassCandidateCalculator =
       validation.firstPassCandidateCalculator;
 
+    const requestHint = () => {
+      socket.send(JSON.stringify({ hint: true }));
+    };
+
     return {
       popup,
       checkNew,
@@ -435,6 +439,7 @@ export default {
       firstPassCandidateCalculator,
       candidates,
       loading,
+      requestHint
     };
   },
   components: {
