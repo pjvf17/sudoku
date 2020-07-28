@@ -9,12 +9,14 @@ import {
   parsePuzzle,
   createBlankPuzzle,
 } from "./generator.ts";
-import {
-  updateNumber,
-  updatePencilMark,
-  validateSquare,
-  setSudokuObj,
-} from "./updates.ts";
+// import {
+//   updateNumber,
+//   updatePencilMark,
+//   validateSquare,
+//   setSudokuObj,
+// } from "./updates.ts";
+import Validation from "./serverSidePuzzleValidation.ts";
+import Updates from "./serverSidePuzzleUpdates.ts";
 import {
   PencilMarkUpdate,
   NumberUpdate,
@@ -42,8 +44,7 @@ app.use(async (context) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ?? "localhost"
+    `Listening on: ${secure ? "https://" : "http://"}${hostname ?? "localhost"
     }:${port}`
   );
 });
@@ -66,9 +67,7 @@ const startNewGame = () => {
         formattedCell = {
           number: cell,
           given: true,
-          valid: {
-            value: true,
-          },
+          valid: true,
           pencilMarks: [
             false,
             false,
@@ -98,7 +97,7 @@ const startNewGame = () => {
             false,
             false,
           ],
-          valid: { value: true },
+          valid: true,
           candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
         };
@@ -111,7 +110,7 @@ const startNewGame = () => {
 };
 
 startNewGame();
-setSudokuObj(sudokuObj);
+const validation = new Validation(sudokuObj.puzzle as Puzzle);
 
 console.log(
   solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true)
@@ -207,17 +206,10 @@ wss.on("connection", function (ws: WebSocket) {
     ws,
     moves,
   };
-  // Send users array
+  const updates = new Updates(sudokuObj.puzzle as Puzzle, users, validation, id);
+  // Send starting info
   ws.send(JSON.stringify({ users, id, color, sudokuObj }));
-  // Send id to user to use as identification in users array
-  // ws.send(JSON.stringify({ id }));
-  // // Send color assignment
-  // ws.send(JSON.stringify({ color }));
-  // // Send sudokuObj
-  // ws.send(JSON.stringify({ sudokuObj }));
-
-  // Send to everyone else, updated users
-  // Send to all connected
+  // Send to everyone else updated users
   for (let client of wss.clients) {
     // Send only to open clients, and not the one who sent a message
     if (!client.isClosed && client != ws) {
@@ -247,29 +239,17 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // Recieved number update
     if (numberUpdate) {
-      const inverseUpdate: NumberUpdate = updateNumber(numberUpdate);
-      // Change the number to the former state
-      moves.push({ numberUpdate: inverseUpdate });
+      updates.updateNumber({ numberUpdate });
     }
     // Recieved pencil mark update
     if (pencilMarkUpdate) {
-      const inverseUpdate: PencilMarkUpdate = updatePencilMark(
-        pencilMarkUpdate
+      updates.updatePencilMarks(
+        {pencilMarkUpdate}
       );
-      moves.push({ pencilMarkUpdate: inverseUpdate });
     }
     // Recieved undo request
-    if (undo && moves.length) {
-      // Get last move for this player
-
-      let move: Move | undefined = moves.pop();
-      // Check if the move is a number update
-      if (move!.numberUpdate) {
-        updateNumber(move!.numberUpdate);
-        // Check if it's a pencilMarkUpdate
-      } else if (move!.pencilMarkUpdate) {
-        updatePencilMark(move!.pencilMarkUpdate);
-      }
+    if (undo) {
+      updates.undo(id);
     }
     // console.log(newGame);
     if (newGame) {

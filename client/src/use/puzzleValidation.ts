@@ -112,7 +112,7 @@ class Validation {
       if (peers[cellIndex].address != cell.address) {
         if (peers[cellIndex].number == cell.number) {
           valid = false;
-          cell.valid.value = false;
+          cell.valid = false;
         }
       }
       // Stop at first invalid
@@ -122,7 +122,7 @@ class Validation {
     }
     // If valid is still valid, reset cell
     if (valid) {
-      cell.valid.value = true;
+      cell.valid = true;
     }
     return cell;
   };

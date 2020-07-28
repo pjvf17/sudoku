@@ -12,7 +12,7 @@
                 'border-right': ((colIndex) % 3) == 0, 
                 'border-bottom': ((rowIndex) % 3) == 0, 
                 'border-left': colIndex == 0, 'border-top': rowIndex == 0, 
-                invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid.value,
+                invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid,
                 'highlight-number': highlightNumbers == sudokuObj[`r${rowIndex}c${colIndex}`].number
               }]"
               @click="handleClick({row: rowIndex, col: colIndex})"
@@ -25,7 +25,7 @@
             >
               <svg class="inputReplacement">
                 <text
-                  :class="[{bold: sudokuObj[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid.value}, 'svgText']"
+                  :class="[{bold: sudokuObj[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid}, 'svgText']"
                   x="50%"
                   y="60%"
                   dominant-baseline="middle"

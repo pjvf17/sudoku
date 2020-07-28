@@ -25,9 +25,7 @@ export interface PencilMarkUpdate {
 export interface Cell {
   number: number | string;
   given: boolean;
-  valid: {
-    value: boolean;
-  };
+  valid: boolean;
   candidates: number[];
   address: Address;
   pencilMarks: boolean[];

@@ -211,7 +211,7 @@ export const createBlankPuzzle = (): Puzzle => {
           false,
           false,
         ],
-        valid: { value: true, reason: null },
+        valid: true,
         candidates: [],
         address: { r: rowIndex + 1, c: colIndex + 1 },
         untriedNumbers: createRandomOneNine(),
@@ -229,16 +229,14 @@ export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
       // console.log(rowIndex*9+colIndex)
       const cell = puzzleToPorse.substr(rowIndex * 9 + colIndex, 1);
-      let formattedCell;
+      let formattedCell: Cell;
       if (cell != ".") {
         // Make a cell object with given equal to true
         formattedCell = {
           number: cell,
           given: true,
-          valid: {
-            value: true,
-            reason: null,
-          },
+          valid: true,
+
           pencilMarks: [
             false,
             false,
@@ -268,7 +266,7 @@ export const parsePuzzle = (puzzleToPorse: string): Puzzle => {
             false,
             false,
           ],
-          valid: { value: true, reason: null },
+          valid: true,
           candidates: [],
           address: { r: rowIndex + 1, c: colIndex + 1 },
           untriedNumbers: createRandomOneNine(),
@@ -369,7 +367,7 @@ export const fillInRemaining = (): Puzzle => {
         if (!valid) {
           // Reset number
           puzzle[`r${address.r}c${address.c}`].number = ".";
-          puzzle[`r${address.r}c${address.c}`].valid.value = true;
+          puzzle[`r${address.r}c${address.c}`].valid = true;
           // Is valid
         } else {
           puzzle[`r${address.r}c${address.c}`].number = number;
@@ -864,7 +862,7 @@ export const claimingLockedCandidatesSolver = (
 
       for (const unitAddress in units) {
         if (units.hasOwnProperty(unitAddress)) {
-          const unit:Unit = units[unitAddress];
+          const unit: Unit = units[unitAddress];
           // Array from 1-9
           const oneNine = createOneNine();
           // Loop through each number
@@ -885,7 +883,7 @@ export const claimingLockedCandidatesSolver = (
             We only do this if square is "empty" meaning that no other thing has been set
             Or if it's the same square as previous
            */
-              let square:string|null = "empty";
+              let square: string | null = "empty";
               // Loop through filteredCells
               for (
                 // Start at one, so we can compare current and previous
@@ -990,7 +988,7 @@ export const nakedPairSolver = (
     changes = 0;
 
     for (let iteration = 0; iteration < 3; iteration++) {
-      let units:Units = rows;
+      let units: Units = rows;
       switch (iteration) {
         case 0:
           units = rows;
