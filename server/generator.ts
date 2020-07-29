@@ -1183,6 +1183,260 @@ export const hiddenPairSolver = (
   return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
 
+/* 
+  X-Wing specification: http://hodoku.sourceforge.net/en/tech_fishb.php#bf2
+  Take two rows (the base sets). 
+  If you can find two columns, such that all candidates of a specific digit 
+  (the fish digit) in both rows are containd in the columns (the cover sets), 
+  all fish candidates in the columns that are not part of the rows can be eliminated. 
+  The result is called an X-Wing in the rows.
+  If you exchange the terms rows and columns in the description above, you get an X-Wing in the columns.
+*/
+
+/* 
+  The following function will loop through rows, then columns
+  On finding a unit that has only two instances of a number, 
+  Search the rest of that type of unit for another unit that has that number in 
+  The same location
+*/
+
+export const xwingSolver = (
+  puzzle: Puzzle,
+  rows?: Units,
+  cols?: Units,
+  squares?: Units
+) => {
+  rows = rows ?? makeRows(puzzle);
+  cols = cols ?? makeCols(puzzle);
+  squares = squares ?? makeSquares(puzzle);
+  let iterations = 0;
+  let changes = 0;
+  // For calculating cost/difficulty, tracks number of uses total
+  let totalChanges = 0;
+  // Holds changes, especially useful for hint creation
+  let changesArray: any[] = [];
+
+  do {
+    changes = 0;
+
+    for (let iteration = 0; iteration < 3; iteration++) {
+      let units: Units = rows;
+      let unitType: string;
+      switch (iteration) {
+        case 0:
+          units = rows;
+          unitType = "row";
+          break;
+        case 1:
+          units = cols;
+          unitType = "col";
+          break;
+      }
+      for (const unitAddress in units) {
+        if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
+          const unit = units[unitAddress];
+          createOneNine().forEach((number) => {
+            // Filter unit by number
+            const filteredUnit = Object.values(units[unitAddress]).filter(
+              (el: Cell) => {
+                return el.candidates.includes(number);
+              }
+            );
+            // If there are only 2 items in the array
+            // There are only two instances of a number
+            if (filteredUnit.length == 2) {
+              // Now we loop through the units again,
+              // Looking for a seperate unit with the same number in the same places
+              for (const secondUnitAddress in units) {
+                if (
+                  Object.prototype.hasOwnProperty.call(units, secondUnitAddress)
+                ) {
+                  const secondUnit = units[secondUnitAddress];
+                  // Skip over the unit we're checking against
+                  if (secondUnitAddress != unitAddress) {
+                    const secondFilteredUnit = Object.values(
+                      units[secondUnitAddress]
+                    ).filter((el: Cell) => {
+                      return el.candidates.includes(number);
+                    });
+                    // Only two instances of the number
+                    if (secondFilteredUnit.length == 2) {
+                      // If looking in rows, we need the columns to be the same
+                      if (unitType == "row") {
+                        // Checks if both the first and the second elements
+                        // Of each filtered unit have the same column
+                        if (
+                          secondFilteredUnit[0].address.c ==
+                            filteredUnit[0].address.c &&
+                          secondFilteredUnit[1].address.c ==
+                            filteredUnit[1].address.c
+                        ) {
+                          // Look through each column for other cells with this candidate
+                          // That are not in the rows we're checking
+                          // And remove them
+                          for (const cellAddress in cols![
+                            `c${filteredUnit[0].address.c}`
+                          ]) {
+                            if (
+                              Object.prototype.hasOwnProperty.call(
+                                cols![`c${filteredUnit[0].address.c}`],
+                                cellAddress
+                              )
+                            ) {
+                              const cell = cols![
+                                `c${filteredUnit[0].address.c}`
+                              ][cellAddress];
+                              // If not in either of the rows
+                              if (
+                                cell.address.r != filteredUnit[0].address.r &&
+                                cell.address.r !=
+                                  secondFilteredUnit[0].address.r
+                              ) {
+                                if (cell.candidates.includes(number)) {
+                                  cell.candidates.splice(
+                                    cell.candidates.indexOf(number),
+                                    1
+                                  );
+                                  changes++;
+                                }
+                              }
+                            }
+                          }
+                          for (const cellAddress in cols![
+                            `c${filteredUnit[1].address.c}`
+                          ]) {
+                            if (
+                              Object.prototype.hasOwnProperty.call(
+                                cols![`c${filteredUnit[1].address.c}`],
+                                cellAddress
+                              )
+                            ) {
+                              const cell = cols![
+                                `c${filteredUnit[1].address.c}`
+                              ][cellAddress];
+                              // If not in either of the rows
+                              if (
+                                cell.address.r != filteredUnit[1].address.r &&
+                                cell.address.r !=
+                                  secondFilteredUnit[1].address.r
+                              ) {
+                                if (cell.candidates.includes(number)) {
+                                  cell.candidates.splice(
+                                    cell.candidates.indexOf(number),
+                                    1
+                                  );
+                                  changes++;
+                                }
+                              }
+                            }
+                          }
+                        }
+                        // if (changes) {
+                        //   changesArray.push({
+                        //     unitAddress,
+                        //     secondUnitAddress,
+                        //     number,
+                        //   });
+                        // }
+                        // totalChanges += changes;
+                        // changes = 0;
+                      }
+                      // If looking in cols, we need the rows to be the same
+                      else if (unitType == "col") {
+                        // Checks if both the first and the second elements
+                        // Of each filtered unit have the same column
+                        if (
+                          secondFilteredUnit[0].address.r ==
+                            filteredUnit[0].address.r &&
+                          secondFilteredUnit[1].address.r ==
+                            filteredUnit[1].address.r
+                        ) {
+                          // Look through each row for other cells with this candidate
+                          // That are not in the columns we're checking
+                          // And remove them
+                          for (const cellAddress in rows![
+                            `r${filteredUnit[0].address.r}`
+                          ]) {
+                            if (
+                              Object.prototype.hasOwnProperty.call(
+                                rows![`r${filteredUnit[0].address.r}`],
+                                cellAddress
+                              )
+                            ) {
+                              const cell = rows![
+                                `r${filteredUnit[0].address.r}`
+                              ][cellAddress];
+                              // If not in either of the columns
+                              if (
+                                cell.address.c != filteredUnit[0].address.c &&
+                                cell.address.c !=
+                                  secondFilteredUnit[0].address.c
+                              ) {
+                                if (cell.candidates.includes(number)) {
+                                  cell.candidates.splice(
+                                    cell.candidates.indexOf(number),
+                                    1
+                                  );
+                                  changes++;
+                                }
+                              }
+                            }
+                          }
+
+                          for (const cellAddress in rows![
+                            `r${filteredUnit[1].address.r}`
+                          ]) {
+                            if (
+                              Object.prototype.hasOwnProperty.call(
+                                rows![`r${filteredUnit[1].address.r}`],
+                                cellAddress
+                              )
+                            ) {
+                              const cell = rows![
+                                `r${filteredUnit[1].address.r}`
+                              ][cellAddress];
+
+                              // If not in either of the columns
+                              if (
+                                cell.address.c != filteredUnit[1].address.c &&
+                                cell.address.c !=
+                                  secondFilteredUnit[1].address.c
+                              ) {
+                                if (cell.candidates.includes(number)) {
+                                  cell.candidates.splice(
+                                    cell.candidates.indexOf(number),
+                                    1
+                                  );
+                                  changes++;
+                                }
+                              }
+                            }
+                          }
+                          // if (changes) {
+                          //   changesArray.push({
+                          //     unitAddress,
+                          //     secondUnitAddress,
+                          //     number,
+                          //   });
+                          // }
+                          // totalChanges += changes;
+                          // changes = 0;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    totalChanges += changes;
+  } while (changes > 0);
+  return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
+};
+
 export const parsePencilMarksToCandidates = (puzzle: Puzzle) => {
   for (const cellIndex in puzzle) {
     if (Object.prototype.hasOwnProperty.call(puzzle, cellIndex)) {
@@ -1238,6 +1492,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
     claiming: 0,
     nakedPair: 0,
     hiddenPair: 0,
+    xwing: 0,
   };
   do {
     // If in hint mode, stop at first changes
@@ -1391,6 +1646,36 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         continue;
       }
 
+      if (difficulty != "medium") {
+        const xwing = xwingSolver(puzzle, rows, cols, squares);
+        // Update puzzle
+        puzzle = xwing.puzzle;
+        rows = xwing.rows;
+        // console.log(rows);
+        cols = xwing.cols;
+        squares = xwing.squares;
+        // Update cost, initial cost higher than subsequent
+        if (xwing.changes) {
+          // console.log(xwing.changes);
+          cost.xwing =
+            cost.xwing > 0
+              ? // Subsequent cost, 250
+                (cost.xwing += xwing.changes * 250)
+              : // First cost, 350, then add any additional changes, times 250
+                450 + (xwing.changes - 1) * 250;
+        }
+        // Update changes
+        changes = xwing.changes > 0 ? changes + 1 : changes;
+        // If changes made, go the beginnig of the loop
+        // In this way, we go progressively through the harder techniques
+        // Only going to the next when the previous ones didn't work
+        if (xwing.changes > 0) {
+          // Set change to first element of changes
+          change = { xwing: xwing.changesArray[0] };
+          continue;
+        }
+      }
+
       // let totalCost = 0;
       // for (const costType in cost) {
       //   if (cost.hasOwnProperty(costType)) {
@@ -1407,7 +1692,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       totalCost += cost[costType];
     }
   }
-  // console.log(totalCost);
+  // console.log(cost);
   return { puzzle, totalCost, cost };
   // Need to keep track of changes for each method
 };
@@ -1462,17 +1747,17 @@ export const createPuzzle = (difficulty?: string) => {
   // Values will be untred addresses
   let triedConfigurations: any = {};
 
-  let cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0 };
+  let cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0, xwing: 0 };
 
   // Remove pairs till we've reached our target
-  while (totalCost <= targetRange.min) {
+  while (totalCost <= targetRange.min || cost.xwing == 0) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
     let firstNumber: Cell["number"];
     let secondNumber: Cell["number"];
 
-    if (iterations % 500 == 0) {
+    if (iterations % 1000 == 0) {
       // console.log("resetting " + iterations / 500);
       // Reset puzzle
       puzzle = createFilledPuzzle();
@@ -1538,11 +1823,11 @@ export const createPuzzle = (difficulty?: string) => {
       puzzleToString(attemptedPuzzle).indexOf(".") == -1;
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
-      // if (totalCost > targetRange.max) {
-      //   console.log("\n\n totalcost higher");
-      //   console.log(totalCost);
-      //   console.log(cost);
-      // }
+      if (totalCost > targetRange.max) {
+        console.log("\n\n totalcost higher");
+        console.log(totalCost);
+        console.log(cost);
+      }
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -1554,7 +1839,7 @@ export const createPuzzle = (difficulty?: string) => {
 
       // Reset totalCost
       totalCost = 0;
-    }
+    } 
   }
   console.log(`\n\ntotalCost: ${totalCost}`);
   console.log(cost);

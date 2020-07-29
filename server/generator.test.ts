@@ -6,6 +6,7 @@ import {
   parsePuzzle,
   createPuzzle,
   solver,
+  printSudokuToConsole
 } from "./generator.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 
@@ -20,9 +21,7 @@ Deno.test({
 Deno.test({
   name: "Fill in remaining creates a valid puzzle",
   fn(): void {
-    assert(
-      validatePuzzle(fillInRemaining())
-    );
+    assert(validatePuzzle(fillInRemaining()));
   },
 });
 
@@ -82,6 +81,17 @@ Deno.test({
       puzzleToString(solver(parsePuzzle(testPuzzle)).puzzle),
       solvedTestPuzzle
     );
+  },
+});
+
+Deno.test({
+  name: "Solve Puzzle with xwing",
+  fn(): void {
+    const testPuzzle =
+      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+    const solvedPuzzle = solver(parsePuzzle(testPuzzle)).puzzle;
+    printSudokuToConsole(solver(parsePuzzle(testPuzzle)).puzzle);
+    assert(puzzleToString(solvedPuzzle).indexOf(".") == -1);
   },
 });
 
