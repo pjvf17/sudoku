@@ -1531,6 +1531,14 @@ export const calculateCost = (cost: Cost, changes: number) => {
   return cost;
 };
 
+export enum DifficultyValues {
+  easy,
+  medium,
+  hard,
+  insane,
+  diabolical,
+}
+
 /* 
 Master solver method, calls each solver in succesion, 
 Increasing complexity when a given solver changes nothing, 
@@ -1655,7 +1663,22 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // Need to keep track of changes for each method
 };
 
-export const createPuzzle = (difficulty?: Difficulty) => {
+export const createPuzzle = (
+  difficulty?: Difficulty,
+  reqTechs?: Technique[],
+) => {
+  let cost: Score = new ScoreClass();
+  if (difficulty) {
+    // If any of the required techniques passed has a higher minimum difficulty than the difficulty passed, return an error
+    reqTechs?.forEach((tech) => {
+      if (
+        DifficultyValues[cost[tech].difficulty] >
+          DifficultyValues[difficulty as Difficulty]
+      ) {
+        throw new Error("Required techniques don't match difficulty level");
+      }
+    });
+  }
   // const startTimer = performance.now();
   const targetRanges = {
     easy: { min: 4300, max: 5500 },
@@ -1700,10 +1723,8 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   // Values will be untred addresses
   let triedConfigurations: any = {};
 
-  let cost: Score = new ScoreClass();
-
   // Remove pairs till we've reached our target
-  while (totalCost <= targetRange.min) {
+  while (totalCost <= targetRange.min ){
     iterations++;
     let firstAddress: number;
     let secondAddress: number;

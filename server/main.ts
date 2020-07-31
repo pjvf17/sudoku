@@ -46,7 +46,7 @@ let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
 };
 
 export const startNewGame = () => {
-  const puzzle = parsePuzzle(puzzleToString(createPuzzle("hard")));
+  const puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
   console.log("0\n0\n0\n0\n0");
   const solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
   return { puzzle, solved }
