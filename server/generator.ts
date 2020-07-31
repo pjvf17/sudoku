@@ -1,6 +1,16 @@
 // generator.ts
 
-import { Cell, Puzzle, Units, Unit, Address, Difficulty, Cost, Technique, Score } from "../client/src/types.d.ts";
+import {
+  Cell,
+  Puzzle,
+  Units,
+  Unit,
+  Address,
+  Difficulty,
+  Cost,
+  Technique,
+  Score,
+} from "../client/src/types.d.ts";
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 // Validation framework
@@ -91,7 +101,7 @@ export const makeSquares = (puzzle: Puzzle) => {
 export const validateCell = (
   cell: Cell,
   { rows, cols, squares }: { rows: Units; cols: Units; squares: Units },
-  number: Cell["number"]
+  number: Cell["number"],
 ) => {
   let row: Unit, col: Unit, square: Unit;
 
@@ -104,12 +114,11 @@ export const validateCell = (
     ...Object.values(square),
   ];
   let valid = true;
-  valid =
-    peers.findIndex((el: any) => {
+  valid = peers.findIndex((el: any) => {
       return el.number == number;
     }) == -1
-      ? true
-      : false;
+    ? true
+    : false;
 
   return valid;
 };
@@ -123,7 +132,7 @@ export const validatePuzzle = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -150,14 +159,13 @@ export const validatePuzzle = (
       let valid = true;
 
       // The only difference in code is here
-      valid =
-        peers.findIndex((el: Cell) => {
+      valid = peers.findIndex((el: Cell) => {
           // This checks against cell address as well as number,
           // Instead of just number as in validateCell
           return el.number == cell.number && el.address != cell.address;
         }) == -1
-          ? true
-          : false;
+        ? true
+        : false;
 
       if (!valid) {
         // console.log(cell.address);
@@ -314,7 +322,7 @@ export const fillInRemaining = (): Puzzle => {
 
         // Get number, removing each number from the untriedNumbers array to make no repeats
         const number = Number(
-          puzzle[`r${address.r}c${address.c}`].untriedNumbers!.pop()
+          puzzle[`r${address.r}c${address.c}`].untriedNumbers!.pop(),
         );
 
         const cols = makeCols(puzzle);
@@ -322,7 +330,7 @@ export const fillInRemaining = (): Puzzle => {
         const valid = validateCell(
           puzzle[`r${address.r}c${address.c}`],
           { rows, cols, squares },
-          number
+          number,
         );
 
         // Validate cell
@@ -420,10 +428,9 @@ export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
             if (unit[cellAddress].number == ".") {
               // If we're not on the first iteration of both the inner and outer loops
               // Get previous candidates of cell
-              const previousCandidates =
-                iteration == 0
-                  ? Array.from(Array(9), (_, i) => i + 1)
-                  : unit[cellAddress].candidates;
+              const previousCandidates = iteration == 0
+                ? Array.from(Array(9), (_, i) => i + 1)
+                : unit[cellAddress].candidates;
               // Reset candidates
               unit[cellAddress].candidates = [];
               unseenNumbers
@@ -457,7 +464,7 @@ export const updatePeerCandidates = (
     rows: Units;
     cols: Units;
     squares: Units;
-  }
+  },
 ) => {
   // Assemble peers
   let row: Unit, col: Unit, square: Unit;
@@ -500,7 +507,7 @@ export const hiddenAndNakedSingleSolver = (
   candidates?: boolean,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   // If candidates have not been assigned, assign them. Othrewise don't overwrite
   if (!candidates) {
@@ -591,7 +598,7 @@ export const hiddenAndNakedSingleSolver = (
                 let cell: any = Object.values(units[unitAddress]).find(
                   (el: any) => {
                     return el.candidates.includes(candidate);
-                  }
+                  },
                 );
                 if (cell) {
                   // Update number
@@ -668,7 +675,7 @@ export const pointingLockedCandidatesSolver = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
   rows = rows ?? makeRows(puzzle);
@@ -692,7 +699,7 @@ export const pointingLockedCandidatesSolver = (
           const filteredCells: any = Object.values(square).filter(
             (cell: any) => {
               return cell.candidates.includes(number);
-            }
+            },
           );
           // If cells
           if (filteredCells.length) {
@@ -725,12 +732,11 @@ export const pointingLockedCandidatesSolver = (
             // If rowcol row or col, we have found pointing candidates
             if (rowcol == "row" || rowcol == "col") {
               // Get unit
-              const unit =
-                rowcol == "row"
-                  ? // Only referencing the first element of filtered cells here
-                  // Because each element should share the same row or col
+              const unit = rowcol == "row"
+                ? // Only referencing the first element of filtered cells here
+                // Because each element should share the same row or col
                   rows![`r${filteredCells[0].address.r}`]
-                  : cols![`c${filteredCells[0].address.c}`];
+                : cols![`c${filteredCells[0].address.c}`];
 
               // Get an array of addresses in rncn format to not change
               // (the ones in the current square)
@@ -748,7 +754,7 @@ export const pointingLockedCandidatesSolver = (
                       // Remove number from cell candidates
                       cell.candidates.splice(
                         cell.candidates.indexOf(number),
-                        1
+                        1,
                       );
                       changes++;
                     }
@@ -760,11 +766,15 @@ export const pointingLockedCandidatesSolver = (
                 // Create address of the form r67c2 or r7c78
                 if (rowcol == "row") {
                   rncnAddress = rncnAddress.concat(
-                    `r${filteredCells[0].address.r}c${filteredCells[0].address.c}${filteredCells[1].address.c}`
+                    `r${filteredCells[0].address.r}c${
+                      filteredCells[0].address.c
+                    }${filteredCells[1].address.c}`,
                   );
                 } else {
                   rncnAddress = rncnAddress.concat(
-                    `r${filteredCells[0].address.r}${filteredCells[1].address.r}c${filteredCells[0].address.c}`
+                    `r${filteredCells[0].address.r}${
+                      filteredCells[1].address.r
+                    }c${filteredCells[0].address.c}`,
                   );
                 }
                 changesArray.push({
@@ -789,7 +799,7 @@ export const claimingLockedCandidatesSolver = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   // puzzle = firstPassCandidateCalculator(puzzle);
   rows = rows ?? makeRows(puzzle);
@@ -830,7 +840,7 @@ export const claimingLockedCandidatesSolver = (
             const filteredCells: Cell[] = Object.values(unit).filter(
               (cell: Cell) => {
                 return cell.candidates.includes(number);
-              }
+              },
             );
             // If cells
             if (filteredCells.length) {
@@ -856,10 +866,9 @@ export const claimingLockedCandidatesSolver = (
                   getSquare(cell) == getSquare(filteredCells[cellIndex - 1])
                 ) {
                   // Check if square is empty, or it matches current square, otherwise set to null
-                  square =
-                    square == "empty" || square == getSquare(cell)
-                      ? getSquare(cell)
-                      : null;
+                  square = square == "empty" || square == getSquare(cell)
+                    ? getSquare(cell)
+                    : null;
                 } else {
                   square = null;
                 }
@@ -878,14 +887,14 @@ export const claimingLockedCandidatesSolver = (
                     if (!addressesToNotChange.includes(cellAddress)) {
                       if (
                         squares![square][cellAddress].candidates.includes(
-                          number
+                          number,
                         )
                       ) {
                         const cell = squares![square][cellAddress];
                         // Remove number from cell candidates
                         cell.candidates.splice(
                           cell.candidates.indexOf(number),
-                          1
+                          1,
                         );
                         changes++;
                       }
@@ -897,19 +906,23 @@ export const claimingLockedCandidatesSolver = (
                   let rncnAddress = "";
                   if (unitType == "row") {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}c${filteredCells[0].address.c
-                      }${filteredCells[1].address.c}${filteredCells.length == 3
-                        ? filteredCells[2].address.c
-                        : ""
-                      }`
+                      `r${filteredCells[0].address.r}c${
+                        filteredCells[0].address.c
+                      }${filteredCells[1].address.c}${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.c
+                          : ""
+                      }`,
                     );
                   } else {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}${filteredCells[1].address.r
-                      }${filteredCells.length == 3
-                        ? filteredCells[2].address.r
-                        : ""
-                      }c${filteredCells[0].address.c}`
+                      `r${filteredCells[0].address.r}${
+                        filteredCells[1].address.r
+                      }${
+                        filteredCells.length == 3
+                          ? filteredCells[2].address.r
+                          : ""
+                      }c${filteredCells[0].address.c}`,
                     );
                   }
                   changesArray.push({
@@ -933,7 +946,7 @@ export const nakedPairSolver = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -970,11 +983,11 @@ export const nakedPairSolver = (
             .map((el: any) => el.candidates);
           // Filter candidates to include only those with two values
           const filteredUnitCandidates = unitCandidates.filter(
-            (candidateArray: any) => candidateArray.length == 2
+            (candidateArray: any) => candidateArray.length == 2,
           );
           // Stringify to allow comparing
           const stringifiedUnitCandidates = filteredUnitCandidates.map(
-            (el: any) => JSON.stringify(el)
+            (el: any) => JSON.stringify(el),
           );
 
           // Further filter candidates to where we only have pairs of pairs
@@ -983,7 +996,7 @@ export const nakedPairSolver = (
               // Returns true if there is more than 1 instance of a given pair
               return (
                 stringifiedUnitCandidates.indexOf(el) !=
-                stringifiedUnitCandidates.lastIndexOf(el)
+                  stringifiedUnitCandidates.lastIndexOf(el)
               );
             })
             // Map them back to arrays
@@ -998,7 +1011,7 @@ export const nakedPairSolver = (
               if (
                 Object.prototype.hasOwnProperty.call(
                   units[unitAddress],
-                  cellAddress
+                  cellAddress,
                 )
               ) {
                 const cell = units[unitAddress][cellAddress];
@@ -1046,7 +1059,7 @@ export const hiddenPairSolver = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -1087,7 +1100,7 @@ export const hiddenPairSolver = (
               .map((el: any) => el.candidates);
             // Filter candidates by number
             const filteredUnitCandidates = unitCandidates.filter(
-              (candidateArray: any) => candidateArray.includes(number)
+              (candidateArray: any) => candidateArray.includes(number),
             );
             if (filteredUnitCandidates.length == 2) {
               candidateArrays.push([number, ...filteredUnitCandidates]);
@@ -1115,10 +1128,10 @@ export const hiddenPairSolver = (
                   // Get the index of the found combination
                   // Plug that into candidate arrays,
                   candidateArrays[
-                  seenCombinations.indexOf(
-                    JSON.stringify(array.slice(1).flat())
-                  )
-                  // Get the first element to get the first number of the pair
+                    seenCombinations.indexOf(
+                      JSON.stringify(array.slice(1).flat()),
+                    )
+                    // Get the first element to get the first number of the pair
                   ][0],
                   // Second number of the pair is the index we're currently on
                   candidateArrays[index][0],
@@ -1139,7 +1152,7 @@ export const hiddenPairSolver = (
                   if (
                     Object.prototype.hasOwnProperty.call(
                       units[unitAddress],
-                      cellAddress
+                      cellAddress,
                     )
                   ) {
                     const cell = units[unitAddress][cellAddress];
@@ -1200,7 +1213,7 @@ export const xwingSolver = (
   puzzle: Puzzle,
   rows?: Units,
   cols?: Units,
-  squares?: Units
+  squares?: Units,
 ) => {
   rows = rows ?? makeRows(puzzle);
   cols = cols ?? makeCols(puzzle);
@@ -1236,7 +1249,7 @@ export const xwingSolver = (
             const filteredUnit = Object.values(units[unitAddress]).filter(
               (el: Cell) => {
                 return el.candidates.includes(number) && el.number == ".";
-              }
+              },
             );
             // If there are only 2 items in the array
             // There are only two instances of a number
@@ -1251,7 +1264,7 @@ export const xwingSolver = (
                   // Skip over the unit we're checking against
                   if (secondUnitAddress != unitAddress) {
                     const secondFilteredUnit = Object.values(
-                      units[secondUnitAddress]
+                      units[secondUnitAddress],
                     ).filter((el: Cell) => {
                       return el.candidates.includes(number);
                     });
@@ -1263,23 +1276,25 @@ export const xwingSolver = (
                         // Of each filtered unit have the same column
                         if (
                           secondFilteredUnit[0].address.c ==
-                          filteredUnit[0].address.c &&
+                            filteredUnit[0].address.c &&
                           secondFilteredUnit[1].address.c ==
-                          filteredUnit[1].address.c
+                            filteredUnit[1].address.c
                         ) {
                           // Look through each column for other cells with this candidate
                           // That are not in the rows we're checking
                           // And remove them
-                          for (const cellAddress in cols![
-                            `c${filteredUnit[0].address.c}`
-                          ]) {
+                          for (
+                            const cellAddress in cols![
+                              `c${filteredUnit[0].address.c}`
+                            ]
+                          ) {
                             if (
                               Object.prototype.hasOwnProperty.call(
                                 cols![`c${filteredUnit[0].address.c}`],
-                                cellAddress
+                                cellAddress,
                               ) && cols![`c${filteredUnit[0].address.c}`][
-                                cellAddress
-                              ].number == "."
+                                  cellAddress
+                                ].number == "."
                             ) {
                               const cell = cols![
                                 `c${filteredUnit[0].address.c}`
@@ -1288,28 +1303,30 @@ export const xwingSolver = (
                               if (
                                 cell.address.r != filteredUnit[0].address.r &&
                                 cell.address.r !=
-                                secondFilteredUnit[0].address.r
+                                  secondFilteredUnit[0].address.r
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
                                     cell.candidates.indexOf(number),
-                                    1
+                                    1,
                                   );
                                   changes++;
                                 }
                               }
                             }
                           }
-                          for (const cellAddress in cols![
-                            `c${filteredUnit[1].address.c}`
-                          ]) {
+                          for (
+                            const cellAddress in cols![
+                              `c${filteredUnit[1].address.c}`
+                            ]
+                          ) {
                             if (
                               Object.prototype.hasOwnProperty.call(
                                 cols![`c${filteredUnit[1].address.c}`],
-                                cellAddress
+                                cellAddress,
                               ) && cols![`c${filteredUnit[1].address.c}`][
-                                cellAddress
-                              ].number == "."
+                                  cellAddress
+                                ].number == "."
                             ) {
                               const cell = cols![
                                 `c${filteredUnit[1].address.c}`
@@ -1318,12 +1335,12 @@ export const xwingSolver = (
                               if (
                                 cell.address.r != filteredUnit[1].address.r &&
                                 cell.address.r !=
-                                secondFilteredUnit[1].address.r
+                                  secondFilteredUnit[1].address.r
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
                                     cell.candidates.indexOf(number),
-                                    1
+                                    1,
                                   );
                                   changes++;
                                 }
@@ -1340,30 +1357,31 @@ export const xwingSolver = (
                         // }
                         // totalChanges += changes;
                         // changes = 0;
-                      }
-                      // If looking in cols, we need the rows to be the same
+                      } // If looking in cols, we need the rows to be the same
                       else if (unitType == "col") {
                         // Checks if both the first and the second elements
                         // Of each filtered unit have the same column
                         if (
                           secondFilteredUnit[0].address.r ==
-                          filteredUnit[0].address.r &&
+                            filteredUnit[0].address.r &&
                           secondFilteredUnit[1].address.r ==
-                          filteredUnit[1].address.r
+                            filteredUnit[1].address.r
                         ) {
                           // Look through each row for other cells with this candidate
                           // That are not in the columns we're checking
                           // And remove them
-                          for (const cellAddress in rows![
-                            `r${filteredUnit[0].address.r}`
-                          ]) {
+                          for (
+                            const cellAddress in rows![
+                              `r${filteredUnit[0].address.r}`
+                            ]
+                          ) {
                             if (
                               Object.prototype.hasOwnProperty.call(
                                 rows![`r${filteredUnit[0].address.r}`],
-                                cellAddress
+                                cellAddress,
                               ) && rows![`r${filteredUnit[0].address.r}`][
-                                cellAddress
-                              ].number == "."
+                                  cellAddress
+                                ].number == "."
                             ) {
                               const cell = rows![
                                 `r${filteredUnit[0].address.r}`
@@ -1372,12 +1390,12 @@ export const xwingSolver = (
                               if (
                                 cell.address.c != filteredUnit[0].address.c &&
                                 cell.address.c !=
-                                secondFilteredUnit[0].address.c
+                                  secondFilteredUnit[0].address.c
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
                                     cell.candidates.indexOf(number),
-                                    1
+                                    1,
                                   );
                                   changes++;
                                 }
@@ -1385,16 +1403,18 @@ export const xwingSolver = (
                             }
                           }
 
-                          for (const cellAddress in rows![
-                            `r${filteredUnit[1].address.r}`
-                          ]) {
+                          for (
+                            const cellAddress in rows![
+                              `r${filteredUnit[1].address.r}`
+                            ]
+                          ) {
                             if (
                               Object.prototype.hasOwnProperty.call(
                                 rows![`r${filteredUnit[1].address.r}`],
-                                cellAddress
+                                cellAddress,
                               ) && rows![`r${filteredUnit[1].address.r}`][
-                                cellAddress
-                              ].number == "."
+                                  cellAddress
+                                ].number == "."
                             ) {
                               const cell = rows![
                                 `r${filteredUnit[1].address.r}`
@@ -1404,12 +1424,12 @@ export const xwingSolver = (
                               if (
                                 cell.address.c != filteredUnit[1].address.c &&
                                 cell.address.c !=
-                                secondFilteredUnit[1].address.c
+                                  secondFilteredUnit[1].address.c
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
                                     cell.candidates.indexOf(number),
-                                    1
+                                    1,
                                   );
                                   changes++;
                                 }
@@ -1463,57 +1483,53 @@ export const parsePencilMarksToCandidates = (puzzle: Puzzle) => {
 };
 
 export class ScoreClass {
-  [index: string]: Cost;
+  [index: string]: Cost
   hiddenSingle: Cost = {
     firstUse: 100,
     subUses: 100,
     total: 0,
-    difficulty: "easy"
-  }
+    difficulty: "easy",
+  };
   pointing: Cost = {
     firstUse: 350,
     subUses: 200,
     total: 0,
-    difficulty: "medium"
-  }
+    difficulty: "medium",
+  };
   claiming: Cost = {
     firstUse: 400,
     subUses: 250,
     total: 0,
-    difficulty: "medium"
-  }
+    difficulty: "medium",
+  };
   nakedPair: Cost = {
     firstUse: 350,
     subUses: 200,
     total: 0,
-    difficulty: "medium"
-  }
+    difficulty: "medium",
+  };
   hiddenPair: Cost = {
     firstUse: 450,
     subUses: 250,
     total: 0,
-    difficulty: "medium"
-  }
+    difficulty: "medium",
+  };
   xwing: Cost = {
     firstUse: 450,
     subUses: 250,
     total: 0,
-    difficulty: "hard"
-  }
+    difficulty: "hard",
+  };
 }
 
-
-export const calculateCost = (cost:Cost, changes:number) =>{
+export const calculateCost = (cost: Cost, changes: number) => {
   if (changes) {
-    cost.total =
-      cost.total > 0
-        ? // Subsequent cost, 200
-        (cost.total += changes * cost.subUses)
-        : // First cost, 350, then add any additional changes, times 300
-        cost.firstUse + (changes - 1) * cost.subUses;
+    cost.total = cost.total > 0
+      ? (cost.total += changes * cost.subUses)
+      : cost.firstUse + (changes - 1) * cost.subUses;
   }
-  return cost
-}
+  return cost;
+};
 
 /* 
 Master solver method, calls each solver in succesion, 
@@ -1522,7 +1538,6 @@ And returning to start when a solver changes something
 */
 
 export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
-
   difficulty = difficulty ?? "all";
   // First, populate candidates
   let rows = makeRows(puzzle);
@@ -1541,7 +1556,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // For passing back to hint
   let change: any;
   // Holds cost of each method used
-  const cost:Score= new ScoreClass();
+  const cost: Score = new ScoreClass();
   cost.xwing.subUses = 100;
   do {
     // If in hint mode, stop at first changes
@@ -1556,7 +1571,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       true,
       rows,
       cols,
-      squares
+      squares,
     );
     // Update puzzle
     ({ puzzle, rows, cols, squares } = hiddenSingle);
@@ -1566,7 +1581,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
 
     if (hiddenSingle.cost > 0) {
-       // Set change to first element of changes
+      // Set change to first element of changes
       change = hiddenSingle.changesArray[0];
       continue;
     }
@@ -1577,7 +1592,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         puzzle,
         rows,
         cols,
-        squares
+        squares,
       );
       ({ puzzle, rows, cols, squares } = pointing);
       // Update cost, initial cost higher than subsequent
@@ -1599,7 +1614,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         puzzle,
         rows,
         cols,
-        squares
+        squares,
       );
       ({ puzzle, rows, cols, squares } = claiming);
       cost.claiming = calculateCost(cost.claiming, claiming.changes);
@@ -1685,7 +1700,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   // Values will be untred addresses
   let triedConfigurations: any = {};
 
-  let cost:Score = new ScoreClass();
+  let cost: Score = new ScoreClass();
 
   // Remove pairs till we've reached our target
   while (totalCost <= targetRange.min) {
@@ -1750,14 +1765,13 @@ export const createPuzzle = (difficulty?: Difficulty) => {
     let attemptedPuzzle: Puzzle;
     const attemptedPuzzleObj = solver(
       JSON.parse(JSON.stringify(puzzle)),
-      difficulty
+      difficulty,
     );
     attemptedPuzzle = attemptedPuzzleObj.puzzle;
     totalCost = attemptedPuzzleObj.totalCost;
     cost = attemptedPuzzleObj.cost as ScoreClass;
     // Validate, check if valid, AND check if full
-    const valid =
-      validatePuzzle(attemptedPuzzle) &&
+    const valid = validatePuzzle(attemptedPuzzle) &&
       puzzleToString(attemptedPuzzle).indexOf(".") == -1;
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
@@ -1779,7 +1793,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
       totalCost = 0;
     }
   }
-  console.log(iterations / 500)
+  console.log(iterations / 500);
   console.log(`\n\ntotalCost: ${totalCost}`);
   console.log(cost);
   return puzzle;
