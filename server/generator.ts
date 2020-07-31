@@ -1,6 +1,6 @@
 // generator.ts
 
-import { Cell, Puzzle, Units, Unit, Address, Difficulty, Cost } from "../client/src/types.d.ts";
+import { Cell, Puzzle, Units, Unit, Address, Difficulty, Cost, Technique, Score } from "../client/src/types.d.ts";
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 // Validation framework
@@ -1462,7 +1462,7 @@ export const parsePencilMarksToCandidates = (puzzle: Puzzle) => {
   return puzzle;
 };
 
-export class Score {
+export class ScoreClass {
   [index: string]: Cost;
   hiddenSingle: Cost = {
     firstUse: 100,
@@ -1502,6 +1502,7 @@ export class Score {
   }
 }
 
+
 export const calculateCost = (cost:Cost, changes:number) =>{
   if (changes) {
     cost.total =
@@ -1540,7 +1541,8 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // For passing back to hint
   let change: any;
   // Holds cost of each method used
-  const cost = new Score();
+  const cost:Score= new ScoreClass();
+  cost.xwing.subUses = 100;
   do {
     // If in hint mode, stop at first changes
     if (hint && changes) {
@@ -1630,7 +1632,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   let totalCost = 0;
   for (const costType in cost) {
     if (cost.hasOwnProperty(costType)) {
-      totalCost += cost[costType].total;
+      totalCost += cost[costType as Technique].total;
     }
   }
   // console.log(cost);
@@ -1683,7 +1685,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   // Values will be untred addresses
   let triedConfigurations: any = {};
 
-  let cost = new Score();
+  let cost:Score = new ScoreClass();
 
   // Remove pairs till we've reached our target
   while (totalCost <= targetRange.min) {
@@ -1752,7 +1754,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
     );
     attemptedPuzzle = attemptedPuzzleObj.puzzle;
     totalCost = attemptedPuzzleObj.totalCost;
-    cost = attemptedPuzzleObj.cost as Score;
+    cost = attemptedPuzzleObj.cost as ScoreClass;
     // Validate, check if valid, AND check if full
     const valid =
       validatePuzzle(attemptedPuzzle) &&

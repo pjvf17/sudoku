@@ -66,17 +66,20 @@ export interface Users {
 
 export type Difficulty = "easy" | "medium" | "hard" | "insane" | "diabolical";
 
+export type Technique = "hiddenSingle" | "pointing" | "claiming" | "nakedPair" | "hiddenPair" | "xwing";
+
 export interface Cost {
   // Price for first use
-  firstUse: number,
+  firstUse: Readonly<number>,
   // Price for subsequent uses
-  subUses: number,
+  subUses: Readonly<number>,
   // Current total
   total: number,
   // Difficulty at which to start using it
-  difficulty: Difficulty
+  difficulty: Readonly<Difficulty>
 }
 
+export type Score = Record<Technique, Cost>;
 
 export interface Puzzle {
   [index: string]: Cell;
