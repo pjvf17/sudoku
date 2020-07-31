@@ -32,8 +32,6 @@ export interface Cell {
   untriedNumbers?: number[];
 }
 
-
-
 export interface Units {
   [propName: string]: {
     [propName: string]: Cell;
@@ -45,8 +43,8 @@ export interface Unit {
 }
 
 export interface Move {
-  pencilMarkUpdate?: PencilMarkUpdate
-  numberUpdate?: NumberUpdate
+  pencilMarkUpdate?: PencilMarkUpdate;
+  numberUpdate?: NumberUpdate;
 }
 
 export interface User {
@@ -64,19 +62,30 @@ export interface Users {
   [propName: string]: User;
 }
 
-export type Difficulty = "easy" | "medium" | "hard" | "insane" | "diabolical";
+export type Difficulty =
+  | "easy"
+  | "medium"
+  | "hard"
+  | "insane"
+  | "diabolical";
 
-export type Technique = "hiddenSingle" | "pointing" | "claiming" | "nakedPair" | "hiddenPair" | "xwing";
+export type Technique =
+  | "hiddenSingle"
+  | "pointing"
+  | "claiming"
+  | "nakedPair"
+  | "hiddenPair"
+  | "xwing";
 
 export interface Cost {
   // Price for first use
-  firstUse: Readonly<number>,
+  firstUse: Readonly<number>;
   // Price for subsequent uses
-  subUses: Readonly<number>,
+  subUses: Readonly<number>;
   // Current total
-  total: number,
+  total: number;
   // Difficulty at which to start using it
-  difficulty: Readonly<Difficulty>
+  difficulty: Readonly<Difficulty>;
 }
 
 export type Score = Record<Technique, Cost>;
