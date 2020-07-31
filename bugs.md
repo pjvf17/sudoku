@@ -10,5 +10,6 @@
   - [x] For now will just enable and disable extension as I switch between server and client (24-07-2020)
 - [ ] Error message when server sends defocus for self
 - [ ] If there are no hints available, it sends back the entire puzzle obj
+- [ ] Naked pair sometimes comes up with a hidden pair
 
   

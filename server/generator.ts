@@ -1500,7 +1500,6 @@ export class Score {
     total: 0,
     difficulty: "hard"
   }
-
 }
 
 export const calculateCost = (cost:Cost, changes:number) =>{
@@ -1521,9 +1520,7 @@ Increasing complexity when a given solver changes nothing,
 And returning to start when a solver changes something 
 */
 
-
 export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
-
 
   difficulty = difficulty ?? "all";
   // First, populate candidates
@@ -1584,9 +1581,6 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       // Update cost, initial cost higher than subsequent
       cost.pointing = calculateCost(cost.pointing, pointing.changes);
       changes = pointing.changes > 0 ? changes + 1 : changes;
-      // If changes made, go the beginnig of the loop
-      // In this way, we go progressively through the harder techniques
-      // Only going to the next when the previous ones didn't work
       if (pointing.changes > 0) {
         change = { pointing: pointing.changesArray[0] };
         continue;
@@ -1649,7 +1643,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   const targetRanges = {
     easy: { min: 4300, max: 5500 },
     medium: { min: 5800, max: 6900 },
-    hard: { min: 6600, max: 93000 },
+    hard: { min: 6900, max: 93000 },
     insane: { min: 8300, max: 14000 },
     diabolical: { min: 11000, max: 25000 },
   };
@@ -1660,12 +1654,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   const targetRange = targetRanges[difficulty];
 
   // First get a filled puzzle
-
   let puzzle = createFilledPuzzle();
-
-  // const rows = makeRows(puzzle);
-  // const cols = makeCols(puzzle);
-  // const squares = makeSquares(puzzle);
 
   // Array to hold removed numbers
   let removed: any[] = [];
@@ -1694,7 +1683,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
   // Values will be untred addresses
   let triedConfigurations: any = {};
 
-  let cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0, xwing: 0 };
+  let cost = new Score();
 
   // Remove pairs till we've reached our target
   while (totalCost <= targetRange.min) {
@@ -1763,7 +1752,7 @@ export const createPuzzle = (difficulty?: Difficulty) => {
     );
     attemptedPuzzle = attemptedPuzzleObj.puzzle;
     totalCost = attemptedPuzzleObj.totalCost;
-    cost = attemptedPuzzleObj.cost;
+    cost = attemptedPuzzleObj.cost as Score;
     // Validate, check if valid, AND check if full
     const valid =
       validatePuzzle(attemptedPuzzle) &&
