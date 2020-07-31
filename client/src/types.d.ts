@@ -64,6 +64,20 @@ export interface Users {
   [propName: string]: User;
 }
 
+export type Difficulty = "easy" | "medium" | "hard" | "insane" | "diabolical";
+
+export interface Cost {
+  // Price for first use
+  firstUse: number,
+  // Price for subsequent uses
+  subUses: number,
+  // Current total
+  total: number,
+  // Difficulty at which to start using it
+  difficulty: Difficulty
+}
+
+
 export interface Puzzle {
   [index: string]: Cell;
   r1c1: Cell;

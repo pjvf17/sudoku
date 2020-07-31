@@ -1,6 +1,6 @@
 // generator.ts
 
-import { Cell, Puzzle, Units, Unit, Address } from "../client/src/types.d.ts";
+import { Cell, Puzzle, Units, Unit, Address, Difficulty, Cost } from "../client/src/types.d.ts";
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 // Validation framework
@@ -1462,13 +1462,69 @@ export const parsePencilMarksToCandidates = (puzzle: Puzzle) => {
   return puzzle;
 };
 
+export class Score {
+  [index: string]: Cost;
+  hiddenSingle: Cost = {
+    firstUse: 100,
+    subUses: 100,
+    total: 0,
+    difficulty: "easy"
+  }
+  pointing: Cost = {
+    firstUse: 350,
+    subUses: 200,
+    total: 0,
+    difficulty: "medium"
+  }
+  claiming: Cost = {
+    firstUse: 400,
+    subUses: 250,
+    total: 0,
+    difficulty: "medium"
+  }
+  nakedPair: Cost = {
+    firstUse: 350,
+    subUses: 200,
+    total: 0,
+    difficulty: "medium"
+  }
+  hiddenPair: Cost = {
+    firstUse: 450,
+    subUses: 250,
+    total: 0,
+    difficulty: "medium"
+  }
+  xwing: Cost = {
+    firstUse: 450,
+    subUses: 250,
+    total: 0,
+    difficulty: "hard"
+  }
+
+}
+
+export const calculateCost = (cost:Cost, changes:number) =>{
+  if (changes) {
+    cost.total =
+      cost.total > 0
+        ? // Subsequent cost, 200
+        (cost.total += changes * cost.subUses)
+        : // First cost, 350, then add any additional changes, times 300
+        cost.firstUse + (changes - 1) * cost.subUses;
+  }
+  return cost
+}
+
 /* 
 Master solver method, calls each solver in succesion, 
 Increasing complexity when a given solver changes nothing, 
 And returning to start when a solver changes something 
 */
 
+
 export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
+
+
   difficulty = difficulty ?? "all";
   // First, populate candidates
   let rows = makeRows(puzzle);
@@ -1478,10 +1534,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   if (!hint) {
     // Populate candidates
     const firstPass = firstPassCandidateCalculator(puzzle);
-    puzzle = firstPass.puzzle;
-    rows = firstPass.rows;
-    cols = firstPass.cols;
-    squares = firstPass.squares;
+    ({ puzzle, rows, cols, squares } = firstPass);
   } else {
     puzzle = parsePencilMarksToCandidates(puzzle);
   }
@@ -1490,14 +1543,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // For passing back to hint
   let change: any;
   // Holds cost of each method used
-  const cost: any = {
-    hiddenSingle: 0,
-    pointing: 0,
-    claiming: 0,
-    nakedPair: 0,
-    hiddenPair: 0,
-    xwing: 0,
-  };
+  const cost = new Score();
   do {
     // If in hint mode, stop at first changes
     if (hint && changes) {
@@ -1514,16 +1560,14 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
       squares
     );
     // Update puzzle
-    puzzle = hiddenSingle.puzzle;
-    rows = hiddenSingle.rows;
-    cols = hiddenSingle.cols;
-    squares = hiddenSingle.squares;
+    ({ puzzle, rows, cols, squares } = hiddenSingle);
     // Update cost
-    cost.hiddenSingle += hiddenSingle.cost;
+    cost.hiddenSingle.total += hiddenSingle.cost;
     // Update changes
     changes = hiddenSingle.cost > 0 ? changes + 1 : changes;
 
     if (hiddenSingle.cost > 0) {
+       // Set change to first element of changes
       change = hiddenSingle.changesArray[0];
       continue;
     }
@@ -1536,164 +1580,63 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cols,
         squares
       );
-      // Update puzzle
-      puzzle = pointing.puzzle;
-      rows = pointing.rows;
-      cols = pointing.cols;
-      squares = pointing.squares;
+      ({ puzzle, rows, cols, squares } = pointing);
       // Update cost, initial cost higher than subsequent
-      if (pointing.changes) {
-        cost.pointing =
-          cost.pointing > 0
-            ? // Subsequent cost, 200
-            (cost.pointing += pointing.changes * 200)
-            : // First cost, 350, then add any additional changes, times 300
-            350 + (pointing.changes - 1) * 200;
-      }
-      // Update changes
+      cost.pointing = calculateCost(cost.pointing, pointing.changes);
       changes = pointing.changes > 0 ? changes + 1 : changes;
-
       // If changes made, go the beginnig of the loop
       // In this way, we go progressively through the harder techniques
       // Only going to the next when the previous ones didn't work
       if (pointing.changes > 0) {
-        // Set change to first element of changes
         change = { pointing: pointing.changesArray[0] };
         continue;
       }
-      // Try naked pair solver
       const nakedPair = nakedPairSolver(puzzle, rows, cols, squares);
-      // Update puzzle
-      puzzle = nakedPair.puzzle;
-      rows = nakedPair.rows;
-      cols = nakedPair.cols;
-      squares = nakedPair.squares;
-      // Update cost, initial cost higher than subsequent
-      if (nakedPair.changes) {
-        // console.log(nakedPair.changes);
-        cost.nakedPair =
-          cost.nakedPair > 0
-            ? // Subsequent cost, 200
-            (cost.nakedPair += nakedPair.changes * 200)
-            : // First cost, 350, then add any additional changes, times 200
-            350 + (nakedPair.changes - 1) * 200;
-      }
-      // Update changes
+      ({ puzzle, rows, cols, squares } = nakedPair);
+      cost.nakedPair = calculateCost(cost.nakedPair, nakedPair.changes);
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
-      // If changes made, go the beginnig of the loop
-      // In this way, we go progressively through the harder techniques
-      // Only going to the next when the previous ones didn't work
       if (nakedPair.changes > 0) {
-        // Set change to first element of changes
         change = { nakedPair: nakedPair.changesArray[0] };
         continue;
       }
-
-      // Try pointing candidate solver
       const claiming = claimingLockedCandidatesSolver(
         puzzle,
         rows,
         cols,
         squares
       );
-      // Update puzzle
-      puzzle = claiming.puzzle;
-      rows = claiming.rows;
-      cols = claiming.cols;
-      squares = claiming.squares;
-      // Update cost, initial cost higher than subsequent
-      if (claiming.changes) {
-        // console.log(claiming.changes);
-        cost.claiming =
-          cost.claiming > 0
-            ? // Subsequent cost, 200
-            (cost.claiming += claiming.changes * 250)
-            : // First cost, 350, then add any additional changes, times 200
-            400 + (claiming.changes - 1) * 250;
-      }
-      // Update changes
+      ({ puzzle, rows, cols, squares } = claiming);
+      cost.claiming = calculateCost(cost.claiming, claiming.changes);
       changes = claiming.changes > 0 ? changes + 1 : changes;
-      // If changes made, go the beginnig of the loop
-      // In this way, we go progressively through the harder techniques
-      // Only going to the next when the previous ones didn't work
       if (claiming.changes > 0) {
-        // Set change to first element of changes
         change = { claiming: claiming.changesArray[0] };
         continue;
       }
-
       const hiddenPair = hiddenPairSolver(puzzle, rows, cols, squares);
-      // Update puzzle
-      puzzle = hiddenPair.puzzle;
-      rows = hiddenPair.rows;
-      // console.log(rows);
-      cols = hiddenPair.cols;
-      squares = hiddenPair.squares;
-      // Update cost, initial cost higher than subsequent
-      if (hiddenPair.changes) {
-        // console.log(hiddenPair.changes);
-        cost.hiddenPair =
-          cost.hiddenPair > 0
-            ? // Subsequent cost, 250
-            (cost.hiddenPair += hiddenPair.changes * 250)
-            : // First cost, 350, then add any additional changes, times 250
-            450 + (hiddenPair.changes - 1) * 250;
-      }
-      // Update changes
+      ({ puzzle, rows, cols, squares } = hiddenPair);
+      cost.hiddenPair = calculateCost(cost.hiddenPair, hiddenPair.changes);
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;
-      // If changes made, go the beginnig of the loop
-      // In this way, we go progressively through the harder techniques
-      // Only going to the next when the previous ones didn't work
       if (hiddenPair.changes > 0) {
-        // Set change to first element of changes
         change = { hiddenPair: hiddenPair.changesArray[0] };
         continue;
       }
-
       if (difficulty != "medium") {
         const xwing = xwingSolver(puzzle, rows, cols, squares);
-        // Update puzzle
-        puzzle = xwing.puzzle;
-        rows = xwing.rows;
-        // console.log(rows);
-        cols = xwing.cols;
-        squares = xwing.squares;
-        // Update cost, initial cost higher than subsequent
-        if (xwing.changes) {
-          // console.log(xwing.changes);
-          cost.xwing =
-            cost.xwing > 0
-              ? // Subsequent cost, 250
-              (cost.xwing += xwing.changes * 250)
-              : // First cost, 350, then add any additional changes, times 250
-              450 + (xwing.changes - 1) * 250;
-        }
-        // Update changes
+        ({ puzzle, rows, cols, squares } = xwing);
+        cost.xwing = calculateCost(cost.xwing, xwing.changes);
         changes = xwing.changes > 0 ? changes + 1 : changes;
-        // If changes made, go the beginnig of the loop
-        // In this way, we go progressively through the harder techniques
-        // Only going to the next when the previous ones didn't work
         if (xwing.changes > 0) {
-          // Set change to first element of changes
           change = { xwing: xwing.changesArray[0] };
           continue;
         }
       }
-
-      // let totalCost = 0;
-      // for (const costType in cost) {
-      //   if (cost.hasOwnProperty(costType)) {
-      //     totalCost += cost[costType];
-      //   }
-      // }
-      //     return {puzzle, totalCost, cost};
     }
     // Repeat, if any changes were made
   } while (changes > 0);
   let totalCost = 0;
   for (const costType in cost) {
     if (cost.hasOwnProperty(costType)) {
-      totalCost += cost[costType];
+      totalCost += cost[costType].total;
     }
   }
   // console.log(cost);
@@ -1701,9 +1644,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // Need to keep track of changes for each method
 };
 
-export const createPuzzle = (difficulty?: string) => {
+export const createPuzzle = (difficulty?: Difficulty) => {
   // const startTimer = performance.now();
-  const targetRanges: any = {
+  const targetRanges = {
     easy: { min: 4300, max: 5500 },
     medium: { min: 5800, max: 6900 },
     hard: { min: 6600, max: 93000 },
@@ -1720,9 +1663,9 @@ export const createPuzzle = (difficulty?: string) => {
 
   let puzzle = createFilledPuzzle();
 
-  const rows = makeRows(puzzle);
-  const cols = makeCols(puzzle);
-  const squares = makeSquares(puzzle);
+  // const rows = makeRows(puzzle);
+  // const cols = makeCols(puzzle);
+  // const squares = makeSquares(puzzle);
 
   // Array to hold removed numbers
   let removed: any[] = [];
