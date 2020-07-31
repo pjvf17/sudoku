@@ -17,6 +17,7 @@ import {
   Puzzle,
   Cell,
 } from "../client/src/types.d.ts";
+
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
@@ -35,8 +36,7 @@ app.use(async (context) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ?? "localhost"
+    `Listening on: ${secure ? "https://" : "http://"}${hostname ?? "localhost"
     }:${port}`
   );
 });
@@ -45,14 +45,15 @@ let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
   puzzle: new BlankPuzzle(),
 };
 
-const startNewGame = () => {
-  const puzzleString: string = puzzleToString(createPuzzle("hard"));
+export const startNewGame = () => {
+  const puzzle = parsePuzzle(puzzleToString(createPuzzle("hard")));
   console.log("0\n0\n0\n0\n0");
-  sudokuObj.solved = solver(parsePuzzle(puzzleString)).puzzle;
-  sudokuObj.puzzle = parsePuzzle(puzzleString);
+  const solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  return { puzzle, solved }
 };
-
-startNewGame();
+console.log("starting")
+sudokuObj = startNewGame();
+console.log("started")
 const validation = new Validation(sudokuObj.puzzle as Puzzle);
 
 console.log("\n\n solved:");
@@ -176,13 +177,13 @@ wss.on("connection", function (ws: WebSocket) {
       // Catch the rest until I type them
       [propName: string]: any;
     } = JSON.parse(message);
-    
+
     if (hint) {
       const hintResponse = solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true);
       for (let client of wss.clients) {
         // Send only to open clients including sender
         if (!client.isClosed) {
-          client.send(JSON.stringify({hint: hintResponse}));
+          client.send(JSON.stringify({ hint: hintResponse }));
         }
       }
     }
@@ -205,13 +206,23 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // console.log(newGame);
     if (newGame) {
-      startNewGame();
-      for (let client of wss.clients) {
-        // Send only to open clients
-        if (!client.isClosed) {
-          client.send(JSON.stringify({ sudokuObj }));
+      const startGameWorker = new Worker(new URL("./Workers/startGameWorker.ts", import.meta.url).href, { type: "module", deno: true });
+      startGameWorker.postMessage("");
+      startGameWorker.onmessage = (message) => {
+        sudokuObj = message.data
+        // Update updates and validation
+        updates.sudokuObj = sudokuObj.puzzle;
+        validation.puzzle = sudokuObj.puzzle;
+        updates.validation = validation;
+
+        for (let client of wss.clients) {
+          // Send only to open clients, including sender
+          if (!client.isClosed) {
+            client.send(JSON.stringify({ sudokuObj }));
+          }
         }
       }
+      console.log("after");
     } else if (!hint) {
       // Send to all connected
       for (let client of wss.clients) {
@@ -220,8 +231,8 @@ wss.on("connection", function (ws: WebSocket) {
           client.send(message);
         }
       }
-    } 
-    
+    }
+
   });
   ws.on("close", function (message: any) {
     freeColor(ws);

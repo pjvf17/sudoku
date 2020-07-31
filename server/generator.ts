@@ -728,8 +728,8 @@ export const pointingLockedCandidatesSolver = (
               const unit =
                 rowcol == "row"
                   ? // Only referencing the first element of filtered cells here
-                    // Because each element should share the same row or col
-                    rows![`r${filteredCells[0].address.r}`]
+                  // Because each element should share the same row or col
+                  rows![`r${filteredCells[0].address.r}`]
                   : cols![`c${filteredCells[0].address.c}`];
 
               // Get an array of addresses in rncn format to not change
@@ -897,22 +897,18 @@ export const claimingLockedCandidatesSolver = (
                   let rncnAddress = "";
                   if (unitType == "row") {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}c${
-                        filteredCells[0].address.c
-                      }${filteredCells[1].address.c}${
-                        filteredCells.length == 3
-                          ? filteredCells[2].address.c
-                          : ""
+                      `r${filteredCells[0].address.r}c${filteredCells[0].address.c
+                      }${filteredCells[1].address.c}${filteredCells.length == 3
+                        ? filteredCells[2].address.c
+                        : ""
                       }`
                     );
                   } else {
                     rncnAddress = rncnAddress.concat(
-                      `r${filteredCells[0].address.r}${
-                        filteredCells[1].address.r
-                      }${
-                        filteredCells.length == 3
-                          ? filteredCells[2].address.r
-                          : ""
+                      `r${filteredCells[0].address.r}${filteredCells[1].address.r
+                      }${filteredCells.length == 3
+                        ? filteredCells[2].address.r
+                        : ""
                       }c${filteredCells[0].address.c}`
                     );
                   }
@@ -1119,10 +1115,10 @@ export const hiddenPairSolver = (
                   // Get the index of the found combination
                   // Plug that into candidate arrays,
                   candidateArrays[
-                    seenCombinations.indexOf(
-                      JSON.stringify(array.slice(1).flat())
-                    )
-                    // Get the first element to get the first number of the pair
+                  seenCombinations.indexOf(
+                    JSON.stringify(array.slice(1).flat())
+                  )
+                  // Get the first element to get the first number of the pair
                   ][0],
                   // Second number of the pair is the index we're currently on
                   candidateArrays[index][0],
@@ -1239,7 +1235,7 @@ export const xwingSolver = (
             // Filter unit by number
             const filteredUnit = Object.values(units[unitAddress]).filter(
               (el: Cell) => {
-                return el.candidates.includes(number);
+                return el.candidates.includes(number) && el.number == ".";
               }
             );
             // If there are only 2 items in the array
@@ -1267,9 +1263,9 @@ export const xwingSolver = (
                         // Of each filtered unit have the same column
                         if (
                           secondFilteredUnit[0].address.c ==
-                            filteredUnit[0].address.c &&
+                          filteredUnit[0].address.c &&
                           secondFilteredUnit[1].address.c ==
-                            filteredUnit[1].address.c
+                          filteredUnit[1].address.c
                         ) {
                           // Look through each column for other cells with this candidate
                           // That are not in the rows we're checking
@@ -1281,7 +1277,9 @@ export const xwingSolver = (
                               Object.prototype.hasOwnProperty.call(
                                 cols![`c${filteredUnit[0].address.c}`],
                                 cellAddress
-                              )
+                              ) && cols![`c${filteredUnit[0].address.c}`][
+                                cellAddress
+                              ].number == "."
                             ) {
                               const cell = cols![
                                 `c${filteredUnit[0].address.c}`
@@ -1290,7 +1288,7 @@ export const xwingSolver = (
                               if (
                                 cell.address.r != filteredUnit[0].address.r &&
                                 cell.address.r !=
-                                  secondFilteredUnit[0].address.r
+                                secondFilteredUnit[0].address.r
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
@@ -1309,7 +1307,9 @@ export const xwingSolver = (
                               Object.prototype.hasOwnProperty.call(
                                 cols![`c${filteredUnit[1].address.c}`],
                                 cellAddress
-                              )
+                              ) && cols![`c${filteredUnit[1].address.c}`][
+                                cellAddress
+                              ].number == "."
                             ) {
                               const cell = cols![
                                 `c${filteredUnit[1].address.c}`
@@ -1318,7 +1318,7 @@ export const xwingSolver = (
                               if (
                                 cell.address.r != filteredUnit[1].address.r &&
                                 cell.address.r !=
-                                  secondFilteredUnit[1].address.r
+                                secondFilteredUnit[1].address.r
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
@@ -1347,9 +1347,9 @@ export const xwingSolver = (
                         // Of each filtered unit have the same column
                         if (
                           secondFilteredUnit[0].address.r ==
-                            filteredUnit[0].address.r &&
+                          filteredUnit[0].address.r &&
                           secondFilteredUnit[1].address.r ==
-                            filteredUnit[1].address.r
+                          filteredUnit[1].address.r
                         ) {
                           // Look through each row for other cells with this candidate
                           // That are not in the columns we're checking
@@ -1361,7 +1361,9 @@ export const xwingSolver = (
                               Object.prototype.hasOwnProperty.call(
                                 rows![`r${filteredUnit[0].address.r}`],
                                 cellAddress
-                              )
+                              ) && rows![`r${filteredUnit[0].address.r}`][
+                                cellAddress
+                              ].number == "."
                             ) {
                               const cell = rows![
                                 `r${filteredUnit[0].address.r}`
@@ -1370,7 +1372,7 @@ export const xwingSolver = (
                               if (
                                 cell.address.c != filteredUnit[0].address.c &&
                                 cell.address.c !=
-                                  secondFilteredUnit[0].address.c
+                                secondFilteredUnit[0].address.c
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
@@ -1390,7 +1392,9 @@ export const xwingSolver = (
                               Object.prototype.hasOwnProperty.call(
                                 rows![`r${filteredUnit[1].address.r}`],
                                 cellAddress
-                              )
+                              ) && rows![`r${filteredUnit[1].address.r}`][
+                                cellAddress
+                              ].number == "."
                             ) {
                               const cell = rows![
                                 `r${filteredUnit[1].address.r}`
@@ -1400,7 +1404,7 @@ export const xwingSolver = (
                               if (
                                 cell.address.c != filteredUnit[1].address.c &&
                                 cell.address.c !=
-                                  secondFilteredUnit[1].address.c
+                                secondFilteredUnit[1].address.c
                               ) {
                                 if (cell.candidates.includes(number)) {
                                   cell.candidates.splice(
@@ -1542,9 +1546,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.pointing =
           cost.pointing > 0
             ? // Subsequent cost, 200
-              (cost.pointing += pointing.changes * 200)
+            (cost.pointing += pointing.changes * 200)
             : // First cost, 350, then add any additional changes, times 300
-              350 + (pointing.changes - 1) * 200;
+            350 + (pointing.changes - 1) * 200;
       }
       // Update changes
       changes = pointing.changes > 0 ? changes + 1 : changes;
@@ -1570,9 +1574,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.nakedPair =
           cost.nakedPair > 0
             ? // Subsequent cost, 200
-              (cost.nakedPair += nakedPair.changes * 200)
+            (cost.nakedPair += nakedPair.changes * 200)
             : // First cost, 350, then add any additional changes, times 200
-              350 + (nakedPair.changes - 1) * 200;
+            350 + (nakedPair.changes - 1) * 200;
       }
       // Update changes
       changes = nakedPair.changes > 0 ? changes + 1 : changes;
@@ -1603,9 +1607,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.claiming =
           cost.claiming > 0
             ? // Subsequent cost, 200
-              (cost.claiming += claiming.changes * 250)
+            (cost.claiming += claiming.changes * 250)
             : // First cost, 350, then add any additional changes, times 200
-              400 + (claiming.changes - 1) * 250;
+            400 + (claiming.changes - 1) * 250;
       }
       // Update changes
       changes = claiming.changes > 0 ? changes + 1 : changes;
@@ -1631,9 +1635,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
         cost.hiddenPair =
           cost.hiddenPair > 0
             ? // Subsequent cost, 250
-              (cost.hiddenPair += hiddenPair.changes * 250)
+            (cost.hiddenPair += hiddenPair.changes * 250)
             : // First cost, 350, then add any additional changes, times 250
-              450 + (hiddenPair.changes - 1) * 250;
+            450 + (hiddenPair.changes - 1) * 250;
       }
       // Update changes
       changes = hiddenPair.changes > 0 ? changes + 1 : changes;
@@ -1660,9 +1664,9 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
           cost.xwing =
             cost.xwing > 0
               ? // Subsequent cost, 250
-                (cost.xwing += xwing.changes * 250)
+              (cost.xwing += xwing.changes * 250)
               : // First cost, 350, then add any additional changes, times 250
-                450 + (xwing.changes - 1) * 250;
+              450 + (xwing.changes - 1) * 250;
         }
         // Update changes
         changes = xwing.changes > 0 ? changes + 1 : changes;
@@ -1750,14 +1754,14 @@ export const createPuzzle = (difficulty?: string) => {
   let cost: any = { hiddenSingle: 0, pointing: 0, claiming: 0, xwing: 0 };
 
   // Remove pairs till we've reached our target
-  while (totalCost <= targetRange.min || cost.xwing == 0) {
+  while (totalCost <= targetRange.min) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
     let firstNumber: Cell["number"];
     let secondNumber: Cell["number"];
 
-    if (iterations % 1000 == 0) {
+    if (iterations % 500 == 0) {
       // console.log("resetting " + iterations / 500);
       // Reset puzzle
       puzzle = createFilledPuzzle();
@@ -1823,11 +1827,11 @@ export const createPuzzle = (difficulty?: string) => {
       puzzleToString(attemptedPuzzle).indexOf(".") == -1;
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
-      if (totalCost > targetRange.max) {
-        console.log("\n\n totalcost higher");
-        console.log(totalCost);
-        console.log(cost);
-      }
+      // if (totalCost > targetRange.max) {
+      //   console.log("\n\n totalcost higher");
+      //   console.log(totalCost);
+      //   console.log(cost);
+      // }
       // Backtrack
       // Reset first number
       puzzle[`r${firstAddress}c${secondAddress}`].number = firstNumber;
@@ -1839,8 +1843,9 @@ export const createPuzzle = (difficulty?: string) => {
 
       // Reset totalCost
       totalCost = 0;
-    } 
+    }
   }
+  console.log(iterations / 500)
   console.log(`\n\ntotalCost: ${totalCost}`);
   console.log(cost);
   return puzzle;

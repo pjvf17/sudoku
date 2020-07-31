@@ -16,6 +16,8 @@
   - [ ] If wrong, option to go back to last valid state
 - [ ] Hold (some key) to skip over numbers or loop around to other side
 - [ ] Difficulty Selector
+  - [ ] Serverside
+    - [ ] Including required specific techniques
 - [x] Populate all candidates with basic rules (17/07/2020)
   - [ ] Not paying attention to non givens?
   - [ ] Per cell option
@@ -36,6 +38,7 @@
 - [x] Send all initial values at once
 - [ ] On fill in candidates, send updates in a bundle
   - [ ] pencilMarkUpdate in array form
+
 
 ### Typescript
 
