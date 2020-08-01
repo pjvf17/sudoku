@@ -1228,7 +1228,7 @@ export const xwingSolver = (
   do {
     changes = 0;
 
-    for (let iteration = 0; iteration < 3; iteration++) {
+    for (let iteration = 0; iteration < 2; iteration++) {
       let units: Units = rows;
       let unitType: string;
       switch (iteration) {
@@ -1348,15 +1348,6 @@ export const xwingSolver = (
                             }
                           }
                         }
-                        // if (changes) {
-                        //   changesArray.push({
-                        //     unitAddress,
-                        //     secondUnitAddress,
-                        //     number,
-                        //   });
-                        // }
-                        // totalChanges += changes;
-                        // changes = 0;
                       } // If looking in cols, we need the rows to be the same
                       else if (unitType == "col") {
                         // Checks if both the first and the second elements
@@ -1402,7 +1393,6 @@ export const xwingSolver = (
                               }
                             }
                           }
-
                           for (
                             const cellAddress in rows![
                               `r${filteredUnit[1].address.r}`
@@ -1436,16 +1426,19 @@ export const xwingSolver = (
                               }
                             }
                           }
-                          // if (changes) {
-                          //   changesArray.push({
-                          //     unitAddress,
-                          //     secondUnitAddress,
-                          //     number,
-                          //   });
-                          // }
-                          // totalChanges += changes;
-                          // changes = 0;
                         }
+                      }
+                      if (changes) {
+                        changesArray.push({
+                          unitType,
+                          number,
+                          filteredUnit: filteredUnit.map((cell) =>
+                            cell.address
+                          ),
+                          secondFilteredUnit: secondFilteredUnit.map((cell) =>
+                            cell.address
+                          ),
+                        });
                       }
                     }
                   }
@@ -1456,7 +1449,8 @@ export const xwingSolver = (
         }
       }
     }
-    totalChanges += changes;
+    // Update totalchanges, counting one per run through
+    totalChanges = changes > 0 ? totalChanges + 1 : totalChanges;
   } while (changes > 0);
   return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
@@ -1735,7 +1729,6 @@ export const createPuzzle = (
 
     if (iterations % 500 == 0) {
       console.log("resetting " + iterations / 500);
-      console.log(cost);
       // Reset puzzle
       puzzle = createFilledPuzzle();
       // Reset totalCost

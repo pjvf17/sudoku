@@ -35,12 +35,22 @@ await bench({
   },
 });
 
+// await bench({
+//   name: "Create medium puzzle",
+//   runs: 20,
+//   func(b): void {
+//     b.start();
+//     const puzzle = createPuzzle("medium");
+//     b.stop();
+//   },
+// });
+
 await bench({
-  name: "Create medium puzzle",
-  runs: 20,
+  name: "Create xwing required puzzle",
+  runs: 5,
   func(b): void {
     b.start();
-    const puzzle = createPuzzle("medium");
+    createPuzzle("hard", ["xwing"]);
     b.stop();
   },
 });
