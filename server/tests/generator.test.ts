@@ -7,7 +7,7 @@ import {
   createPuzzle,
   solver,
   printSudokuToConsole
-} from "./generator.ts";
+} from "../generator.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 
 Deno.test({

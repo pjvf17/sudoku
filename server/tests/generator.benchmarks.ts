@@ -1,7 +1,7 @@
 import {
   fillInRemaining,
   createPuzzle,
-} from "./generator.ts";
+} from "../generator.ts";
 
 import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";
 

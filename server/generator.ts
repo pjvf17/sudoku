@@ -1503,20 +1503,20 @@ export class ScoreClass {
     difficulty: "medium",
   };
   nakedPair: Cost = {
-    firstUse: 350,
-    subUses: 200,
+    firstUse: 750,
+    subUses: 500,
     total: 0,
     difficulty: "medium",
   };
   hiddenPair: Cost = {
-    firstUse: 450,
-    subUses: 250,
+    firstUse: 1500,
+    subUses: 1200,
     total: 0,
     difficulty: "medium",
   };
   xwing: Cost = {
-    firstUse: 450,
-    subUses: 250,
+    firstUse: 2800,
+    subUses: 1600,
     total: 0,
     difficulty: "hard",
   };
@@ -1565,7 +1565,6 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   let change: any;
   // Holds cost of each method used
   const cost: Score = new ScoreClass();
-  cost.xwing.subUses = 100;
   do {
     // If in hint mode, stop at first changes
     if (hint && changes) {
@@ -1724,7 +1723,10 @@ export const createPuzzle = (
   let triedConfigurations: any = {};
 
   // Remove pairs till we've reached our target
-  while (totalCost <= targetRange.min ){
+  while (
+    totalCost <= targetRange.min ||
+    reqTechs?.some((tech) => cost[tech].total == 0)
+  ) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
@@ -1732,7 +1734,8 @@ export const createPuzzle = (
     let secondNumber: Cell["number"];
 
     if (iterations % 500 == 0) {
-      // console.log("resetting " + iterations / 500);
+      console.log("resetting " + iterations / 500);
+      console.log(cost);
       // Reset puzzle
       puzzle = createFilledPuzzle();
       // Reset totalCost
