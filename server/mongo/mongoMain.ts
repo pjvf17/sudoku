@@ -1,28 +1,25 @@
-
 import { MongoClient } from "https://deno.land/x/mongo@v0.9.1/mod.ts";
-
-const mongoURI = "mongodb+srv://admin:enliven-vietnam-songbird-gloaming-posse-clapper@sudoku.qzkya.mongodb.net/<dbname>?retryWrites=true&w=majority";
-
-const client = new MongoClient();
-client.connectWithUri(mongoURI);
-
-const db = client.database("test");
+import { Difficulty, Technique } from "../../client/src/types.d.ts";
+import { createPuzzle, puzzleToString } from "../generator.ts";
+import "https://deno.land/x/dotenv/load.ts";
 
 // Defining schema interface
-interface UserSchema {
+export interface PuzzleSchema {
   _id: { $oid: string };
-  username: string;
-  password: string;
+  puzzleString: string;
+  difficulty: Difficulty;
+  reqTechs?: Technique[];
 }
 
-const mongoUsers = db.collection<UserSchema>("users");
-
-// insert
-const insertId = await mongoUsers.insertOne({
-  username: "user1",
-  password: "pass1",
-});
-
-const user1 = await mongoUsers.findOne({ _id: insertId });
-
-console.log(user1);
+export class MongoClass {
+  connect() {
+    const mongoURI = `mongodb+srv://${Deno.env.get("DB_USER")}:${
+      Deno.env.get("DB_PWD")
+    }@sudoku.qzkya.mongodb.net/<dbname>?retryWrites=true&w=majority`;
+    const client = new MongoClient();
+    client.connectWithUri(mongoURI);
+    const db = client.database("test");
+    const puzzles = db.collection<PuzzleSchema>("puzzles");
+    return {client, db, puzzles};
+  }
+}

@@ -1728,7 +1728,7 @@ export const createPuzzle = (
     let secondNumber: Cell["number"];
 
     if (iterations % 500 == 0) {
-      console.log("resetting " + iterations / 500);
+      // console.log("resetting " + iterations / 500);
       // Reset puzzle
       puzzle = createFilledPuzzle();
       // Reset totalCost

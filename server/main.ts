@@ -36,8 +36,8 @@ app.use(async (context) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${hostname ?? "localhost"
-    }:${port}`
+    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
+      "localhost"}:${port}`,
   );
 });
 
@@ -45,17 +45,28 @@ let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
   puzzle: new BlankPuzzle(),
 };
 
-export const startNewGame = () => {
-  const puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
-  console.log("0\n0\n0\n0\n0");
-  const solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-  return { puzzle, solved }
-};
-console.log("starting")
-sudokuObj = startNewGame();
-console.log("started")
-const validation = new Validation(sudokuObj.puzzle as Puzzle);
+const db = new MongoClass();
+const { puzzles } = db.connect();
+console.log(await puzzles.count());
 
+export const startNewGame = async () => {
+  let puzzle:Puzzle = new BlankPuzzle();
+  let solved:Puzzle = puzzle;
+  // Check for puzzles in db
+  if (await puzzles.count()) {
+    const found = await puzzles.findOne({"difficulty": "hard"})
+    puzzle = parsePuzzle(found?.puzzleString as string);
+    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  } else {
+    puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+    console.log("0\n0\n0\n0\n0");
+    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  }
+
+  return { puzzle, solved };
+};
+sudokuObj = await startNewGame();
+const validation = new Validation(sudokuObj.puzzle as Puzzle);
 console.log("\n\n solved:");
 printSudokuToConsole(sudokuObj.solved as Puzzle);
 
@@ -64,6 +75,7 @@ import {
   WebSocketServer,
 } from "https://deno.land/x/websocket/mod.ts";
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
+import { MongoClass } from "./mongo/mongoMain.ts";
 
 const colors: any = [
   { value: "#bf616a88", used: false },
@@ -106,7 +118,7 @@ const userTimers: { [index: string]: any } = {};
 const updateFocus = (
   { id, focus }: { id: User["id"]; focus: User["focus"] },
   wss: WebSocketServer,
-  ws: WebSocket
+  ws: WebSocket,
 ) => {
   if (userTimers[id]) {
     clearTimeout(userTimers[id]);
@@ -123,7 +135,7 @@ const updateFocus = (
         client.send(
           JSON.stringify({
             focusUpdate: { id, focus: { row: null, col: null } },
-          })
+          }),
         );
       }
     }
@@ -151,7 +163,7 @@ wss.on("connection", function (ws: WebSocket) {
     sudokuObj.puzzle as Puzzle,
     users,
     validation,
-    id
+    id,
   );
   // Send starting info
   ws.send(JSON.stringify({ users, id, color, sudokuObj }));
@@ -170,7 +182,7 @@ wss.on("connection", function (ws: WebSocket) {
       pencilMarkUpdate,
       newGame,
       undo,
-      hint
+      hint,
     }: {
       numberUpdate: NumberUpdate;
       pencilMarkUpdate: PencilMarkUpdate;
@@ -179,7 +191,11 @@ wss.on("connection", function (ws: WebSocket) {
     } = JSON.parse(message);
 
     if (hint) {
-      const hintResponse = solver(JSON.parse(JSON.stringify(sudokuObj.puzzle)), undefined, true);
+      const hintResponse = solver(
+        JSON.parse(JSON.stringify(sudokuObj.puzzle)),
+        undefined,
+        true,
+      );
       for (let client of wss.clients) {
         // Send only to open clients including sender
         if (!client.isClosed) {
@@ -206,10 +222,13 @@ wss.on("connection", function (ws: WebSocket) {
     }
     // console.log(newGame);
     if (newGame) {
-      const startGameWorker = new Worker(new URL("./Workers/startGameWorker.ts", import.meta.url).href, { type: "module", deno: true });
+      const startGameWorker = new Worker(
+        new URL("./Workers/startGameWorker.ts", import.meta.url).href,
+        { type: "module", deno: true },
+      );
       startGameWorker.postMessage("");
       startGameWorker.onmessage = (message) => {
-        sudokuObj = message.data
+        sudokuObj = message.data;
         // Update updates and validation
         updates.sudokuObj = sudokuObj.puzzle;
         validation.puzzle = sudokuObj.puzzle;
@@ -221,7 +240,7 @@ wss.on("connection", function (ws: WebSocket) {
             client.send(JSON.stringify({ sudokuObj }));
           }
         }
-      }
+      };
       console.log("after");
     } else if (!hint) {
       // Send to all connected
@@ -232,7 +251,6 @@ wss.on("connection", function (ws: WebSocket) {
         }
       }
     }
-
   });
   ws.on("close", function (message: any) {
     freeColor(ws);

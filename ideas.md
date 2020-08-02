@@ -9,6 +9,7 @@
   - [x] Backend support for finding and returning a hint
   - [x] Request a hint from client for current boardstate
   - [x] Display hint on client
+    - [ ] Display prettily
 - [ ] Select multiple cells to toggle pencilmarks
 - [ ] Select multiple numbers to highlight
 - [ ] Select specific cells to highlight
