@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <div class="pane" v-if="!loading">
-      
       <table>
         <tbody>
           <tr v-for="rowIndex in 9" :key="rowIndex">
@@ -80,6 +79,11 @@
         </div>
         <BaseButton @mouseup="requestHint()">Hint</BaseButton>
         <BaseButton @mouseup="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
+      </div>
+    </div>
+    <div class="pane" v-if="loading">
+      <div class="actions">
+        <BaseButton @click="newGame()" class="button">Start New Game</BaseButton>
       </div>
     </div>
   </div>
@@ -497,17 +501,6 @@ $box-shadow: 0px 0px 15px 0px
   display: flex;
   flex-direction: column;
   padding-bottom: 2em;
-}
-
-.button {
-  width: 30%;
-  margin: auto;
-  margin-top: 1em;
-  padding: 1em;
-  border-radius: 3px;
-  box-shadow: $box-shadow;
-  border: none;
-  background-color: $nord6;
 }
 
 .notation-text {

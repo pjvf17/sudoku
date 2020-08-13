@@ -6,6 +6,8 @@ import "https://deno.land/x/dotenv/load.ts";
 // Defining schema interface
 export interface PuzzleSchema {
   _id: { $oid: string };
+  createdAt: Date,
+  updatedAt: Date,
   puzzleString: string;
   difficulty: Difficulty;
   reqTechs?: Technique[];

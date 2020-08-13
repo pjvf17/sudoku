@@ -17,6 +17,7 @@ for (let index = 0; index < 5; index++) {
       puzzleString: message.data,
       difficulty: "hard",
       reqTechs: ["xwing"],
+      createdAt: new Date()
     });
     console.log(`${index} done`);
   };
