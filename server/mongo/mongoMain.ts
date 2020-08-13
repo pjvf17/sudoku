@@ -13,6 +13,8 @@ export interface PuzzleSchema {
   reqTechs?: Technique[];
 }
 
+console.log(Deno.env.get("DB_USER"));
+
 export class MongoClass {
   connect() {
     const mongoURI = `mongodb+srv://${Deno.env.get("DB_USER")}:${
