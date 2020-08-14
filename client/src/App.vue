@@ -1,14 +1,22 @@
 <template>
-  <RouterView></RouterView>
+  <div id="app">
+    <RouterView></RouterView>
+  </div>
 </template>
 
 <script>
-const { RouterView }=require("vue-router");
+const { RouterView } = require("vue-router");
 
 export default {
-    components: {
-        RouterView
-    }
-}
-
+  components: {
+    RouterView,
+  },
+};
 </script>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>

@@ -90,15 +90,11 @@
 </template>
 
 <script lang="ts">
-console.log("success");
-console.log(process.env.VUE_APP_WS_URL);
 const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
-// const wsUrl = "ws://localhost:8010";
-console.log(wsUrl);
-
 const socket = new WebSocket(wsUrl);
 
 import BaseButton from "../Base/BaseButton.vue";
+
 /* eslint-disable */
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
@@ -123,7 +119,7 @@ export default {
     });
 
     socket.onopen = function () {
-      console.log("connection established");
+      console.log(`Connected established to ${wsUrl}`);
     };
     const color = ref<string>();
     const sudokuObj = ref<Puzzle>();
@@ -466,7 +462,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "node_modules/nord/src/sass/nord.scss";
 
 body {

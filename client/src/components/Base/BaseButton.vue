@@ -4,8 +4,10 @@
   </button>
 </template>
 
-<script setup="props">
-export const name = "BaseButton";
+<script>
+export default {
+  name: "BaseButton"
+}
 </script>
 
 <style lang="scss" scoped>
