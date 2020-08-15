@@ -8,39 +8,69 @@
               v-for="colIndex in 9"
               :key="`r${rowIndex}c${colIndex}-td`"
               :id="`r${rowIndex}c${colIndex}-td-id`"
-              :class="[{
-                'border-right': ((colIndex) % 3) == 0, 
-                'border-bottom': ((rowIndex) % 3) == 0, 
-                'border-left': colIndex == 0, 'border-top': rowIndex == 0, 
-                invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid,
-                'highlight-number': highlightNumbers == sudokuObj[`r${rowIndex}c${colIndex}`].number
-              }]"
-              @click="handleClick({row: rowIndex, col: colIndex})"
-              :style="{ 
-                'background-color': ((selfFocus.row == rowIndex 
-                || selfFocus.col == colIndex) 
-                && !checkFocus[`r${rowIndex}c${colIndex}`]) 
-                ? `${color.slice(0,7)}44` : checkFocus[`r${rowIndex}c${colIndex}`]
+              :class="[
+                {
+                  'border-right': colIndex % 3 == 0,
+                  'border-bottom': rowIndex % 3 == 0,
+                  'border-left': colIndex == 1,
+                  'border-top': rowIndex == 1,
+                  invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid,
+                  'highlight-number':
+                    highlightNumbers ==
+                    sudokuObj[`r${rowIndex}c${colIndex}`].number,
+                },
+              ]"
+              @click="handleClick({ row: rowIndex, col: colIndex })"
+              :style="{
+                'background-color':
+                  (selfFocus.row == rowIndex || selfFocus.col == colIndex) &&
+                  !checkFocus[`r${rowIndex}c${colIndex}`]
+                    ? `${color.slice(0, 7)}44`
+                    : checkFocus[`r${rowIndex}c${colIndex}`],
               }"
             >
               <svg class="inputReplacement">
                 <text
-                  :class="[{bold: sudokuObj[`r${rowIndex}c${colIndex}`].given, invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid}, 'svgText']"
+                  :class="[
+                    {
+                      bold: sudokuObj[`r${rowIndex}c${colIndex}`].given,
+                      invalid: !sudokuObj[`r${rowIndex}c${colIndex}`].valid,
+                    },
+                    'svgText',
+                  ]"
                   x="50%"
                   y="60%"
                   dominant-baseline="middle"
                   text-anchor="middle"
-                  :ref="el => { inputs[`r${rowIndex}c${colIndex}`] = el }"
-                >{{sudokuObj[`r${rowIndex}c${colIndex}`].number == "." ? "" : sudokuObj[`r${rowIndex}c${colIndex}`].number}}</text>
+                  :ref="
+                    (el) => {
+                      inputs[`r${rowIndex}c${colIndex}`] = el;
+                    }
+                  "
+                >
+                  {{
+                    sudokuObj[`r${rowIndex}c${colIndex}`].number == "."
+                      ? ""
+                      : sudokuObj[`r${rowIndex}c${colIndex}`].number
+                  }}
+                </text>
                 <g
-                  v-for="(pencilMark, index) in sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks"
+                  v-for="(pencilMark, index) in sudokuObj[
+                    `r${rowIndex}c${colIndex}`
+                  ].pencilMarks"
                   :key="index"
                 >
                   <circle
-                    v-if="sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[index] && sudokuObj[`r${rowIndex}c${colIndex}`].number == '.'"
-                    :class="[{'circle-number': highlightNumbers == index + 1}]"
-                    :cy="9+(22*Math.floor(index / 3))"
-                    :cx="8.5+(22 * (index % 3))"
+                    v-if="
+                      sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[
+                        index
+                      ] && sudokuObj[`r${rowIndex}c${colIndex}`].number == '.'
+                    "
+                    :class="[
+                      { 'circle-number': highlightNumbers == index + 1 },
+                    ]"
+                    :cy="9 + 22 * Math.floor(index / 3)"
+                    :cx="8.5 + 22 * (index % 3)"
                     r="8"
                   />
                   <text
@@ -50,10 +80,14 @@
                   >
                     <tspan
                       style="font-size: 14px"
-                      :y="10+(22*Math.floor(index / 3))"
-                      :x="8+(22 * (index % 3))"
-                      v-if="sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[index]"
-                    >{{index+1}}</tspan>
+                      :y="10 + 22 * Math.floor(index / 3)"
+                      :x="8 + 22 * (index % 3)"
+                      v-if="
+                        sudokuObj[`r${rowIndex}c${colIndex}`].pencilMarks[index]
+                      "
+                    >
+                      {{ index + 1 }}
+                    </tspan>
                   </text>
                 </g>
               </svg>
@@ -61,38 +95,44 @@
           </tr>
         </tbody>
       </table>
-      <span
-        class="notation-text"
-        style="color: white"
-      >{{ notating ? "Notation Mode On" : "Notation Mode Off" }}</span>
+      <span class="notation-text" style="color: white">{{
+        notating ? "Notation Mode On" : "Notation Mode Off"
+      }}</span>
       <div style="color: white" class="hint" v-if="hint">
-        {{hint}}
+        {{ hint }}
       </div>
       <div class="actions">
-        <BaseButton @click="newGame()" class="button">Start New Game</BaseButton>
+        <BaseButton @click="newGame()" class="button"
+          >Start New Game</BaseButton
+        >
         <div class="popup" v-if="checkNew" ref="popup">
           <h3 class="title">Are you sure you want to start a new game?</h3>
           <div class="actions">
-            <BaseButton @mouseup="newGame(true)" class="yes">Start new game</BaseButton>
-            <BaseButton @click="checkNew = false" class="no">Take me back</BaseButton>
+            <BaseButton @mouseup="newGame(true)" class="yes"
+              >Start new game</BaseButton
+            >
+            <BaseButton @click="checkNew = false" class="no"
+              >Take me back</BaseButton
+            >
           </div>
         </div>
         <BaseButton @mouseup="requestHint()">Hint</BaseButton>
-        <BaseButton @mouseup="firstPassCandidateCalculator()" class="button">Fill In Candidates</BaseButton>
+        <BaseButton @mouseup="firstPassCandidateCalculator()" class="button"
+          >Fill In Candidates</BaseButton
+        >
       </div>
     </div>
     <div class="pane" v-if="loading">
       <div class="actions">
-        <BaseButton @click="newGame()" class="button">Start New Game</BaseButton>
+        <BaseButton @click="newGame()" class="button"
+          >Start New Game</BaseButton
+        >
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
-const socket = new WebSocket(wsUrl);
-
 import BaseButton from "../Base/BaseButton.vue";
 
 /* eslint-disable */
@@ -114,11 +154,13 @@ import {
 
 export default {
   setup() {
+    const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
+    const socket = new WebSocket(wsUrl);
     onBeforeUnmount(() => {
       socket.close(1000, "logging off");
     });
 
-    socket.onopen = function () {
+    socket.onopen = function() {
       console.log(`Connected established to ${wsUrl}`);
     };
     const color = ref<string>();
@@ -130,10 +172,10 @@ export default {
     const loading = ref(true);
     const validation = new Validation(sudokuObj, id, socket);
     const updates: Updates = new Updates(sudokuObj, users, socket, validation);
-    const hint:any = ref(false);
+    const hint: any = ref(false);
     // const focused = ref({});
 
-    socket.onmessage = function ({ data }) {
+    socket.onmessage = function({ data }) {
       const {
         // Color assignment, sent once
         color: sentColor,
@@ -370,7 +412,7 @@ export default {
       }
     };
 
-    document.body.addEventListener("keydown", function () {
+    document.body.addEventListener("keydown", function() {
       handleInput({ key: event.key, event });
     });
 
@@ -452,13 +494,13 @@ export default {
       candidates,
       loading,
       requestHint,
-      hint
+      hint,
     };
   },
   components: {
     BaseButton,
   },
-  name: "PuzzleView"
+  name: "PuzzleView",
 };
 </script>
 
