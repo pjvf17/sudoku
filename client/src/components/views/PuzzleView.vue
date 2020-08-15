@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="main">
     <div class="pane" v-if="!loading">
       <table>
         <tbody>
@@ -505,25 +505,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@use "src/sass/_containerStyles" as c;
 @import "node_modules/nord/src/sass/nord.scss";
 
 body {
   margin: 0;
   padding: 0;
 }
-#app {
-  // font-family: 'Courier New', Courier, monospace;
-  // -webkit-font-smoothing: antialiased;
-  // -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  background-color: $nord1;
-  font-family: Nunito, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+#main {
+  @include c.mainContainer;
 }
 
 $border: 2px solid black;
