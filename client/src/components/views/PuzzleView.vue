@@ -95,12 +95,10 @@
           </tr>
         </tbody>
       </table>
-      <span class="notation-text" style="color: white">{{
-        notating ? "Notation Mode On" : "Notation Mode Off"
-      }}</span>
-      <div style="color: white" class="hint" v-if="hint">
-        {{ hint }}
-      </div>
+      <span class="notation-text" style="color: white">
+        {{ notating ? "Notation Mode On" : "Notation Mode Off" }}
+      </span>
+      <div style="color: white" class="hint" v-if="hint">{{ hint }}</div>
       <div class="actions">
         <BaseButton @click="newGame()" class="button"
           >Start New Game</BaseButton
@@ -135,13 +133,12 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 
-/* eslint-disable */
-
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 
 import Validation from "../../use/puzzleValidation";
 import Updates from "../../use/puzzleUpdates";
-import {
+/*eslint no-unused-vars: off*/
+import type {
   NumberUpdate,
   PencilMarkUpdate,
   Address,
@@ -150,7 +147,9 @@ import {
   Users,
 } from "../../types";
 
-/* eslint-enable */
+interface Ref<T> {
+  value: T;
+}
 
 export default {
   setup() {
@@ -165,13 +164,18 @@ export default {
     };
     const color = ref<string>();
     const sudokuObj = ref<Puzzle>();
-    const users = ref<Users>();
-    const id = ref<string>();
+    const users = ref<Users>({});
+    const id = ref<string>("");
     const notating = ref<boolean>(false);
     const candidates = ref<boolean>(false);
     const loading = ref(true);
-    const validation = new Validation(sudokuObj, id, socket);
-    const updates: Updates = new Updates(sudokuObj, users, socket, validation);
+    const validation = new Validation(sudokuObj as Ref<Puzzle>, id, socket);
+    const updates: Updates = new Updates(
+      sudokuObj as Ref<Puzzle>,
+      users,
+      socket,
+      validation
+    );
     const hint: any = ref(false);
     // const focused = ref({});
 
@@ -255,7 +259,7 @@ export default {
     };
 
     const checkFocus = computed(() => {
-      const focused = {};
+      const focused:{[index: string]: string} = {};
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
@@ -275,10 +279,10 @@ export default {
       if (user.focus.row != null) {
         // Check if there is a number in the cell
         if (
-          sudokuObj.value[`r${user.focus.row}c${user.focus.col}`].number != "."
+          sudokuObj?.value?.[`r${user.focus.row}c${user.focus.col}`]?.number != "."
         ) {
           number =
-            sudokuObj.value[`r${user.focus.row}c${user.focus.col}`].number;
+            sudokuObj?.value?.[`r${user.focus.row}c${user.focus.col}`]?.number;
         }
       }
       return number;
@@ -290,21 +294,21 @@ export default {
     // For reference: https://composition-api.vuejs.org/api.html#template-refs
 
     // For refs
-    const inputs = ref({});
+    const inputs = ref<{ [index: string]: SVGTextElement }>({});
 
     // make sure to reset the refs before each update
     onBeforeUpdate(() => {
       inputs.value = {};
     });
 
-    const move = (row, col, rowDir, colDir) => {
+    const move = (row:number, col:number, rowDir:number, colDir:number) => {
       row = row + rowDir;
       col = col + colDir;
       // Don't go beyond edge
       if (row > 9 || col > 9 || row < 1 || col < 1) {
         return;
       }
-      inputs.value[`r${row}c${col}`].focus();
+      inputs?.value?.[`r${row}c${col}`]?.focus();
       users.value[id.value].focus = { row, col };
       socket.send(
         JSON.stringify({
@@ -316,7 +320,7 @@ export default {
       );
     };
 
-    const handleInput = ({ key, event }) => {
+    const handleInput = (event: KeyboardEvent) => {
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
       // Address of cursor
@@ -340,31 +344,37 @@ export default {
       }
       // Only allow change of non-givens
       if (
-        !sudokuObj.value[`r${row}c${col}`].given &&
-        acceptedKeys.includes(key)
+        !sudokuObj?.value?.[`r${row}c${col}`]?.given &&
+        acceptedKeys.includes(event.key)
       ) {
         event.preventDefault();
         if (notating.value) {
-          let { address } = sudokuObj.value[`r${row}c${col}`];
+          let { address } = sudokuObj?.value?.[`r${row}c${col}`] as Cell;
           // Create pencilMarkUpdate object
-          const pencilMarkUpdate = { address, pencilMark: key, id: id.value };
+          const pencilMarkUpdate = {
+            address,
+            pencilMark: event.key,
+            id: id.value,
+          };
           // Update local
           updates.updatePencilMarks({ pencilMarkUpdate });
         } else {
-          let { address } = sudokuObj.value[`r${row}c${col}`];
+          let { address } = sudokuObj?.value?.[`r${row}c${col}`] as Cell;
           // Create numberupdate object
-          const numberUpdate = { address, number: key, id: id.value };
+          const numberUpdate = { address, number: event.key, id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
           // Update peer candidates
-          updates.updatePeerCandidates(sudokuObj.value[`r${row}c${col}`]);
+          updates.updatePeerCandidates(
+            sudokuObj?.value?.[`r${row}c${col}`] as Cell
+          );
         }
-      } else if (key == "Backspace") {
+      } else if (event.key == "Backspace") {
         event.preventDefault();
 
         // Check if in notation mode
         if (notating.value) {
-          let { address } = sudokuObj.value[`r${row}c${col}`];
+          let { address } = sudokuObj?.value?.[`r${row}c${col}`] as Cell;
           // Create pencilMarkUpdate object
           const pencilMarkUpdate = {
             address,
@@ -380,15 +390,15 @@ export default {
           //   })
           // );
         } else {
-          let { address } = sudokuObj.value[`r${row}c${col}`];
+          let { address } = sudokuObj?.value?.[`r${row}c${col}`] as Cell;
           // Create numberupdate object
           const numberUpdate = { address, number: ".", id: id.value };
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
         }
-      } else if (arrowKeys.includes(key)) {
+      } else if (arrowKeys.includes(event.key)) {
         event.preventDefault();
-        switch (key) {
+        switch (event.key) {
           case "ArrowRight":
             move(row, col, 0, 1);
             break;
@@ -402,21 +412,21 @@ export default {
             move(row, col, -1, 0);
             break;
         }
-      } else if (key == "Shift") {
+      } else if (event.key == "Shift") {
         notating.value = !notating.value;
         // Check for ctrl/command z : classic undo combo
-      } else if (key.toLowerCase() == "z" && event.metaKey) {
+      } else if (event.key.toLowerCase() == "z" && event.metaKey) {
         // Update local
         updates.undo(id.value);
         socket.send(JSON.stringify({ undo: id.value }));
       }
     };
 
-    document.body.addEventListener("keydown", function() {
-      handleInput({ key: event.key, event });
+    document.body.addEventListener("keydown", function(event: KeyboardEvent) {
+      handleInput(event);
     });
 
-    const handleClick = ({ row, col }) => {
+    const handleClick = ({ row, col }: { row: number; col: number }) => {
       users.value[id.value].focus = { row, col };
       socket.send(
         JSON.stringify({
@@ -431,14 +441,16 @@ export default {
     const popup = ref(null);
     const checkNew = ref(false);
 
-    const checkForPopupElementAndDisable = (event) => {
+    const checkForPopupElementAndDisable = (event: MouseEvent) => {
+      // Can't be sure that it is in fact a Div, however, it will give access to 'parentElement'
+      const target = event.target as HTMLDivElement;
       // Check if target is part of popup, otherwise close popup
       if (
         checkNew.value &&
         !(
-          event.target == popup.value ||
-          event.target.parentElement == popup.value ||
-          event.target.parentElement.parentElement == popup.value
+          target == popup.value ||
+          target.parentElement == popup.value ||
+          target.parentElement.parentElement == popup.value
         )
       ) {
         checkNew.value = false;
@@ -449,8 +461,9 @@ export default {
         );
       }
     };
-
-    const newGame = (check) => {
+    // If check is false or undefined, trigger popup
+    // Else, trigger new game request
+    const newGame = (check: boolean) => {
       console.log("triggered");
       if (!check) {
         document.body.addEventListener(

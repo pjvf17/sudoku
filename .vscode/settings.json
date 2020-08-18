@@ -1,4 +1,11 @@
 {
     "typescript.validate.enable": true,
     "deno.enable": false,
+
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "vue"
+        ]
+      
 }
