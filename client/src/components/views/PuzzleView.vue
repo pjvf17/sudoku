@@ -520,6 +520,7 @@ export default {
 <style lang="scss" scoped>
 @use "src/sass/_containerStyles" as c;
 @import "node_modules/nord/src/sass/nord.scss";
+@import "src/sass/_borders.scss";
 
 body {
   margin: 0;
@@ -528,13 +529,6 @@ body {
 #main {
   @include c.mainContainer;
 }
-
-$border: 2px solid black;
-$box-shadow: 0px 0px 15px 0px
-  rgba(
-    $color: #000000,
-    $alpha: 0.3,
-  );
 
 .pane {
   padding: 1em;
