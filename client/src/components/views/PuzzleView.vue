@@ -103,7 +103,7 @@
         <BaseButton @click="newGame()" class="button"
           >Start New Game</BaseButton
         >
-        <div class="popup" v-if="checkNew" ref="popup">
+        <base-popup v-if="checkNew" ref="popup">
           <h3 class="title">Are you sure you want to start a new game?</h3>
           <div class="actions">
             <BaseButton @mouseup="newGame(true)" class="yes"
@@ -113,7 +113,7 @@
               >Take me back</BaseButton
             >
           </div>
-        </div>
+        </base-popup>
         <BaseButton @mouseup="requestHint()">Hint</BaseButton>
         <BaseButton @mouseup="firstPassCandidateCalculator()" class="button"
           >Fill In Candidates</BaseButton
@@ -132,6 +132,8 @@
 
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
+import BasePopup from "../Base/BasePopup.vue";
+
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 
@@ -512,6 +514,7 @@ export default {
   },
   components: {
     BaseButton,
+    BasePopup
   },
   name: "PuzzleView",
 };
@@ -650,24 +653,7 @@ circle {
   display: flex;
 }
 
-.popup {
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  position: absolute;
-  width: 25em;
-  height: 10em;
-  background: $nord2;
-  border-radius: 3px;
-  box-shadow: $box-shadow;
-  margin: auto;
-  padding: 0.5em;
-  padding-bottom: 1em;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-
-  .title {
-    color: $nord4;
-  }
+.title {
+  color: $nord4;
 }
 </style>
