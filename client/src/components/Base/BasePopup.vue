@@ -26,7 +26,6 @@ const BasePopup = defineComponent({
       // Check if target is part of popup, otherwise close popup
       if (!popup.value.contains(target)) {
         emit("outside");
-        console.log("emitted");
       }
     };
     document.body.addEventListener("mousedown", checkForPopupElementAndDisable);

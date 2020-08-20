@@ -107,7 +107,7 @@
           v-if="checkNew"
           title="Are you sure you want to start a new game?"
           ref="popup"
-          @outside="testFunction()"
+          @outside="checkNew = false"
         >
           <div class="actions">
             <BaseButton @mouseup="newGame(true)" class="yes"
@@ -446,27 +446,15 @@ export default {
     const popup = ref(null);
     const checkNew = ref(false);
 
-    const checkForPopupElementAndDisable = (event: MouseEvent) => {
-      // Can't be sure that it is in fact a Div, however, it will give access to 'parentElement'
-    };
-
     // If check is false or undefined, trigger popup
     // Else, trigger new game request
     const newGame = (check: boolean) => {
-      console.log("triggered");
       if (!check) {
-        document.body.addEventListener(
-          "mousedown",
-          checkForPopupElementAndDisable
-        );
         checkNew.value = true;
       } else {
-        // socket.send(JSON.stringify({ newGame: true }));
-        // checkNew.value = false;
-        // document.body.removeEventListener(
-        //   "mousedown",
-        //   checkForPopupElementAndDisable
-        // );
+        console.log("Sending new game request to server");
+        socket.send(JSON.stringify({ newGame: true }));
+        checkNew.value = false;
       }
     };
 
@@ -477,12 +465,7 @@ export default {
       socket.send(JSON.stringify({ hint: true }));
     };
 
-    const testFunction = () => {
-      console.log("testFunction success");
-    }
-
     return {
-      testFunction,
       popup,
       checkNew,
       selfFocus,
