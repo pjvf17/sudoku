@@ -448,23 +448,6 @@ export default {
 
     const checkForPopupElementAndDisable = (event: MouseEvent) => {
       // Can't be sure that it is in fact a Div, however, it will give access to 'parentElement'
-      const target = event.target as HTMLDivElement;
-      // // Check if target is part of popup, otherwise close popup
-      // if (
-      //   checkNew.value &&
-      //   !(
-      //     target == popup.value ||
-      //     target.parentElement == popup.value ||
-      //     target.parentElement.parentElement == popup.value
-      //   )
-      // ) {
-      //   checkNew.value = false;
-      //   // Remove self
-      //   document.body.removeEventListener(
-      //     "mousedown",
-      //     checkForPopupElementAndDisable
-      //   );
-      // }
     };
 
     // If check is false or undefined, trigger popup

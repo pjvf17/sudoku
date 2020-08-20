@@ -14,7 +14,7 @@ const BasePopup = defineComponent({
   },
   /*eslint no-unused-vars: off*/
   setup(_, { emit }) {
-    const popup = ref();
+    const popup = ref<HTMLDivElement>();
     const checkForPopupElementAndDisable = (event: MouseEvent) => {
       // Check if popup has a value, else return
       if (!popup.value) {
@@ -24,16 +24,7 @@ const BasePopup = defineComponent({
       const target = event.target as HTMLDivElement;
 
       // Check if target is part of popup, otherwise close popup
-      if (
-        !(
-          // Can we create some kind of loop to check this?
-          (
-            target == popup.value ||
-            target.parentElement == popup.value ||
-            target.parentElement?.parentElement == popup.value
-          )
-        )
-      ) {
+      if (!popup.value.contains(target)) {
         emit("outside");
         console.log("emitted");
       }
