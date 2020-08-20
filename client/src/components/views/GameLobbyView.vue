@@ -10,6 +10,7 @@
         >
       </div>
       <base-popup title="New Game Popup" v-if="newGamePopup">
+        <base-input v-model="input"></base-input>
       </base-popup>
     </div>
   </div>
@@ -18,20 +19,24 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
+import BaseInput from "../Base/BaseInput.vue"
 import { ref } from "vue";
 
 const { RouterLink } = require("vue-router");
 export default {
   setup() {
     const newGamePopup = ref(false);
+    const input = ref();
     return {
       newGamePopup,
+      input
     };
   },
   components: {
     RouterLink,
     BasePopup,
     BaseButton,
+    BaseInput
   },
   name: "GameLobbyView",
 };
