@@ -5,10 +5,11 @@
         <RouterLink to="/puzzle">Puzzle</RouterLink>
       </div>
       <div class="actions">
-        <base-button style="margin-top: auto" @mouseup="newGamePopup = true" >New Game</base-button>
+        <base-button style="margin-top: auto" @mouseup="newGamePopup = true"
+          >New Game</base-button
+        >
       </div>
-      <base-popup v-if="newGamePopup">
-      
+      <base-popup title="New Game Popup" v-if="newGamePopup">
       </base-popup>
     </div>
   </div>
@@ -17,20 +18,20 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const { RouterLink } = require("vue-router");
 export default {
   setup() {
     const newGamePopup = ref(false);
     return {
-      newGamePopup
-    }
+      newGamePopup,
+    };
   },
   components: {
     RouterLink,
     BasePopup,
-    BaseButton
+    BaseButton,
   },
   name: "GameLobbyView",
 };
@@ -65,11 +66,8 @@ a {
 .actions {
   height: 20%;
   width: 100%;
-  box-shadow: 0px 0px 25px 0px
-  rgba(
-    $color: #000000,
-    $alpha: 0.3,
-  );  background-color: $nord4;
+  box-shadow: 0px 0px 25px 0px rgba($color: #000000, $alpha: 0.3);
+  background-color: $nord4;
   display: flex;
 }
 
@@ -78,6 +76,4 @@ a {
   width: 100%;
   display: flex;
 }
-
-
 </style>

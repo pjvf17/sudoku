@@ -1,13 +1,50 @@
 <template>
-  <div class="popup">
+  <div class="popup" ref="popup">
+    <h3 class="title" v-if="title">{{ title }}</h3>
     <slot></slot>
   </div>
 </template>
 
 <script lang="ts">
-export default {
-    name: "BasePopup"
-};
+import { ref, defineComponent } from "vue";
+const BasePopup = defineComponent({
+  emits: ["outside"],
+  props: {
+    title: String,
+  },
+  /*eslint no-unused-vars: off*/
+  setup(_, { emit }) {
+    const popup = ref();
+    const checkForPopupElementAndDisable = (event: MouseEvent) => {
+      // Check if popup has a value, else return
+      if (!popup.value) {
+        return;
+      }
+      // Can't be sure that it is in fact a Div, however, it will give access to 'parentElement'
+      const target = event.target as HTMLDivElement;
+
+      // Check if target is part of popup, otherwise close popup
+      if (
+        !(
+          // Can we create some kind of loop to check this?
+          (
+            target == popup.value ||
+            target.parentElement == popup.value ||
+            target.parentElement?.parentElement == popup.value
+          )
+        )
+      ) {
+        emit("outside");
+        console.log("emitted");
+      }
+    };
+    document.body.addEventListener("mousedown", checkForPopupElementAndDisable);
+    return { popup };
+  },
+  // Add event emitter for click outside elemnt (if possible)
+  name: "BasePopup",
+});
+export default BasePopup;
 </script>
 
 <style lang="scss" scoped>

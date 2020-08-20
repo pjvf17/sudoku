@@ -103,8 +103,12 @@
         <BaseButton @click="newGame()" class="button"
           >Start New Game</BaseButton
         >
-        <base-popup v-if="checkNew" ref="popup">
-          <h3 class="title">Are you sure you want to start a new game?</h3>
+        <base-popup
+          v-if="checkNew"
+          title="Are you sure you want to start a new game?"
+          ref="popup"
+          @outside="testFunction()"
+        >
           <div class="actions">
             <BaseButton @mouseup="newGame(true)" class="yes"
               >Start new game</BaseButton
@@ -148,7 +152,6 @@ import type {
   Puzzle,
   Users,
 } from "../../types";
-
 interface Ref<T> {
   value: T;
 }
@@ -446,23 +449,24 @@ export default {
     const checkForPopupElementAndDisable = (event: MouseEvent) => {
       // Can't be sure that it is in fact a Div, however, it will give access to 'parentElement'
       const target = event.target as HTMLDivElement;
-      // Check if target is part of popup, otherwise close popup
-      if (
-        checkNew.value &&
-        !(
-          target == popup.value ||
-          target.parentElement == popup.value ||
-          target.parentElement.parentElement == popup.value
-        )
-      ) {
-        checkNew.value = false;
-        // Remove self
-        document.body.removeEventListener(
-          "mousedown",
-          checkForPopupElementAndDisable
-        );
-      }
+      // // Check if target is part of popup, otherwise close popup
+      // if (
+      //   checkNew.value &&
+      //   !(
+      //     target == popup.value ||
+      //     target.parentElement == popup.value ||
+      //     target.parentElement.parentElement == popup.value
+      //   )
+      // ) {
+      //   checkNew.value = false;
+      //   // Remove self
+      //   document.body.removeEventListener(
+      //     "mousedown",
+      //     checkForPopupElementAndDisable
+      //   );
+      // }
     };
+
     // If check is false or undefined, trigger popup
     // Else, trigger new game request
     const newGame = (check: boolean) => {
@@ -474,12 +478,12 @@ export default {
         );
         checkNew.value = true;
       } else {
-        socket.send(JSON.stringify({ newGame: true }));
-        checkNew.value = false;
-        document.body.removeEventListener(
-          "mousedown",
-          checkForPopupElementAndDisable
-        );
+        // socket.send(JSON.stringify({ newGame: true }));
+        // checkNew.value = false;
+        // document.body.removeEventListener(
+        //   "mousedown",
+        //   checkForPopupElementAndDisable
+        // );
       }
     };
 
@@ -490,7 +494,12 @@ export default {
       socket.send(JSON.stringify({ hint: true }));
     };
 
+    const testFunction = () => {
+      console.log("testFunction success");
+    }
+
     return {
+      testFunction,
       popup,
       checkNew,
       selfFocus,
@@ -651,9 +660,5 @@ circle {
 
 .actions {
   display: flex;
-}
-
-.title {
-  color: $nord4;
 }
 </style>
