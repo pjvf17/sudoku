@@ -1,6 +1,6 @@
 {
     "typescript.validate.enable": true,
-    "deno.enable": false,
+    "deno.enable": true,
 
         "eslint.validate": [
           "javascript",

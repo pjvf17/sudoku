@@ -152,13 +152,16 @@ import type {
   Puzzle,
   Users,
 } from "../../types";
+import router from '../../router';
 interface Ref<T> {
   value: T;
 }
 
 export default {
   setup() {
-    const wsUrl = process.env.VUE_APP_WS_URL ?? "ws://tealog.xyz:8010";
+    // Open socket to room address
+    const wsUrl = "ws://localhost:8011/puzzle/room/ws";
+    console.log(wsUrl);
     const socket = new WebSocket(wsUrl);
     onBeforeUnmount(() => {
       socket.close(1000, "logging off");
@@ -166,6 +169,7 @@ export default {
 
     socket.onopen = function() {
       console.log(`Connected established to ${wsUrl}`);
+      socket.send("taco");
     };
     const color = ref<string>();
     const sudokuObj = ref<Puzzle>();
@@ -213,7 +217,7 @@ export default {
         // Catch the rest until I type them
         [propName: string]: any;
       } = JSON.parse(data);
-
+      console.log(data);
       if (sentHint) {
         console.log(sentHint);
         hint.value = sentHint;
