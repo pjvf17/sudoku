@@ -4,7 +4,7 @@ import GameLobbyView from "../components/views/GameLobbyView.vue"
 
 const routes = [
 {
-  path: '/puzzle',
+  path: '/puzzle/:roomTitle',
   name: 'Puzzle',
   component: PuzzleView
 },

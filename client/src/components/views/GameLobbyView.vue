@@ -2,15 +2,16 @@
   <div id="main">
     <div id="gamelist-container">
       <div class="gamelist">
-        <RouterLink to="/puzzle">Puzzle</RouterLink>
+        <!-- <RouterLink to="/puzzle">Puzzle</RouterLink> -->
       </div>
       <div class="actions">
         <base-button style="margin-top: auto" @mouseup="newGamePopup = true"
           >New Game</base-button
         >
       </div>
-      <base-popup title="New Game Popup" v-if="newGamePopup">
-        <base-input v-model="input"></base-input>
+      <base-popup class="flex flex-column" title="Create Room" v-if="newGamePopup">
+        <base-input id="title" name="title" v-model="title"></base-input>
+        <base-button @mouseup="createRoom()">Create Room</base-button>
       </base-popup>
     </div>
   </div>
@@ -19,27 +20,42 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
-import BaseInput from "../Base/BaseInput.vue"
-import { ref } from "vue";
+import BaseInput from "../Base/BaseInput.vue";
+import { ref, defineComponent } from "vue";
+// import { RouterLink } from "vue-router";
+import router from "../../router";
 
-const { RouterLink } = require("vue-router");
-export default {
+const GameLobbyView = defineComponent({
+
   setup() {
     const newGamePopup = ref(false);
-    const input = ref();
+    const title = ref<string>();
+
+    const createRoom = () => {
+      console.log(title.value)
+      if (!title.value) {
+        return;
+      }
+      // TODO Ask server if name is taken
+
+      // Redirect to room
+      router.push(`/puzzle/${title.value}`)
+    }
     return {
       newGamePopup,
-      input
+      title,
+      createRoom
     };
   },
   components: {
-    RouterLink,
+    // RouterLink,
     BasePopup,
     BaseButton,
-    BaseInput
+    BaseInput,
   },
   name: "GameLobbyView",
-};
+});
+export default GameLobbyView;
 </script>
 
 <style lang="scss" scoped>
@@ -60,6 +76,14 @@ export default {
   display: flex;
   flex-direction: column;
   border-radius: 3px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
 }
 
 a {
