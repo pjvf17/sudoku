@@ -51,7 +51,8 @@ app.use(async (context) => {
           WSUsers.delete(socket);
         } else {
           for (const user of WSUsers) {
-            user.send(ev as WebSocketMessage);
+            const res = ev as WebSocketMessage
+            user.send(res);
           }
         }
       }

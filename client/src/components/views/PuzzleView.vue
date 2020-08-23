@@ -169,7 +169,7 @@ export default {
 
     socket.onopen = function() {
       console.log(`Connected established to ${wsUrl}`);
-      socket.send("taco");
+      socket.send(JSON.stringify("taco"));
     };
     const color = ref<string>();
     const sudokuObj = ref<Puzzle>();
