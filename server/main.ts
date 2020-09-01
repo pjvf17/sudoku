@@ -20,7 +20,11 @@ import {
 
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
 import { MongoClass } from "./mongo/mongoMain.ts";
-import { isWebSocketCloseEvent, WebSocket, WebSocketMessage } from "https://deno.land/std@0.61.0/ws/mod.ts";
+import {
+  isWebSocketCloseEvent,
+  WebSocket,
+  WebSocketMessage,
+} from "https://deno.land/std@0.61.0/ws/mod.ts";
 
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
@@ -34,11 +38,22 @@ app.use(async (context) => {
     // If not upgradeable, send to vue
     console.log(context.isUpgradable);
     if (!context.isUpgradable) {
-      console.log("in if block, sending to vue")
-      await send(context, context.request.url.pathname, {
-        root: "dist",
-        index: "index.html",
-      });
+      console.log("in if block, sending to vue");
+      try {
+        // Looks to see if there are the correct corrosponding files
+        await send(context, context.request.url.pathname, {
+          root: "dist",
+          index: "index.html",
+        });
+      } catch (error) {
+        // If no corrosponding files, send to index
+        // This allows Vue Router to work in History Mode
+        // See more here: https://router.vuejs.org/guide/essentials/history-mode.html#example-server-configurations
+        await send(context, "/", {
+          root: "dist",
+          index: "index.html",
+        });
+      }
     } else {
       // Upgrade to websocket
       const socket = await context.upgrade();
@@ -51,7 +66,7 @@ app.use(async (context) => {
           WSUsers.delete(socket);
         } else {
           for (const user of WSUsers) {
-            const res = ev as WebSocketMessage
+            const res = ev as WebSocketMessage;
             user.send(res);
           }
         }
@@ -64,8 +79,9 @@ app.use(async (context) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
-      "localhost"}:${port}`,
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
+    }:${port}`
   );
 });
 
