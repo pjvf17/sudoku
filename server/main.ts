@@ -54,10 +54,12 @@ app.use(async (context) => {
           index: "index.html",
         });
       }
+      // Is upgradeable
     } else {
       // Upgrade to websocket
       const socket = await context.upgrade();
       WSUsers.add(socket);
+      onConnection(socket);
       // For each event from socket
       for await (const ev of socket) {
         console.log(ev);
@@ -76,6 +78,60 @@ app.use(async (context) => {
     console.log(err);
   }
 });
+
+const colors: any = [
+  { value: "#bf616a88", used: false },
+  { value: "#d0877088", used: false },
+  { value: "#ebcb8b88", used: false },
+  { value: "#a3be8c88", used: false },
+  { value: "#b48ead88", used: false },
+];
+
+const users: Users = {};
+
+const getColor = (socket: WebSocket) => {
+  let count = 0;
+  while (count < colors.length) {
+    if (!colors[count].used) {
+      colors[count].used = socket;
+      return colors[count].value;
+    }
+    count++;
+  }
+};
+
+const onConnection = (ws:WebSocket) => {
+  // Assign color
+  // TODO Possibly assign by ip address?
+  let color = getColor(ws);
+  let id = v4.generate();
+  // For undoing
+  const moves: Move[] = [];
+  // Save to users
+  users[id] = {
+    id,
+    focus: { row: 1, col: 1 },
+    // name: null,
+    color,
+    ws,
+    moves,
+  };
+  const updates = new Updates(
+    sudokuObj.puzzle as Puzzle,
+    users,
+    validation,
+    id,
+  );
+  // Send starting info
+  ws.send(JSON.stringify({ users, id, color, sudokuObj }));
+  // Send to everyone else updated users
+  for (const user of WSUsers) {
+    // Send only to open clients, and not the one who sent a message
+    if (!user.isClosed && user != ws) {
+      user.send(JSON.stringify({ users }));
+    }
+  }
+}
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
@@ -118,24 +174,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 // //   WebSocket,
 // //   WebSocketServer,
 // // } from "https://deno.land/x/websocket/mod.ts";
-// const colors: any = [
-//   { value: "#bf616a88", used: false },
-//   { value: "#d0877088", used: false },
-//   { value: "#ebcb8b88", used: false },
-//   { value: "#a3be8c88", used: false },
-//   { value: "#b48ead88", used: false },
-// ];
 
-// const getColor = (socket: WebSocket) => {
-//   let count = 0;
-//   while (count < colors.length) {
-//     if (!colors[count].used) {
-//       colors[count].used = socket;
-//       return colors[count].value;
-//     }
-//     count++;
-//   }
-// };
 
 // const freeColor = (socket: WebSocket) => {
 //   let count = 0;
@@ -147,8 +186,6 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 //     count++;
 //   }
 // };
-
-// const users: Users = {};
 
 // const freeUser = (id: User["id"]) => {
 //   delete users[id];
