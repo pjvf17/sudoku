@@ -30,15 +30,16 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
 
-const WSUsers = new Set<WebSocket>();
+const WSSockes = new Set<WebSocket>();
+
+const WSusers: Users = {};
+
+const WSUserUpdates: { [propName: string]: Updates } = {};
 
 app.use(async (context) => {
-  console.log(context.request.url.pathname);
   try {
     // If not upgradeable, send to vue
-    console.log(context.isUpgradable);
     if (!context.isUpgradable) {
-      console.log("in if block, sending to vue");
       try {
         // Looks to see if there are the correct corrosponding files
         await send(context, context.request.url.pathname, {
@@ -58,19 +59,17 @@ app.use(async (context) => {
     } else {
       // Upgrade to websocket
       const socket = await context.upgrade();
-      WSUsers.add(socket);
-      onConnection(socket);
+      WSSockes.add(socket);
+      const id = onConnection(socket);
       // For each event from socket
       for await (const ev of socket) {
-        console.log(ev);
         // If close event, remove from user set
         if (isWebSocketCloseEvent(ev)) {
-          WSUsers.delete(socket);
-        } else {
-          for (const user of WSUsers) {
-            const res = ev as WebSocketMessage;
-            user.send(res);
-          }
+          onClose(socket, JSON.stringify(ev), id);
+          WSSockes.delete(socket);
+        } else if (typeof ev === "string") {
+          // Send to update handler
+          onMessage(socket, ev, id);
         }
       }
     }
@@ -87,8 +86,6 @@ const colors: any = [
   { value: "#b48ead88", used: false },
 ];
 
-const users: Users = {};
-
 const getColor = (socket: WebSocket) => {
   let count = 0;
   while (count < colors.length) {
@@ -100,15 +97,15 @@ const getColor = (socket: WebSocket) => {
   }
 };
 
-const onConnection = (ws:WebSocket) => {
+const onConnection = (ws: WebSocket) => {
   // Assign color
   // TODO Possibly assign by ip address?
   let color = getColor(ws);
   let id = v4.generate();
   // For undoing
   const moves: Move[] = [];
-  // Save to users
-  users[id] = {
+  // Save to WSusers
+  WSusers[id] = {
     id,
     focus: { row: 1, col: 1 },
     // name: null,
@@ -116,22 +113,129 @@ const onConnection = (ws:WebSocket) => {
     ws,
     moves,
   };
-  const updates = new Updates(
+  WSUserUpdates[id] = new Updates(
     sudokuObj.puzzle as Puzzle,
-    users,
+    WSusers,
     validation,
-    id,
+    id
   );
   // Send starting info
-  ws.send(JSON.stringify({ users, id, color, sudokuObj }));
-  // Send to everyone else updated users
-  for (const user of WSUsers) {
+  ws.send(JSON.stringify({ users: WSusers, id, color, sudokuObj }));
+  // Send to everyone else updated WSusers
+  for (const user of WSSockes) {
     // Send only to open clients, and not the one who sent a message
     if (!user.isClosed && user != ws) {
-      user.send(JSON.stringify({ users }));
+      user.send(JSON.stringify({ WSusers }));
     }
   }
-}
+  return id;
+};
+
+const userTimers: { [index: string]: any } = {};
+
+const updateFocus = (
+  { id, focus }: { id: User["id"]; focus: User["focus"] },
+  ws: WebSocket
+) => {
+  if (userTimers[id]) {
+    clearTimeout(userTimers[id]);
+  }
+  if (WSusers[id]) {
+    WSusers[id].focus = focus;
+  }
+  userTimers[id] = setTimeout(() => {
+    updateFocus({ id, focus: { row: null, col: null } }, ws);
+    // Get rid of cursor
+    for (let client of WSSockes) {
+      // Send only to open clients, and not the one who sent a message
+      if (!client.isClosed && client != ws) {
+        client.send(
+          JSON.stringify({
+            focusUpdate: { id, focus: { row: null, col: null } },
+          })
+        );
+      }
+    }
+  }, 180000);
+};
+
+const onMessage = (ws: WebSocket, message: string, id: string) => {
+  const {
+    focusUpdate,
+    numberUpdate,
+    pencilMarkUpdate,
+    newGame,
+    undo,
+    hint,
+  }: {
+    numberUpdate: NumberUpdate;
+    pencilMarkUpdate: PencilMarkUpdate;
+    // Catch the rest until I type them
+    [propName: string]: any;
+  } = JSON.parse(message);
+  const updates = WSUserUpdates[id];
+  if (hint) {
+    const hintResponse = solver(
+      JSON.parse(JSON.stringify(sudokuObj.puzzle)),
+      undefined,
+      true
+    );
+    for (let client of WSSockes) {
+      // Send only to open clients including sender
+      if (!client.isClosed) {
+        client.send(JSON.stringify({ hint: hintResponse }));
+      }
+    }
+  }
+  // Recieved movement/focus update
+  if (focusUpdate) {
+    // update user
+    updateFocus(focusUpdate, ws);
+  }
+  // Recieved number update
+  if (numberUpdate) {
+    updates.updateNumber({ numberUpdate });
+  }
+  // Recieved pencil mark update
+  if (pencilMarkUpdate) {
+    updates.updatePencilMarks({ pencilMarkUpdate });
+  }
+  // Recieved undo request
+  if (undo) {
+    updates.undo(id);
+  }
+  // console.log(newGame);
+  if (newGame) {
+    const startGameWorker = new Worker(
+      new URL("./Workers/startGameWorker.ts", import.meta.url).href,
+      { type: "module", deno: true }
+    );
+    startGameWorker.postMessage("");
+    startGameWorker.onmessage = (message) => {
+      sudokuObj = message.data;
+      // Update updates and validation
+      updates.sudokuObj = sudokuObj.puzzle;
+      validation.puzzle = sudokuObj.puzzle;
+      updates.validation = validation;
+
+      for (let client of WSSockes) {
+        // Send only to open clients, including sender
+        if (!client.isClosed) {
+          client.send(JSON.stringify({ sudokuObj }));
+        }
+      }
+    };
+    console.log("after");
+  } else if (!hint) {
+    // Send to all connected
+    for (let client of WSSockes) {
+      // Send only to open clients, and not the one who sent a message
+      if (!client.isClosed && client != ws) {
+        client.send(message);
+      }
+    }
+  }
+};
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
@@ -141,84 +245,61 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
   );
 });
 
-// let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
-//   puzzle: new BlankPuzzle(),
-// };
+let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
+  puzzle: new BlankPuzzle(),
+};
 
-// const db = new MongoClass();
-// const { puzzles } = db.connect();
-// console.log(await puzzles.count());
+const db = new MongoClass();
+const { puzzles } = db.connect();
+console.log(await puzzles.count());
 
-// export const startNewGame = async () => {
-//   let puzzle: Puzzle = new BlankPuzzle();
-//   let solved: Puzzle = puzzle;
-//   // Check for puzzles in db
-//   if (await puzzles.count()) {
-//     const found = await puzzles.findOne({ "difficulty": "hard" });
-//     puzzle = parsePuzzle(found?.puzzleString as string);
-//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-//   } else {
-//     puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
-//     console.log("0\n0\n0\n0\n0");
-//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-//   }
+export const startNewGame = async () => {
+  let puzzle: Puzzle = new BlankPuzzle();
+  let solved: Puzzle = puzzle;
+  // Check for puzzles in db
+  if (await puzzles.count()) {
+    const found = await puzzles.findOne({ difficulty: "hard" });
+    puzzle = parsePuzzle(found?.puzzleString as string);
+    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  } else {
+    puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+    console.log("0\n0\n0\n0\n0");
+    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  }
 
-//   return { puzzle, solved };
-// };
-// sudokuObj = await startNewGame();
-// const validation = new Validation(sudokuObj.puzzle as Puzzle);
-// console.log("\n\n solved:");
-// printSudokuToConsole(sudokuObj.solved as Puzzle);
+  return { puzzle, solved };
+};
+sudokuObj = await startNewGame();
+const validation = new Validation(sudokuObj.puzzle as Puzzle);
+console.log("\n\n solved:");
+printSudokuToConsole(sudokuObj.solved as Puzzle);
 
-// // import {
-// //   WebSocket,
-// //   WebSocketServer,
-// // } from "https://deno.land/x/websocket/mod.ts";
+const freeColor = (socket: WebSocket) => {
+  let count = 0;
+  while (count < colors.length) {
+    if (colors[count].used == socket) {
+      colors[count].used = false;
+      return true;
+    }
+    count++;
+  }
+};
 
+const freeUser = (id: User["id"]) => {
+  delete WSusers[id];
+};
 
-// const freeColor = (socket: WebSocket) => {
-//   let count = 0;
-//   while (count < colors.length) {
-//     if (colors[count].used == socket) {
-//       colors[count].used = false;
-//       return true;
-//     }
-//     count++;
-//   }
-// };
+const onClose = (ws: WebSocket, message:string, id:string) => {
+  freeColor(ws);
+  freeUser(id);
+  console.log(`socket closed: ${message}`);
+  for (let client of WSSockes) {
+    if (!client.isClosed) {
+      client.send(JSON.stringify({ users: WSusers }));
+    }
+  }
+};
 
-// const freeUser = (id: User["id"]) => {
-//   delete users[id];
-// };
-
-// const userTimers: { [index: string]: any } = {};
-
-// const updateFocus = (
-//   { id, focus }: { id: User["id"]; focus: User["focus"] },
-//   wss: WebSocketServer,
-//   ws: WebSocket,
-// ) => {
-//   if (userTimers[id]) {
-//     clearTimeout(userTimers[id]);
-//   }
-//   if (users[id]) {
-//     users[id].focus = focus;
-//   }
-//   userTimers[id] = setTimeout(() => {
-//     updateFocus({ id, focus: { row: null, col: null } }, wss, ws);
-//     // Get rid of cursor
-//     for (let client of wss.clients) {
-//       // Send only to open clients, and not the one who sent a message
-//       if (!client.isClosed && client != ws) {
-//         client.send(
-//           JSON.stringify({
-//             focusUpdate: { id, focus: { row: null, col: null } },
-//           }),
-//         );
-//       }
-//     }
-//   }, 180000);
-// };
 // const wss = new WebSocketServer(8010);
 
 // wss.on("connection", function (ws: WebSocket) {
@@ -227,8 +308,8 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 //   let id = v4.generate();
 //   // For undoing
 //   const moves: Move[] = [];
-//   // Save to users
-//   users[id] = {
+//   // Save to WSusers
+//   WSusers[id] = {
 //     id,
 //     focus: { row: 1, col: 1 },
 //     // name: null,
@@ -238,17 +319,17 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 //   };
 //   const updates = new Updates(
 //     sudokuObj.puzzle as Puzzle,
-//     users,
+//     WSusers,
 //     validation,
 //     id,
 //   );
 //   // Send starting info
-//   ws.send(JSON.stringify({ users, id, color, sudokuObj }));
-//   // Send to everyone else updated users
+//   ws.send(JSON.stringify({ WSusers, id, color, sudokuObj }));
+//   // Send to everyone else updated WSusers
 //   for (let client of wss.clients) {
 //     // Send only to open clients, and not the one who sent a message
 //     if (!client.isClosed && client != ws) {
-//       client.send(JSON.stringify({ users }));
+//       client.send(JSON.stringify({ WSusers }));
 //     }
 //   }
 
@@ -335,7 +416,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 //     console.log(`socket closed: ${message}`);
 //     for (let client of wss.clients) {
 //       if (!client.isClosed) {
-//         client.send(JSON.stringify({ users }));
+//         client.send(JSON.stringify({ WSusers }));
 //       }
 //     }
 //   });
