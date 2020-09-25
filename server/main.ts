@@ -1,4 +1,4 @@
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
+import { Application, send } from "https://deno.land/x/oak@v6.2.0/mod.ts";
 import {
   puzzleToString,
   createPuzzle,
@@ -8,7 +8,7 @@ import {
 } from "./generator.ts";
 import Validation from "./serverSidePuzzleValidation.ts";
 import Updates from "./serverSidePuzzleUpdates.ts";
-import {
+import type {
   PencilMarkUpdate,
   NumberUpdate,
   Users,

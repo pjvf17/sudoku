@@ -6,6 +6,9 @@
           "javascript",
           "javascriptreact",
           "vue"
-        ]
+        ],
+        "deno.import_intellisense_origins": {
+          "https://deno.land": true
+        }
       
 }

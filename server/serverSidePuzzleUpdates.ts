@@ -1,6 +1,6 @@
 /* eslint-disable */
-import Validation from "./serverSidePuzzleValidation.ts";
-import { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../client/src/types.d.ts";
+import type Validation from "./serverSidePuzzleValidation.ts";
+import type { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../client/src/types.d.ts";
 /* eslint-enable */
 
 

@@ -1,6 +1,6 @@
 // generator.ts
 
-import {
+import type {
   Cell,
   Puzzle,
   Units,
