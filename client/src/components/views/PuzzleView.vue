@@ -160,7 +160,11 @@ interface Ref<T> {
 export default {
   setup() {
     // Open socket to room address
-    const wsUrl = "ws://localhost:8011/puzzle/room/ws";
+    console.log("router:");
+    
+    console.log(router.currentRoute.value.params.roomTitle);
+    
+    const wsUrl = `ws://localhost:8011/puzzle/${router.currentRoute.value.params.roomTitle}/ws`;
     console.log(wsUrl);
     const socket = new WebSocket(wsUrl);
     onBeforeUnmount(() => {
@@ -171,7 +175,7 @@ export default {
       console.log(`Connected established to ${wsUrl}`);
       socket.send(JSON.stringify("taco"));
     };
-    const color = ref<string>();
+    const color = ref<string>("");
     const sudokuObj = ref<Puzzle>();
     const users = ref<Users>({});
     const id = ref<string>("");

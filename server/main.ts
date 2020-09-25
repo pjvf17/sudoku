@@ -31,9 +31,11 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 const app = new Application();
 
 const WSUsers = new Set<WebSocket>();
+const WSRooms = new Set<string>();
 
 app.use(async (context) => {
-  console.log(context.request.url.pathname);
+  const pathname = context.request.url.pathname
+  console.log(pathname);
   try {
     // If not upgradeable, send to vue
     console.log(context.isUpgradable);
@@ -41,7 +43,7 @@ app.use(async (context) => {
       console.log("in if block, sending to vue");
       try {
         // Looks to see if there are the correct corrosponding files
-        await send(context, context.request.url.pathname, {
+        await send(context, pathname, {
           root: "dist",
           index: "index.html",
         });
@@ -58,6 +60,7 @@ app.use(async (context) => {
     } else {
       // Upgrade to websocket
       const socket = await context.upgrade();
+      WSRooms.add(pathname.slice(pathname.indexOf("e/")+2, pathname.indexOf("/ws")));
       WSUsers.add(socket);
       onConnection(socket);
       // For each event from socket
@@ -100,7 +103,31 @@ const getColor = (socket: WebSocket) => {
   }
 };
 
-const onConnection = (ws:WebSocket) => {
+let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
+  puzzle: new BlankPuzzle(),
+};
+
+// export const startNewGame = async () => {
+//   let puzzle: Puzzle = new BlankPuzzle();
+//   let solved: Puzzle = puzzle;
+//   // Check for puzzles in db
+//   // if (await puzzles.count()) {
+//   //   const found = await puzzles.findOne({ "difficulty": "hard" });
+//   //   puzzle = parsePuzzle(found?.puzzleString as string);
+//   //   solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   // } else {
+//     puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+//     console.log("0\n0\n0\n0\n0");
+//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   // }
+
+//   return { puzzle, solved };
+// };
+// sudokuObj = await startNewGame();
+
+const validation = new Validation(sudokuObj.puzzle as Puzzle);
+
+const onConnection = (ws: WebSocket) => {
   // Assign color
   // TODO Possibly assign by ip address?
   let color = getColor(ws);
@@ -131,19 +158,14 @@ const onConnection = (ws:WebSocket) => {
       user.send(JSON.stringify({ users }));
     }
   }
-}
+};
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ?? "localhost"
-    }:${port}`
+    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
+      "localhost"}:${port}`,
   );
 });
-
-// let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
-//   puzzle: new BlankPuzzle(),
-// };
 
 // const db = new MongoClass();
 // const { puzzles } = db.connect();
@@ -174,7 +196,6 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 // //   WebSocket,
 // //   WebSocketServer,
 // // } from "https://deno.land/x/websocket/mod.ts";
-
 
 // const freeColor = (socket: WebSocket) => {
 //   let count = 0;
