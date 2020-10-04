@@ -32,7 +32,11 @@ const app = new Application();
 
 class WSRoom {
   readonly roomName: string;
-  WSUsers = new Set<WebSocket>();
+  WSUsers: Users = {
+    // Need to fit Updates in here somewhere
+  };
+  WSSockets = new Set<WebSocket>();
+  readonly validation: Validation;
   readonly sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
     puzzle: new BlankPuzzle(),
   };
@@ -50,6 +54,7 @@ class WSRoom {
     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
 
     this.sudokuObj = { puzzle, solved };
+    this.validation = new Validation(sudokuObj.puzzle as Puzzle);
   }
 }
 
@@ -84,7 +89,7 @@ app.use(async (context) => {
       const socket = await context.upgrade();
       const roomName = pathname.slice(
         pathname.indexOf("e/") + 2,
-        pathname.indexOf("/ws"),
+        pathname.indexOf("/ws")
       );
       // If that room does not exist
       if (
@@ -93,21 +98,21 @@ app.use(async (context) => {
       ) {
         // Create new WSRoom and add to WSRooms
         room = new WSRoom(roomName);
-        room.WSUsers.add(socket);
+        room.WSSockets.add(socket);
         WSRooms.push(room);
       } else {
         // Get room
         room = WSRooms.find((room) => room.roomName == roomName);
-        room?.WSUsers.add(socket);
+        room?.WSSockets.add(socket);
       }
       onConnection(socket, room as WSRoom);
       // For each event from socket
       for await (const ev of socket) {
         // If close event, remove from user set
         if (isWebSocketCloseEvent(ev)) {
-          room?.WSUsers.delete(socket);
+          room?.WSSockets.delete(socket);
         } else {
-          for (const user of room!.WSUsers) {
+          for (const user of room!.WSSockets) {
             const res = ev as WebSocketMessage;
             user.send(res);
           }
@@ -160,8 +165,6 @@ export const startNewGame = async () => {
 };
 // sudokuObj = await startNewGame();
 
-const validation = new Validation(sudokuObj.puzzle as Puzzle);
-
 const onConnection = (ws: WebSocket, room: WSRoom) => {
   // Assign color
   // TODO Possibly assign by ip address?
@@ -170,7 +173,7 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
   // For undoing
   const moves: Move[] = [];
   // Save to WSusers
-  WSusers[id] = {
+  room.WSUsers[id] = {
     id,
     focus: { row: 1, col: 1 },
     // name: null,
@@ -304,8 +307,9 @@ const onMessage = (ws: WebSocket, message: string, id: string) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
-      "localhost"}:${port}`,
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
+    }:${port}`
   );
 });
 
@@ -327,23 +331,23 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 //     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
 //   }
 
-const db = new MongoClass();
-const { puzzles } = db.connect();
-console.log(await puzzles.count());
+// const db = new MongoClass();
+// const { puzzles } = db.connect();
+// console.log(await puzzles.count());
 
-export const startNewGame = async () => {
-  let puzzle: Puzzle = new BlankPuzzle();
-  let solved: Puzzle = puzzle;
-  // Check for puzzles in db
-  if (await puzzles.count()) {
-    const found = await puzzles.findOne({ difficulty: "hard" });
-    puzzle = parsePuzzle(found?.puzzleString as string);
-    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-  } else {
-    puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
-    console.log("0\n0\n0\n0\n0");
-    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-  }
+// export const startNewGame = async () => {
+//   let puzzle: Puzzle = new BlankPuzzle();
+//   let solved: Puzzle = puzzle;
+//   // Check for puzzles in db
+//   if (await puzzles.count()) {
+//     const found = await puzzles.findOne({ difficulty: "hard" });
+//     puzzle = parsePuzzle(found?.puzzleString as string);
+//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   } else {
+//     puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+//     console.log("0\n0\n0\n0\n0");
+//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   }
 
 // const freeColor = (socket: WebSocket) => {
 //   let count = 0;
@@ -360,7 +364,7 @@ const freeUser = (id: User["id"]) => {
   delete WSusers[id];
 };
 
-const onClose = (ws: WebSocket, message:string, id:string) => {
+const onClose = (ws: WebSocket, message: string, id: string) => {
   freeColor(ws);
   freeUser(id);
   console.log(`socket closed: ${message}`);
