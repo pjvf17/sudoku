@@ -1,5 +1,5 @@
 import { createRandomOneNine } from "./generator.ts";
-import { Address, Cell, Puzzle } from "../client/src/types.d.ts";
+import type { Address, Cell, Puzzle } from "../client/src/types.d.ts";
 
 export class BlankCell implements Cell {
   number = ".";

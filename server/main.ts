@@ -1,4 +1,4 @@
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
+import { Application, send } from "https://deno.land/x/oak@v6.2.0/mod.ts";
 import {
   puzzleToString,
   createPuzzle,
@@ -8,7 +8,7 @@ import {
 } from "./generator.ts";
 import Validation from "./serverSidePuzzleValidation.ts";
 import Updates from "./serverSidePuzzleUpdates.ts";
-import {
+import type {
   PencilMarkUpdate,
   NumberUpdate,
   Users,
@@ -30,19 +30,41 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const app = new Application();
 
-const WSSockes = new Set<WebSocket>();
+class WSRoom {
+  readonly roomName: string;
+  WSUsers = new Set<WebSocket>();
+  readonly sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
+    puzzle: new BlankPuzzle(),
+  };
 
-const WSusers: Users = {};
+  constructor(name: string) {
+    this.roomName = name;
 
-const WSUserUpdates: { [propName: string]: Updates } = {};
+    // Initialize puzzle
+
+    let puzzle: Puzzle = new BlankPuzzle();
+    let solved: Puzzle = puzzle;
+
+    puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+    console.log("0\n0\n0\n0\n0");
+    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+
+    this.sudokuObj = { puzzle, solved };
+  }
+}
+
+const WSRooms: WSRoom[] = [];
+const WSRoomNames = new Set<string>();
 
 app.use(async (context) => {
+  const pathname = context.request.url.pathname;
+  console.log(pathname);
   try {
     // If not upgradeable, send to vue
     if (!context.isUpgradable) {
       try {
         // Looks to see if there are the correct corrosponding files
-        await send(context, context.request.url.pathname, {
+        await send(context, pathname, {
           root: "dist",
           index: "index.html",
         });
@@ -57,19 +79,38 @@ app.use(async (context) => {
       }
       // Is upgradeable
     } else {
+      let room;
       // Upgrade to websocket
       const socket = await context.upgrade();
-      WSSockes.add(socket);
-      const id = onConnection(socket);
+      const roomName = pathname.slice(
+        pathname.indexOf("e/") + 2,
+        pathname.indexOf("/ws"),
+      );
+      // If that room does not exist
+      if (
+        !WSRoomNames.has(roomName) &&
+        WSRooms.findIndex((room) => room.roomName == roomName) != -1
+      ) {
+        // Create new WSRoom and add to WSRooms
+        room = new WSRoom(roomName);
+        room.WSUsers.add(socket);
+        WSRooms.push(room);
+      } else {
+        // Get room
+        room = WSRooms.find((room) => room.roomName == roomName);
+        room?.WSUsers.add(socket);
+      }
+      onConnection(socket, room as WSRoom);
       // For each event from socket
       for await (const ev of socket) {
         // If close event, remove from user set
         if (isWebSocketCloseEvent(ev)) {
-          onClose(socket, JSON.stringify(ev), id);
-          WSSockes.delete(socket);
-        } else if (typeof ev === "string") {
-          // Send to update handler
-          onMessage(socket, ev, id);
+          room?.WSUsers.delete(socket);
+        } else {
+          for (const user of room!.WSUsers) {
+            const res = ev as WebSocketMessage;
+            user.send(res);
+          }
         }
       }
     }
@@ -97,7 +138,31 @@ const getColor = (socket: WebSocket) => {
   }
 };
 
-const onConnection = (ws: WebSocket) => {
+let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
+  puzzle: new BlankPuzzle(),
+};
+
+export const startNewGame = async () => {
+  let puzzle: Puzzle = new BlankPuzzle();
+  let solved: Puzzle = puzzle;
+  // Check for puzzles in db
+  // if (await puzzles.count()) {
+  //   const found = await puzzles.findOne({ "difficulty": "hard" });
+  //   puzzle = parsePuzzle(found?.puzzleString as string);
+  //   solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  // } else {
+  puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+  console.log("0\n0\n0\n0\n0");
+  solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  // }
+
+  return { puzzle, solved };
+};
+// sudokuObj = await startNewGame();
+
+const validation = new Validation(sudokuObj.puzzle as Puzzle);
+
+const onConnection = (ws: WebSocket, room: WSRoom) => {
   // Assign color
   // TODO Possibly assign by ip address?
   let color = getColor(ws);
@@ -120,9 +185,9 @@ const onConnection = (ws: WebSocket) => {
     id
   );
   // Send starting info
-  ws.send(JSON.stringify({ users: WSusers, id, color, sudokuObj }));
-  // Send to everyone else updated WSusers
-  for (const user of WSSockes) {
+  ws.send(JSON.stringify({ users, id, color, sudokuObj }));
+  // Send to everyone else updated users
+  for (const user of room!.WSUsers) {
     // Send only to open clients, and not the one who sent a message
     if (!user.isClosed && user != ws) {
       user.send(JSON.stringify({ WSusers }));
@@ -239,15 +304,28 @@ const onMessage = (ws: WebSocket, message: string, id: string) => {
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ?? "localhost"
-    }:${port}`
+    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
+      "localhost"}:${port}`,
   );
 });
 
-let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
-  puzzle: new BlankPuzzle(),
-};
+// const db = new MongoClass();
+// const { puzzles } = db.connect();
+// console.log(await puzzles.count());
+
+// export const startNewGame = async () => {
+//   let puzzle: Puzzle = new BlankPuzzle();
+//   let solved: Puzzle = puzzle;
+//   // Check for puzzles in db
+//   if (await puzzles.count()) {
+//     const found = await puzzles.findOne({ "difficulty": "hard" });
+//     puzzle = parsePuzzle(found?.puzzleString as string);
+//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   } else {
+//     puzzle = parsePuzzle(puzzleToString(createPuzzle("hard", ["xwing"])));
+//     console.log("0\n0\n0\n0\n0");
+//     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+//   }
 
 const db = new MongoClass();
 const { puzzles } = db.connect();
@@ -267,23 +345,16 @@ export const startNewGame = async () => {
     solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
   }
 
-  return { puzzle, solved };
-};
-sudokuObj = await startNewGame();
-const validation = new Validation(sudokuObj.puzzle as Puzzle);
-console.log("\n\n solved:");
-printSudokuToConsole(sudokuObj.solved as Puzzle);
-
-const freeColor = (socket: WebSocket) => {
-  let count = 0;
-  while (count < colors.length) {
-    if (colors[count].used == socket) {
-      colors[count].used = false;
-      return true;
-    }
-    count++;
-  }
-};
+// const freeColor = (socket: WebSocket) => {
+//   let count = 0;
+//   while (count < colors.length) {
+//     if (colors[count].used == socket) {
+//       colors[count].used = false;
+//       return true;
+//     }
+//     count++;
+//   }
+// };
 
 const freeUser = (id: User["id"]) => {
   delete WSusers[id];

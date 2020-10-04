@@ -1,5 +1,5 @@
-import { MongoClient } from "https://deno.land/x/mongo@v0.9.1/mod.ts";
-import { Difficulty, Technique } from "../../client/src/types.d.ts";
+import { MongoClient } from "https://deno.land/x/mongo@v0.12.1/mod.ts";
+import type { Difficulty, Technique } from "../../client/src/types.d.ts";
 import { createPuzzle, puzzleToString } from "../generator.ts";
 import "https://deno.land/x/dotenv/load.ts";
 

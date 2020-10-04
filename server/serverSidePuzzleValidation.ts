@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Puzzle, Cell, Units, Unit, PencilMarkUpdate, User } from "../client/src/types.d.ts";
+import type { Puzzle, Cell, Units, Unit, PencilMarkUpdate, User } from "../client/src/types.d.ts";
 /* eslint-enable */
 
 
