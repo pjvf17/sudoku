@@ -159,12 +159,14 @@ const freeColor = (socket: WebSocket) => {
   }
 };
 
-const freeUser = (room: WSRoom, ws: WebSocket, id:string) => {
+const freeUser = (room: WSRoom, ws: WebSocket, id: string) => {
+  // WSSockets is a set, delete by passing in the object
   room.WSSockets.delete(ws);
+  // WSUsers is an object, delete by passing in the key
   delete room.WSUsers[id];
 };
 
-const onClose = (room: WSRoom, ws: WebSocket, code: number, id:string) => {
+const onClose = (room: WSRoom, ws: WebSocket, code: number, id: string) => {
   // Free color
   freeColor(ws);
   // Delete from Sockets and Users
@@ -323,11 +325,19 @@ const onMessage = (
       updates.sudokuObj = sudokuObj.puzzle;
       room.validation.puzzle = sudokuObj.puzzle;
       updates.validation = room.validation;
+      // For each user
+      for (let id in room.WSUsers) {
+        // Reset moves
+        room.WSUsers[id].moves = [];
+        // Reset position
+        room.WSUsers[id].focus = { row: null, col: null };
+      }
 
       for (let client of room.WSSockets) {
         // Send only to open clients, including sender
         if (!client.isClosed) {
-          client.send(JSON.stringify({ sudokuObj }));
+          // Update sudokuObj and users (which had values reset)
+          client.send(JSON.stringify({ sudokuObj, users: room.WSUsers }));
         }
       }
     };
