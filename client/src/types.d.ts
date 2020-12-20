@@ -8,6 +8,14 @@ export interface Address {
   */
 }
 
+export interface FocusUpdate {
+  id: string;
+  focus: {
+    row: number;
+    col: number;
+  }
+}
+
 export interface NumberUpdate {
   address: Address;
   number: number | string;
@@ -55,6 +63,7 @@ export interface User {
   };
   id: string;
   moves: Move[];
+  // deno-lint-ignore no-explicit-any
   ws: any;
 }
 

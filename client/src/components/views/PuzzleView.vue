@@ -151,6 +151,7 @@ import type {
   Cell,
   Puzzle,
   Users,
+  FocusUpdate,
 } from "../../types";
 import router from '../../router';
 interface Ref<T> {
@@ -343,12 +344,15 @@ export default {
         row = 5;
         col = 5;
         users.value[id.value].focus = { row, col };
+        const focusUpdate:FocusUpdate = {
+          id: id.value,
+          focus: {
+            row, col
+          }
+        }
         socket.send(
           JSON.stringify({
-            focusUpdate: {
-              id: id.value,
-              focus: { row, col },
-            },
+            focusUpdate
           })
         );
         // end function

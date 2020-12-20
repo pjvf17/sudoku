@@ -1,25 +1,27 @@
 /* eslint-disable */
 import type Validation from "./serverSidePuzzleValidation.ts";
-import type { NumberUpdate, Puzzle, Users, PencilMarkUpdate, Cell } from "../client/src/types.d.ts";
+import type {
+  NumberUpdate,
+  Puzzle,
+  Users,
+  PencilMarkUpdate,
+  Cell,
+} from "../client/src/types.d.ts";
 /* eslint-enable */
-
 
 class Updates {
   sudokuObj: Puzzle;
   users: Users;
   validation: Validation;
-  id: string
 
   constructor(
     puzzle: Puzzle,
     users: Users,
-    validationClass: Validation, 
-    userId:string
+    validationClass: Validation,
   ) {
     this.sudokuObj = puzzle;
     this.users = users;
     this.validation = validationClass;
-    this.id = userId;
   }
 
   updateNumber(
@@ -36,15 +38,14 @@ class Updates {
     this.sudokuObj[
       `r${address.r}c${address.c}`
     ] = this.validation.validateSquare(
-      this.sudokuObj[`r${address.r}c${address.c}`]
+      this.sudokuObj[`r${address.r}c${address.c}`],
     );
     // If not undoing a move add to moves
     if (!undo) {
       // If no associated PencilMarkUpdates, assemble them
-      associatedPencilMarkUpdates =
-        associatedPencilMarkUpdates ??
+      associatedPencilMarkUpdates = associatedPencilMarkUpdates ??
         this.updatePeerCandidates(
-          this.sudokuObj[`r${address.r}c${address.c}`]
+          this.sudokuObj[`r${address.r}c${address.c}`], id
         );
 
       const inverseUpdate: NumberUpdate = { ...numberUpdate };
@@ -54,7 +55,6 @@ class Updates {
       inverseUpdate.number = originalState.number;
       // Add to moves
       this.users[id].moves.push({ numberUpdate: inverseUpdate });
-
     } else {
       // Undo each pencilMarkUpdate
       associatedPencilMarkUpdates?.forEach((pencilMarkUpdate) => {
@@ -64,7 +64,7 @@ class Updates {
   }
 
   // Updates the candidates in each peer of a cell that has been updated
-  updatePeerCandidates = (cell: Cell) => {
+  updatePeerCandidates = (cell: Cell, id:string) => {
     // Assemble peers
     const { row, col, square } = this.validation.getPeers(cell);
     const peers: Cell[] = [
@@ -91,7 +91,7 @@ class Updates {
           // Sending pencilMarks instead of pencilMark means that instead of toggling
           // This array will replace the previous
           pencilMarks: originalState,
-          id: this.id
+          id: id,
         };
         // Push update to array
         pencilMarkUpdates.push(inverseUpdate);
@@ -116,7 +116,7 @@ class Updates {
       this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
       ] = !this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks[
-      Number(pencilMark) - 1
+        Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
       this.sudokuObj[
@@ -143,9 +143,7 @@ class Updates {
       // Update moves
       this.users[id].moves.push({ pencilMarkUpdate: inverseUpdate });
       // If not from server
-    
     }
-
   }
   undo(userId: string) {
     // Check that there is in fact a move to undo
@@ -160,7 +158,7 @@ class Updates {
         console.log("sending");
         this.updatePencilMarks(
           { pencilMarkUpdate: move!.pencilMarkUpdate },
-          true
+          true,
         );
       }
     }
