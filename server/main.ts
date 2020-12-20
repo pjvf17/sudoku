@@ -113,9 +113,8 @@ app.use(async (context) => {
       const id = onConnection(socket, room as WSRoom);
       // For each event from socket
       for await (const ev of socket) {
-        // If close event, remove from user set
         if (isWebSocketCloseEvent(ev)) {
-          room?.WSSockets.delete(socket);
+          onClose(room as WSRoom, socket, ev.code, id);
         } else {
           onMessage(socket, ev as string, room as WSRoom);
           // for (const user of room!.WSSockets) {
@@ -146,6 +145,37 @@ const getColor = (socket: WebSocket) => {
       return colors[count].value;
     }
     count++;
+  }
+};
+
+const freeColor = (socket: WebSocket) => {
+  let count = 0;
+  while (count < colors.length) {
+    if (colors[count].used == socket) {
+      colors[count].used = false;
+      return true;
+    }
+    count++;
+  }
+};
+
+const freeUser = (room: WSRoom, ws: WebSocket, id:string) => {
+  room.WSSockets.delete(ws);
+  delete room.WSUsers[id];
+};
+
+const onClose = (room: WSRoom, ws: WebSocket, code: number, id:string) => {
+  // Free color
+  freeColor(ws);
+  // Delete from Sockets and Users
+  freeUser(room, ws, id);
+  console.log(`socket closed: ${code}`);
+  // Send to everyone else updated users
+  for (const user of room.WSSockets) {
+    // Send only to open clients
+    if (!user.isClosed && user != ws) {
+      user.send(JSON.stringify({ users: room.WSUsers }));
+    }
   }
 };
 
@@ -240,7 +270,7 @@ const onMessage = (
     pencilMarkUpdate,
     newGame,
     undo,
-    hint
+    hint,
   }: {
     focusUpdate: FocusUpdate;
     numberUpdate: NumberUpdate;
