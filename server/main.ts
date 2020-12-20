@@ -36,31 +36,36 @@ class WSRoom {
   WSUsers: Users = {};
   WSSockets = new Set<WebSocket>();
   updates: Updates;
-  readonly validation: Validation;
-  readonly sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
-    puzzle: new BlankPuzzle(),
-  };
 
   constructor(name: string) {
     this.roomName = name;
-    // Initialize puzzle
 
-    let puzzle: Puzzle = new BlankPuzzle();
-    let solved: Puzzle = puzzle;
-
-    puzzle = parsePuzzle(puzzleToString(createPuzzle("hard")));
-    console.log("0\n0\n0\n0\n0");
-    solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-
-    this.sudokuObj = { puzzle, solved };
-    this.validation = new Validation(sudokuObj.puzzle as Puzzle);
+    const blankPuzzle = new BlankPuzzle();
     this.updates = new Updates(
-      this.sudokuObj.puzzle as Puzzle,
+      {
+        puzzle: blankPuzzle,
+      },
       this.WSUsers,
-      this.validation,
     );
   }
 }
+
+export const startNewGame = async () => {
+  let puzzle: Puzzle = new BlankPuzzle();
+  let solved: Puzzle = puzzle;
+  // Check for puzzles in db
+  // if (await puzzles.count()) {
+  //   const found = await puzzles.findOne({ "difficulty": "hard" });
+  //   puzzle = parsePuzzle(found?.puzzleString as string);
+  //   solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  // } else {
+  puzzle = parsePuzzle(puzzleToString(createPuzzle("medium")));
+  console.log("0\n0\n0\n0\n0");
+  solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
+  // }
+
+  return { puzzle, solved };
+};
 
 const WSRooms: WSRoom[] = [];
 const WSRoomNames = new Set<string>();
@@ -104,6 +109,7 @@ app.use(async (context) => {
         room = new WSRoom(roomName);
         room.WSSockets.add(socket);
         WSRooms.push(room);
+        room.updates.updateSudokuObj(await startNewGame());
         // Room exists
       } else {
         // Get room
@@ -181,28 +187,6 @@ const onClose = (room: WSRoom, ws: WebSocket, code: number, id: string) => {
   }
 };
 
-let sudokuObj: { puzzle: Puzzle; solved?: Puzzle } = {
-  puzzle: new BlankPuzzle(),
-};
-
-export const startNewGame = async () => {
-  let puzzle: Puzzle = new BlankPuzzle();
-  let solved: Puzzle = puzzle;
-  // Check for puzzles in db
-  // if (await puzzles.count()) {
-  //   const found = await puzzles.findOne({ "difficulty": "hard" });
-  //   puzzle = parsePuzzle(found?.puzzleString as string);
-  //   solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-  // } else {
-  puzzle = parsePuzzle(puzzleToString(createPuzzle("medium")));
-  console.log("0\n0\n0\n0\n0");
-  solved = solver(JSON.parse(JSON.stringify(puzzle))).puzzle;
-  // }
-
-  return { puzzle, solved };
-};
-sudokuObj = await startNewGame();
-
 const onConnection = (ws: WebSocket, room: WSRoom) => {
   // Assign color
   // TODO Possibly assign by ip address?
@@ -220,7 +204,11 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
     moves,
   };
   // Send starting info
-  ws.send(JSON.stringify({ users: room.WSUsers, id, color, sudokuObj }));
+  ws.send(
+    JSON.stringify(
+      { users: room.WSUsers, id, color, sudokuObj: room.updates.sudokuObj },
+    ),
+  );
   // Send to everyone else updated users
   for (const user of room.WSSockets) {
     // Send only to open clients, and not the one who sent a message
@@ -281,10 +269,21 @@ const onMessage = (
     // deno-lint-ignore no-explicit-any
     [propName: string]: any;
   } = JSON.parse(message);
+  console.log(
+    {
+      focusUpdate,
+      numberUpdate,
+      pencilMarkUpdate,
+      newGame,
+      undo,
+      hint,
+      message,
+    },
+  );
   const updates = room.updates;
   if (hint) {
     const hintResponse = solver(
-      JSON.parse(JSON.stringify(sudokuObj.puzzle)),
+      JSON.parse(JSON.stringify(room.updates.sudokuObj)),
       undefined,
       true,
     );
@@ -303,6 +302,11 @@ const onMessage = (
   // Recieved number update
   if (numberUpdate) {
     updates.updateNumber({ numberUpdate });
+    console.log(
+      room.updates.sudokuObj.puzzle[
+        `r${numberUpdate.address.r}c${numberUpdate.address.c}`
+      ],
+    );
   }
   // Recieved pencil mark update
   if (pencilMarkUpdate) {
@@ -310,7 +314,7 @@ const onMessage = (
   }
   // Recieved undo request
   if (undo) {
-    updates.undo(undo.id);
+    updates.undo(undo);
   }
   // console.log(newGame);
   if (newGame) {
@@ -320,11 +324,9 @@ const onMessage = (
     );
     startGameWorker.postMessage("");
     startGameWorker.onmessage = (message) => {
-      sudokuObj = message.data;
+      room.updates.updateSudokuObj( message.data );
+      console.log(room.updates.sudokuObj);
       // Update updates and validation
-      updates.sudokuObj = sudokuObj.puzzle;
-      room.validation.puzzle = sudokuObj.puzzle;
-      updates.validation = room.validation;
       // For each user
       for (let id in room.WSUsers) {
         // Reset moves
@@ -337,7 +339,11 @@ const onMessage = (
         // Send only to open clients, including sender
         if (!client.isClosed) {
           // Update sudokuObj and users (which had values reset)
-          client.send(JSON.stringify({ sudokuObj, users: room.WSUsers }));
+          client.send(
+            JSON.stringify(
+              { sudokuObj: room.updates.sudokuObj, users: room.WSUsers },
+            ),
+          );
         }
       }
     };

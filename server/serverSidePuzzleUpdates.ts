@@ -1,5 +1,5 @@
 /* eslint-disable */
-import type Validation from "./serverSidePuzzleValidation.ts";
+import Validation from "./serverSidePuzzleValidation.ts";
 import type {
   NumberUpdate,
   Puzzle,
@@ -10,18 +10,22 @@ import type {
 /* eslint-enable */
 
 class Updates {
-  sudokuObj: Puzzle;
+  sudokuObj: { puzzle: Puzzle; solved?: Puzzle };
   users: Users;
   validation: Validation;
 
   constructor(
-    puzzle: Puzzle,
+    sudokuObj: { puzzle: Puzzle; solved?: Puzzle },
     users: Users,
-    validationClass: Validation,
   ) {
-    this.sudokuObj = puzzle;
+    this.sudokuObj = sudokuObj;
     this.users = users;
-    this.validation = validationClass;
+    this.validation = new Validation(this.sudokuObj.puzzle);
+  }
+
+  updateSudokuObj(sudokuObj: { puzzle: Puzzle; solved?: Puzzle }) {
+    this.sudokuObj = sudokuObj;
+    this.validation = new Validation(this.sudokuObj.puzzle);
   }
 
   updateNumber(
@@ -30,22 +34,22 @@ class Updates {
     undo = false,
   ) {
     let { address, number, id, associatedPencilMarkUpdates } = numberUpdate;
-
     const originalState = {
-      ...this.sudokuObj[`r${address.r}c${address.c}`],
+      ...this.sudokuObj.puzzle[`r${address.r}c${address.c}`],
     };
-    this.sudokuObj[`r${address.r}c${address.c}`].number = number;
-    this.sudokuObj[
+    this.sudokuObj.puzzle[`r${address.r}c${address.c}`].number = number;
+    this.sudokuObj.puzzle[
       `r${address.r}c${address.c}`
     ] = this.validation.validateSquare(
-      this.sudokuObj[`r${address.r}c${address.c}`],
+      this.sudokuObj.puzzle[`r${address.r}c${address.c}`],
     );
     // If not undoing a move add to moves
     if (!undo) {
       // If no associated PencilMarkUpdates, assemble them
       associatedPencilMarkUpdates = associatedPencilMarkUpdates ??
         this.updatePeerCandidates(
-          this.sudokuObj[`r${address.r}c${address.c}`], id
+          this.sudokuObj.puzzle[`r${address.r}c${address.c}`],
+          id,
         );
 
       const inverseUpdate: NumberUpdate = { ...numberUpdate };
@@ -64,7 +68,7 @@ class Updates {
   }
 
   // Updates the candidates in each peer of a cell that has been updated
-  updatePeerCandidates = (cell: Cell, id:string) => {
+  updatePeerCandidates = (cell: Cell, id: string) => {
     // Assemble peers
     const { row, col, square } = this.validation.getPeers(cell);
     const peers: Cell[] = [
@@ -80,7 +84,7 @@ class Updates {
       if (peer.number == "." && peer.pencilMarks[Number(cell.number) - 1]) {
         // Keep original
         const originalState: boolean[] = [
-          ...this.sudokuObj[`r${peer.address.r}c${peer.address.c}`]
+          ...this.sudokuObj.puzzle[`r${peer.address.r}c${peer.address.c}`]
             .pencilMarks,
         ];
         // Update pencilMarks on local
@@ -108,22 +112,22 @@ class Updates {
     let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
     const originalState: boolean[] = [
-      ...this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks,
+      ...this.sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks,
     ];
     // If pencilMark not delete, and we don't have pencilMarks obj
     if (pencilMark != "delete" && !pencilMarks) {
       // Toggle mark
-      this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks[
+      this.sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
-      ] = !this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks[
+      ] = !this.sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks[
         Number(pencilMark) - 1
       ];
     } else if (pencilMarks) {
-      this.sudokuObj[
+      this.sudokuObj.puzzle[
         `r${address.r}c${address.c}`
       ].pencilMarks = pencilMarks;
     } else {
-      this.sudokuObj[`r${address.r}c${address.c}`].pencilMarks = [
+      this.sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks = [
         false,
         false,
         false,
