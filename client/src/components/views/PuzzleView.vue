@@ -151,7 +151,6 @@ import type {
   Cell,
   Puzzle,
   Users,
-  FocusUpdate,
 } from "../../types";
 import router from '../../router';
 interface Ref<T> {
@@ -334,6 +333,7 @@ export default {
     };
 
     const handleInput = (event: KeyboardEvent) => {
+      console.log(event)
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
       // Address of cursor
@@ -344,7 +344,7 @@ export default {
         row = 5;
         col = 5;
         users.value[id.value].focus = { row, col };
-        const focusUpdate:FocusUpdate = {
+        const focusUpdate = {
           id: id.value,
           focus: {
             row, col

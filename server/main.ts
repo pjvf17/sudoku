@@ -110,7 +110,6 @@ app.use(async (context) => {
         room = WSRooms.find((room) => room.roomName == roomName);
         room?.WSSockets.add(socket);
       }
-      console.log(room);
       const id = onConnection(socket, room as WSRoom);
       // For each event from socket
       for await (const ev of socket) {
@@ -194,7 +193,7 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
   for (const user of room.WSSockets) {
     // Send only to open clients, and not the one who sent a message
     if (!user.isClosed && user != ws) {
-      user.send(JSON.stringify({ WSUsers: room.WSUsers }));
+      user.send(JSON.stringify({ users: room.WSUsers }));
     }
   }
   return id;
