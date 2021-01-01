@@ -283,7 +283,7 @@ const onMessage = (
   const updates = room.updates;
   if (hint) {
     const hintResponse = solver(
-      JSON.parse(JSON.stringify(room.updates.sudokuObj)),
+      JSON.parse(JSON.stringify(room.updates.sudokuObj.puzzle)),
       undefined,
       true,
     );
