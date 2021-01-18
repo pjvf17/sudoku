@@ -116,6 +116,12 @@
             <BaseButton @click="checkNew = false" class="no"
               >Take me back</BaseButton
             >
+            <div class="select">
+              <span>Difficulty</span>
+              <select name="difficulty" id="difficulty"
+                ><option value="Hard">Hard</option></select
+              >
+            </div>
           </div>
         </base-popup>
         <BaseButton @mouseup="requestHint()">Hint</BaseButton>
@@ -161,9 +167,9 @@ export default {
   setup() {
     // Open socket to room address
     console.log("router:");
-    
+
     console.log(router.currentRoute.value.params.roomTitle);
-    
+
     const wsUrl = `ws://localhost:8011/puzzle/${router.currentRoute.value.params.roomTitle}/ws`;
     console.log(wsUrl);
     const socket = new WebSocket(wsUrl);
@@ -515,9 +521,71 @@ body {
   margin: 0;
   padding: 0;
 }
+
 #main {
   @include c.mainContainer;
 }
+
+// Adapted from https://moderncss.dev/custom-select-styles-with-pure-css/
+select {
+  // A reset of styles, including removing the default dropdown arrow
+  appearance: none;
+  // Additional resets for further consistency
+  background-color: transparent;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+  outline: none;
+
+  height: 52px;
+  margin: auto;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 3px;
+  box-shadow: $box-shadow;
+  border: none;
+  background-color: $nord6;
+  font-family: Nunito, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
+  transition: 0.5s ease;
+
+  ::-ms-expand {
+    display: none;
+  }
+}
+$box-shadow: 0px 0px 15px 0px
+  rgba(
+    $color: #000000,
+    $alpha: 0.3,
+  );
+$inverse-box-shadow: 0px 0px 15px 0px inset
+  rgba(
+    $color: #000000,
+    $alpha: 0.1,
+  );
+
+// :root {
+//   --select-border: #777;
+//   --select-focus: blue;
+//   --select-arrow: var(--select-border);
+// }
+// .select {
+//   width: 100%;
+//   min-width: 15ch;
+//   max-width: 30ch;
+//   border: 1px solid var(--select-border);
+//   border-radius: 0.25em;
+//   padding: 0.25em 0.5em;
+//   font-size: 1.25rem;
+//   cursor: pointer;
+//   line-height: 1.1;
+//   background-color: #fff;
+//   background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
+// }
 
 .pane {
   padding: 1em;
