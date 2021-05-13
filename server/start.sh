@@ -1,1 +1,1 @@
-deno run --allow-net --allow-read --allow-write --allow-plugin --unstable --allow-env main.ts
+deno run --allow-net --allow-read --allow-write --allow-plugin --allow-env --unstable main.ts --watch

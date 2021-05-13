@@ -3,10 +3,10 @@ import {
   puzzleToString,
   createPuzzle,
   solver,
-  printSudokuToConsole,
+  // printSudokuToConsole,
   parsePuzzle,
 } from "./generator.ts";
-import Validation from "./serverSidePuzzleValidation.ts";
+// import Validation from "./serverSidePuzzleValidation.ts";
 import Updates from "./serverSidePuzzleUpdates.ts";
 import type {
   PencilMarkUpdate,
@@ -16,15 +16,15 @@ import type {
   User,
   Move,
   Puzzle,
-  Cell,
+  // Cell,
 } from "../client/src/types.d.ts";
 
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
-import { MongoClass } from "./mongo/mongoMain.ts";
+// import { MongoClass } from "./mongo/mongoMain.ts";
 import {
   isWebSocketCloseEvent,
   WebSocket,
-  WebSocketMessage,
+  // WebSocketMessage,
 } from "https://deno.land/std@0.61.0/ws/mod.ts";
 
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
@@ -50,7 +50,9 @@ class WSRoom {
   }
 }
 
-export const startNewGame = async () => {
+// Async version to be used if "await puzzles.findOne(...)" is used
+// export const startNewGame = async () => {
+export const startNewGame = () => {
   let puzzle: Puzzle = new BlankPuzzle();
   let solved: Puzzle = puzzle;
   // Check for puzzles in db
@@ -82,7 +84,7 @@ app.use(async (context) => {
           root: "dist",
           index: "index.html",
         });
-      } catch (error) {
+      } catch {
         // If no corrosponding files, send to index
         // This allows Vue Router to work in History Mode
         // See more here: https://router.vuejs.org/guide/essentials/history-mode.html#example-server-configurations
@@ -135,7 +137,12 @@ app.use(async (context) => {
   }
 });
 
-const colors: any = [
+type color = {
+  value: string
+  used: boolean | WebSocket
+}
+
+const colors:color[] = [
   { value: "#bf616a88", used: false },
   { value: "#d0877088", used: false },
   { value: "#ebcb8b88", used: false },
@@ -152,6 +159,8 @@ const getColor = (socket: WebSocket) => {
     }
     count++;
   }
+  // If here, no colors available
+  throw new Error("No Color Available");
 };
 
 const freeColor = (socket: WebSocket) => {
@@ -190,8 +199,8 @@ const onClose = (room: WSRoom, ws: WebSocket, code: number, id: string) => {
 const onConnection = (ws: WebSocket, room: WSRoom) => {
   // Assign color
   // TODO Possibly assign by ip address?
-  let color = getColor(ws);
-  let id = v4.generate();
+  const color = getColor(ws);
+  const id = v4.generate();
   // For undoing
   const moves: Move[] = [];
   // Save to WSusers
@@ -236,7 +245,7 @@ const updateFocus = (
   userTimers[id] = setTimeout(() => {
     updateFocus(room, ws, { id, focus: { row: null, col: null } });
     // Get rid of cursor
-    for (let client of room.WSSockets) {
+    for (const client of room.WSSockets) {
       // Send only to open clients, and not the one who sent a message
       if (!client.isClosed && client != ws) {
         client.send(
@@ -287,7 +296,7 @@ const onMessage = (
       undefined,
       true,
     );
-    for (let client of room.WSSockets) {
+    for (const client of room.WSSockets) {
       // Send only to open clients including sender
       if (!client.isClosed) {
         client.send(JSON.stringify({ hint: hintResponse }));
@@ -328,14 +337,14 @@ const onMessage = (
       console.log(room.updates.sudokuObj);
       // Update updates and validation
       // For each user
-      for (let id in room.WSUsers) {
+      for (const id in room.WSUsers) {
         // Reset moves
         room.WSUsers[id].moves = [];
         // Reset position
         room.WSUsers[id].focus = { row: null, col: null };
       }
 
-      for (let client of room.WSSockets) {
+      for (const client of room.WSSockets) {
         // Send only to open clients, including sender
         if (!client.isClosed) {
           // Update sudokuObj and users (which had values reset)
@@ -350,7 +359,7 @@ const onMessage = (
     console.log("after");
   } else if (!hint) {
     // Send to all connected
-    for (let client of room.WSSockets) {
+    for (const client of room.WSSockets) {
       // Send only to open clients, and not the one who sent a message
       if (!client.isClosed && client != ws) {
         client.send(message);

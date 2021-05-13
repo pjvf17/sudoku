@@ -1,8 +1,9 @@
+/// <reference lib="webworker" />
 import {
     puzzleToString,
     createPuzzle,
     solver,
-    printSudokuToConsole,
+    // printSudokuToConsole,
     parsePuzzle,
   } from "../generator.ts";
 
