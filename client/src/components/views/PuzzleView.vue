@@ -465,7 +465,7 @@ export default {
 
     // If check is false or undefined, trigger popup
     // Else, trigger new game request
-    const newGame = (check: boolean) => {
+    const newGame = (check?: boolean) => {
       if (!check) {
         checkNew.value = true;
       } else {
