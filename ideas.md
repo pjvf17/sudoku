@@ -1,5 +1,6 @@
+# Ideas
 
-### Navigation and Solving
+## Navigation and Solving
 
 - [x] Undo feature (18/07/2020)
 - [ ] Redo Feature
@@ -30,7 +31,7 @@
 - [x] Update peers when number put in (21/07/2020)
   - [x] Update them properly if it's then taken out (28/07/2020)
 
-### Serverside and Stability
+## Serverside and Stability
 
 - [ ] Numbering of moves
   - [ ] Use the numbering to check for missed moves from/to server
@@ -40,8 +41,7 @@
 - [ ] On fill in candidates, send updates in a bundle
   - [ ] pencilMarkUpdate in array form
 
-
-### Typescript
+## Typescript
 
 - [x] Type clientside
 - [x] Type generator.ts
@@ -52,7 +52,7 @@
   - [x] Updates
 - [x] Classify puzzleValidation (26-07-2020)
   
-### Customization and UI
+## Customization and UI
 
 - [x] Are you sure? When starting new game when not finished
 - [ ] Customization
@@ -69,13 +69,12 @@
 - [ ] Indication of loading
 - [ ] Indication/celebration of complete
 
-### Finishing touches
+## Finishing touches
 
 - [ ] Make an account
 - [ ] Game lobby
 - [ ] Walkthrough of features
 - [ ] Walkthrough of techniques
-
 
 ## Specific function plans
 

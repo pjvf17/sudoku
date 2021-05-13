@@ -14,3 +14,4 @@
 - [ ] Error message when server sends defocus for self
 - [ ] If there are no hints available, it sends back the entire puzzle obj
 - [ ] Naked pair sometimes comes up with a hidden pair
+- [ ] SudokuObj possibly undefined PuzzleView.vue
