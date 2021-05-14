@@ -15,5 +15,7 @@
 - [ ] If there are no hints available, it sends back the entire puzzle obj
 - [ ] Naked pair sometimes comes up with a hidden pair
 - [ ] SudokuObj possibly undefined PuzzleView.vue
-- [x] Currently unable to switch tabs with puzzle open
-- [ ] Commenting out code that sets row & col to 5 in handeInput() causes errors, despite it being seemingly useless due to the cursor always starting at 1 (and what does that?)
+- [x] Currently unable to switch tabs with puzzle open (05-14-2021)
+- [x] Commenting out code that sets row & col to 5 in handeInput() causes errors, despite it being seemingly useless due to the cursor always starting at 1 (and what does that?) (05-14-2021)
+  - Second piece, setting row & col = 1 is done in onConnection, main.ts
+  - Caused type errors, changed type def in types.d.ts to not include the null possiblity, having been solved by onConnection setting the values

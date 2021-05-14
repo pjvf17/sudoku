@@ -344,27 +344,6 @@ export default {
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
       // Address of cursor
       let { row, col } = users.value[id.value].focus;
-      // If cursor isn't anywhere (i.e. puzzle was just generated), then set it to the middle of the puzzle
-      // TODO figure out why row & col get set to 1 each, and why commenting out this code results in errors
-      if (row == null || col == null) {
-        // Set to middle
-        row = 5;
-        col = 5;
-        users.value[id.value].focus = { row, col };
-        const focusUpdate = {
-          id: id.value,
-          focus: {
-            row, col
-          }
-        }
-        socket.send(
-          JSON.stringify({
-            focusUpdate
-          })
-        );
-        // end function
-        return;
-      }
       // Only allow change of non-givens
       if (
         !sudokuObj?.value?.[`r${row}c${col}`]?.given &&

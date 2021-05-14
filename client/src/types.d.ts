@@ -58,8 +58,8 @@ export interface Move {
 export interface User {
   color: string;
   focus: {
-    row: number | null;
-    col: number | null;
+    row: number;
+    col: number;
   };
   id: string;
   moves: Move[];
