@@ -19,3 +19,6 @@
 - [x] Commenting out code that sets row & col to 5 in handeInput() causes errors, despite it being seemingly useless due to the cursor always starting at 1 (and what does that?) (14-05-2021)
   - Second piece, setting row & col = 1 is done in onConnection, main.ts
   - Caused type errors, changed type def in types.d.ts to not include the null possiblity, having been solved by onConnection setting the values
+- [ ] Assigning null to User.focus.row/col error
+  - Used for taking someone's cursor off the page if they're inactive
+  - Fix by making an "active" switch that will hide a person's cursor if it's false 
