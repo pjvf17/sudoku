@@ -700,5 +700,8 @@ circle {
 
 .actions {
   display: flex;
+  span {
+    color: $nord4;
+  }
 }
 </style>

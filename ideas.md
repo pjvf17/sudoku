@@ -72,6 +72,11 @@
   - [x] Including required specific techniques (05-14-2021)
     - Basic support exists, not currently able to do from UI
   - [ ] UI
+    - [ ] Improve selector, right now the best thing going for it is that it's visible
+      - [ ] Needs to be clear it's a selector and not a button
+      - [ ] Needs to be positioned correctly
+    - [ ] Select more difficulties (other than hard)
+    - [ ] Select specific techniques
 
 ## Finishing touches
 
