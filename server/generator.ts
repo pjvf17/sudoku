@@ -1,22 +1,22 @@
 // generator.ts
 
 import type {
-  Cell,
-  Puzzle,
-  Units,
-  Unit,
   Address,
-  Difficulty,
+  Cell,
   Cost,
-  Technique,
+  Difficulty,
+  Puzzle,
   Score,
+  Technique,
+  Unit,
+  Units,
 } from "../client/src/types.d.ts";
 import { BlankPuzzle } from "./createBlankPuzzle.ts";
 
 // Validation framework
 
 export const makeRows = (puzzle: Puzzle) => {
-  let rows: Units = {
+  const rows: Units = {
     r1: {},
     r2: {},
     r3: {},
@@ -36,7 +36,7 @@ export const makeRows = (puzzle: Puzzle) => {
   return rows;
 };
 export const makeCols = (puzzle: Puzzle) => {
-  let cols: Units = {
+  const cols: Units = {
     c1: {},
     c2: {},
     c3: {},
@@ -57,9 +57,9 @@ export const makeCols = (puzzle: Puzzle) => {
 };
 
 export const getSquare = (cell: Cell) => {
-  let s13 = [1, 2, 3];
-  let s46 = [4, 5, 6];
-  let s79 = [7, 8, 9];
+  const s13 = [1, 2, 3];
+  const s46 = [4, 5, 6];
+  const s79 = [7, 8, 9];
 
   let square: number[] = [1, 2, 3];
   if (cell.address.r >= 1 && cell.address.r <= 3) {
@@ -75,7 +75,7 @@ export const getSquare = (cell: Cell) => {
 };
 
 export const makeSquares = (puzzle: Puzzle) => {
-  let squares: Units = {
+  const squares: Units = {
     s1: {},
     s2: {},
     s3: {},
@@ -103,18 +103,17 @@ export const validateCell = (
   { rows, cols, squares }: { rows: Units; cols: Units; squares: Units },
   number: Cell["number"],
 ) => {
-  let row: Unit, col: Unit, square: Unit;
+  const row: Unit = rows[`r${cell.address.r}`];
+  const col: Unit = cols[`c${cell.address.c}`];
+  const square: Unit = squares[getSquare(cell)];
 
-  row = rows[`r${cell.address.r}`];
-  col = cols[`c${cell.address.c}`];
-  square = squares[getSquare(cell)];
   const peers: Cell[] = [
     ...Object.values(row),
     ...Object.values(col),
     ...Object.values(square),
   ];
   let valid = true;
-  valid = peers.findIndex((el: any) => {
+  valid = peers.findIndex((el) => {
       return el.number == number;
     }) == -1
     ? true
@@ -124,7 +123,7 @@ export const validateCell = (
 };
 
 /*
-Most of the time, the following function isn't worth it. 
+Most of the time, the following function isn't worth it.
 It's best use is for testing other, more targetted validation methods to make sure they work
 */
 
@@ -140,15 +139,15 @@ export const validatePuzzle = (
   // Assume valid
   let valid = true;
   for (const cellAddress in puzzle) {
-    if (puzzle.hasOwnProperty(cellAddress)) {
+    if (Object.prototype.hasOwnProperty.call(puzzle, cellAddress)) {
       const cell = puzzle[cellAddress];
 
       // Most of this code is the same as in
       // validateCell
 
-      let row: Unit = rows[`r${cell.address.r}`];
-      let col: Unit = cols[`c${cell.address.c}`];
-      let square: Unit = squares[getSquare(cell)];
+      const row: Unit = rows[`r${cell.address.r}`];
+      const col: Unit = cols[`c${cell.address.c}`];
+      const square: Unit = squares[getSquare(cell)];
 
       const peers: Cell[] = [
         ...Object.values(row),
@@ -156,7 +155,7 @@ export const validatePuzzle = (
         ...Object.values(square),
       ];
 
-      let valid = true;
+      valid = true;
 
       // The only difference in code is here
       valid = peers.findIndex((el: Cell) => {
@@ -177,6 +176,9 @@ export const validatePuzzle = (
 };
 
 // From https://stackoverflow.com/a/12646864
+// Ignoring no-explicit any due to this operating on any type of array
+// May be a better ts way to do it
+// deno-lint-ignore no-explicit-any
 export const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -195,7 +197,7 @@ export const createRandomOneNine = (): number[] => {
 };
 
 export const parsePuzzle = (puzzleToParse: string): Puzzle => {
-  let puzzle: Puzzle = new BlankPuzzle();
+  const puzzle: Puzzle = new BlankPuzzle();
 
   for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
     for (let colIndex = 0; colIndex < 9; colIndex++) {
@@ -253,7 +255,7 @@ export const parsePuzzle = (puzzleToParse: string): Puzzle => {
 export const printSudokuToConsole = (puzzleToPrint: Puzzle) => {
   let stringToPrint = "\n\n";
   for (const cellAddress in puzzleToPrint) {
-    if (puzzleToPrint.hasOwnProperty(cellAddress)) {
+    if (Object.prototype.hasOwnProperty.call(puzzleToPrint, cellAddress)) {
       const cell = puzzleToPrint[cellAddress];
       stringToPrint = stringToPrint.concat(String(cell.number));
       // console.log(cell.number);
@@ -268,7 +270,7 @@ export const printSudokuToConsole = (puzzleToPrint: Puzzle) => {
 export const printSudokuToConsoleFormatted = async (puzzleToPrint: Puzzle) => {
   await Deno.stdout.write(new TextEncoder().encode("\n\n"));
   for (const cellAddress in puzzleToPrint) {
-    if (puzzleToPrint.hasOwnProperty(cellAddress)) {
+    if (Object.prototype.hasOwnProperty.call(puzzleToPrint, cellAddress)) {
       const cell = puzzleToPrint[cellAddress];
       await Deno.stdout.write(new TextEncoder().encode(`  ${cell.number}  `));
       if (cell.address.c == 9) {
@@ -280,10 +282,10 @@ export const printSudokuToConsoleFormatted = async (puzzleToPrint: Puzzle) => {
 };
 
 export const puzzleToString = (puzzle: Puzzle) => {
-  let puzzleString: string = "";
+  let puzzleString = "";
 
   for (const cellAddress in puzzle) {
-    if (puzzle.hasOwnProperty(cellAddress)) {
+    if (Object.prototype.hasOwnProperty.call(puzzle, cellAddress)) {
       const cell = puzzle[cellAddress];
       // console.log(cell.number);
       puzzleString = puzzleString.concat(String(cell.number));
@@ -390,7 +392,7 @@ export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
   const cols = makeCols(puzzle);
   const squares = makeSquares(puzzle);
   for (let iteration = 0; iteration < 3; iteration++) {
-    let units: any;
+    let units: Units = {};
     switch (iteration) {
       case 0:
         units = rows;
@@ -404,27 +406,29 @@ export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
     }
     // Update candidates for each cell
     for (const unitAddress in units) {
-      if (units.hasOwnProperty(unitAddress)) {
+      if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
         const unit = units[unitAddress];
         // Create an array of the numbers in the row
 
         // First, create an array of the values
         const rowNumbers = Object.values(units[unitAddress])
           // Second, parse each value as a number
-          .map((el: any) => parseInt(el.number))
+          // el.number as string to get around parseInt ts being unhappy
+          // TODO can we guarantee that el.number is a number, if not, why?
+          .map((el) => parseInt(el.number as string))
           // Third, filter out any non numbers
-          .filter((el: any) => !isNaN(el));
+          .filter((el) => !isNaN(el));
 
         // Create an array of numbers from 1 to 9
         let unseenNumbers = Array.from(Array(9), (_, i) => i + 1);
         // For each number in the row
-        unseenNumbers = unseenNumbers.filter((number: any) => {
+        unseenNumbers = unseenNumbers.filter((number) => {
           // Return only the numbers not in the row
           return !rowNumbers.includes(number);
         });
         // For each non number in the row, add the unseenNumbers to the candidates array
         for (const cellAddress in unit) {
-          if (unit.hasOwnProperty(cellAddress)) {
+          if (Object.prototype.hasOwnProperty.call(units, cellAddress)) {
             if (unit[cellAddress].number == ".") {
               // If we're not on the first iteration of both the inner and outer loops
               // Get previous candidates of cell
@@ -435,11 +439,11 @@ export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
               unit[cellAddress].candidates = [];
               unseenNumbers
                 // Include only what previous candidates also has
-                .filter((number: any) => {
+                .filter((number) => {
                   return previousCandidates.includes(number);
                 })
                 // Add each number to the candidates
-                .forEach((number: any) => {
+                .forEach((number) => {
                   unit[cellAddress].candidates.push(number);
                 });
             }
@@ -467,23 +471,24 @@ export const updatePeerCandidates = (
   },
 ) => {
   // Assemble peers
-  let row: Unit, col: Unit, square: Unit;
+  const row: Unit = rows[`r${cell.address.r}`];
+  const col: Unit = cols[`c${cell.address.c}`];
+  const square: Unit = squares[getSquare(cell)];
   // console.log(rows, cols, squares);
-  row = rows[`r${cell.address.r}`];
-  col = cols[`c${cell.address.c}`];
-  square = squares[getSquare(cell)];
-  const peers: any = [
+  
+  const peers: Cell[] = [
     ...Object.values(row),
     ...Object.values(col),
     ...Object.values(square),
   ];
 
   // Loop through peers
-  peers.forEach((peer: any) => {
+  peers.forEach((peer) => {
     // Only effect empty cells
     if (peer.number == ".") {
       // Get index (if any) of number
-      const numberIndex = peer.candidates.indexOf(number);
+      // TODO check if the as number can be gotten rid of
+      const numberIndex = peer.candidates.indexOf(number as number);
       // If candidates includes number
       if (numberIndex != -1) {
         // Remove that candidate
@@ -495,9 +500,9 @@ export const updatePeerCandidates = (
   return puzzle;
 };
 
-/* 
+/*
 The following function loops through a puzzle.
-On each iteration it checks if any unit (row, col, square) 
+On each iteration it checks if any unit (row, col, square)
 has only one spot for a given number to go.
 Then it checks for any cell that only has one candidate
 Only stopping when no changes have been made in a given iteration
@@ -526,14 +531,14 @@ export const hiddenAndNakedSingleSolver = (
   // For calculating cost/difficulty, tracks number of uses total
   let totalChanges = 0;
   // Holds changes, especially useful for hint creation
-  let changesArray: any = [];
+  const changesArray = [];
 
   do {
     changes = 0;
 
     for (let iteration = 0; iteration < 3; iteration++) {
-      let units: any;
-      let unit: any;
+      let units: Units = {};
+      let unit: string;
       switch (iteration) {
         case 0:
           units = rows;
@@ -547,12 +552,13 @@ export const hiddenAndNakedSingleSolver = (
           units = squares;
           unit = "square";
           break;
+          // TODO catch other cases
       }
 
       // Update any cells where there is only one candidate
       for (const cellAddress in puzzle) {
         if (
-          puzzle.hasOwnProperty(cellAddress) &&
+          Object.prototype.hasOwnProperty.call(puzzle, cellAddress) &&
           puzzle[cellAddress].number == "."
         ) {
           const cell = puzzle[cellAddress];
@@ -580,23 +586,23 @@ export const hiddenAndNakedSingleSolver = (
       // Find cells where there is only one spot in a unit for a given number
       // And update them
       for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
+        if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
           // Get array of candidate arrays in unit
           const unitCandidates = Object.values(units[unitAddress])
             // Return candidates of each cell
-            .flatMap((el: any) => el.candidates);
+            .flatMap((el) => el.candidates);
 
-          const filteredUnitCandidates = unitCandidates.filter((el: any) => {
+          const filteredUnitCandidates = unitCandidates.filter((el) => {
             // Returns true if there is only one instance of a given number
             return unitCandidates.indexOf(el) == unitCandidates.lastIndexOf(el);
           });
           try {
             if (filteredUnitCandidates.length) {
               // Search for number
-              filteredUnitCandidates.forEach((candidate: any) => {
+              filteredUnitCandidates.forEach((candidate) => {
                 // Get cell
-                let cell: any = Object.values(units[unitAddress]).find(
-                  (el: any) => {
+                const cell = Object.values(units[unitAddress]).find(
+                  (el) => {
                     return el.candidates.includes(candidate);
                   },
                 );
@@ -689,7 +695,7 @@ export const pointingLockedCandidatesSolver = (
   do {
     changes = 0;
     for (const squareAddress in squares) {
-      if (squares.hasOwnProperty(squareAddress)) {
+      if (Object.prototype.hasOwnProperty.call(squares, squareAddress)) {
         const square = squares[squareAddress];
         // Array form 1-9
         const oneNine = createOneNine();
@@ -711,14 +717,14 @@ export const pointingLockedCandidatesSolver = (
             We only do this if rowcol is "empty" meaning that no other thing has been set
             Or if it's the same (we're assigning rowcol to "col", when it was previously "col")
            */
-            let rowcol: any = "empty";
+            let rowcol:string|null = "empty";
             // Loop through filteredCells
             for (
               let cellIndex = 1;
               cellIndex < filteredCells.length;
               cellIndex++
             ) {
-              const cell: any = filteredCells[cellIndex];
+              const cell = filteredCells[cellIndex];
               if (cell.address.c == filteredCells[cellIndex - 1].address.c) {
                 rowcol = rowcol == "empty" || rowcol == "col" ? "col" : null;
               } else if (
@@ -808,7 +814,7 @@ export const claimingLockedCandidatesSolver = (
   let changes = 0;
   let totalChanges = 0;
   // Holds changes, especially useful for hint creation
-  let changesArray: any = [];
+  const changesArray: any[] = [];
   // Look through row,
   // Then look through col
   do {
@@ -830,7 +836,7 @@ export const claimingLockedCandidatesSolver = (
       }
 
       for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
+        if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
           const unit: Unit = units[unitAddress];
           // Array from 1-9
           const oneNine = createOneNine();
@@ -860,7 +866,7 @@ export const claimingLockedCandidatesSolver = (
                 cellIndex < filteredCells.length;
                 cellIndex++
               ) {
-                const cell: any = filteredCells[cellIndex];
+                const cell = filteredCells[cellIndex];
                 // Compare squares
                 if (
                   getSquare(cell) == getSquare(filteredCells[cellIndex - 1])
@@ -876,7 +882,7 @@ export const claimingLockedCandidatesSolver = (
               // If square not null or empty
               if (square != null && square != "empty") {
                 // Get an array of addresses in rncn format to not change
-                const addressesToNotChange = filteredCells.map((cell: any) => {
+                const addressesToNotChange = filteredCells.map((cell) => {
                   return `r${cell.address.r}c${cell.address.c}`;
                 });
                 // Loop through cells in the square
@@ -976,23 +982,23 @@ export const nakedPairSolver = (
       }
 
       for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
+        if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
           // Get array of candidate arrays in unit
           const unitCandidates = Object.values(units[unitAddress])
             // Return stringifiedcandidates of each cell
-            .map((el: any) => el.candidates);
+            .map((el) => el.candidates);
           // Filter candidates to include only those with two values
           const filteredUnitCandidates = unitCandidates.filter(
-            (candidateArray: any) => candidateArray.length == 2,
+            (candidateArray) => candidateArray.length == 2,
           );
           // Stringify to allow comparing
           const stringifiedUnitCandidates = filteredUnitCandidates.map(
-            (el: any) => JSON.stringify(el),
+            (el) => JSON.stringify(el),
           );
 
           // Further filter candidates to where we only have pairs of pairs
           const pairsFilteredUnitCandidates = stringifiedUnitCandidates
-            .filter((el: any) => {
+            .filter((el) => {
               // Returns true if there is more than 1 instance of a given pair
               return (
                 stringifiedUnitCandidates.indexOf(el) !=
@@ -1000,7 +1006,7 @@ export const nakedPairSolver = (
               );
             })
             // Map them back to arrays
-            .map((el: any) => JSON.parse(el));
+            .map((el) => JSON.parse(el));
 
           if (pairsFilteredUnitCandidates.length) {
             // Get pair
@@ -1089,18 +1095,18 @@ export const hiddenPairSolver = (
       }
 
       for (const unitAddress in units) {
-        if (units.hasOwnProperty(unitAddress)) {
+        if (Object.prototype.hasOwnProperty.call(units, unitAddress)) {
           // Keep track of selected candidate arrays for this unit
-          const candidateArrays: any = [];
+          const candidateArrays = [];
           // Go by number
           for (let number = 1; number <= 9; number++) {
             // Get array of candidate arrays in unit
             const unitCandidates = Object.values(units[unitAddress])
               // Return stringifiedcandidates of each cell
-              .map((el: any) => el.candidates);
+              .map((el) => el.candidates);
             // Filter candidates by number
             const filteredUnitCandidates = unitCandidates.filter(
-              (candidateArray: any) => candidateArray.includes(number),
+              (candidateArray) => candidateArray.includes(number),
             );
             if (filteredUnitCandidates.length == 2) {
               candidateArrays.push([number, ...filteredUnitCandidates]);
@@ -1111,9 +1117,10 @@ export const hiddenPairSolver = (
             // console.log(candidateArrays);
 
             // Keep track of seen combinations of 1 and 2
-            const seenCombinations: any = [];
+            // TODO change this from any[]
+            const seenCombinations:any[] = [];
             // Keep track of any hidden pairs we find
-            const pairs: any = [];
+            const pairs = [];
 
             // Now we look through the candidateArrays for items
             // that have the same arrays at indexes 1 and 2
@@ -1146,6 +1153,7 @@ export const hiddenPairSolver = (
               // console.log(unitAddress);
               // console.log(pairs);
               // Since it's possible we found more than one pair, loop through pairs
+              // TODO figure out why this is froced to any
               pairs.forEach((pair: any) => {
                 // Loop through unit, find the two cells containing the numbers
                 for (const cellAddress in units[unitAddress]) {
@@ -1192,20 +1200,20 @@ export const hiddenPairSolver = (
   return { puzzle, changes: totalChanges, rows, cols, squares, changesArray };
 };
 
-/* 
+/*
   X-Wing specification: http://hodoku.sourceforge.net/en/tech_fishb.php#bf2
-  Take two rows (the base sets). 
-  If you can find two columns, such that all candidates of a specific digit 
-  (the fish digit) in both rows are containd in the columns (the cover sets), 
-  all fish candidates in the columns that are not part of the rows can be eliminated. 
+  Take two rows (the base sets).
+  If you can find two columns, such that all candidates of a specific digit
+  (the fish digit) in both rows are containd in the columns (the cover sets),
+  all fish candidates in the columns that are not part of the rows can be eliminated.
   The result is called an X-Wing in the rows.
   If you exchange the terms rows and columns in the description above, you get an X-Wing in the columns.
 */
 
-/* 
+/*
   The following function will loop through rows, then columns
-  On finding a unit that has only two instances of a number, 
-  Search the rest of that type of unit for another unit that has that number in 
+  On finding a unit that has only two instances of a number,
+  Search the rest of that type of unit for another unit that has that number in
   The same location
 */
 
@@ -1533,10 +1541,10 @@ export enum DifficultyValues {
   diabolical,
 }
 
-/* 
-Master solver method, calls each solver in succesion, 
-Increasing complexity when a given solver changes nothing, 
-And returning to start when a solver changes something 
+/*
+Master solver method, calls each solver in succesion,
+Increasing complexity when a given solver changes nothing,
+And returning to start when a solver changes something
 */
 
 export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
@@ -1647,7 +1655,7 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   } while (changes > 0);
   let totalCost = 0;
   for (const costType in cost) {
-    if (cost.hasOwnProperty(costType)) {
+    if (Object.prototype.hasOwnProperty.call(cost, costType)) {
       totalCost += cost[costType as Technique].total;
     }
   }
@@ -1692,8 +1700,8 @@ export const createPuzzle = (
   // Array to hold removed numbers
   let removed: any[] = [];
   // Iterations, so we can reset if needed
-  let iterations: number = 0;
-  let totalCost: number = 0;
+  let iterations = 0;
+  let totalCost = 0;
   const populateAddresses = () => {
     let addresses: Address[] = [];
     for (let rowIndex = 1; rowIndex <= 5; rowIndex++) {
@@ -1739,7 +1747,7 @@ export const createPuzzle = (
       triedConfigurations = {};
     }
     // Test if triedConfigurations has current config
-    if (!triedConfigurations.hasOwnProperty(puzzleToString(puzzle))) {
+    if (!Object.prototype.hasOwnProperty.call(triedConfigurations, (puzzleToString(puzzle)))) {
       // If not, populate it
       triedConfigurations[puzzleToString(puzzle)] = populateAddresses();
     }
@@ -1760,7 +1768,7 @@ export const createPuzzle = (
           `r${10 - toReset.firstAddress}c${10 - toReset.secondAddress}`
         ].number = toReset.secondNumber;
       }
-      let address = triedConfigurations[puzzleToString(puzzle)].pop();
+      const address = triedConfigurations[puzzleToString(puzzle)].pop();
       firstAddress = address.r;
       secondAddress = address.c;
     } while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".");
