@@ -242,6 +242,8 @@ const updateFocus = (
   if (room.WSUsers[id]) {
     room.WSUsers[id].focus = focus;
   }
+  // If user goes over timeout, take them off the page
+  // TODO fix
   userTimers[id] = setTimeout(() => {
     updateFocus(room, ws, { id, focus: { row: null, col: null } });
     // Get rid of cursor
@@ -341,7 +343,7 @@ const onMessage = (
         // Reset moves
         room.WSUsers[id].moves = [];
         // Reset position
-        room.WSUsers[id].focus = { row: null, col: null };
+        room.WSUsers[id].focus = { row: 1, col: 1 };
       }
 
       for (const client of room.WSSockets) {
