@@ -337,14 +337,15 @@ export default {
         })
       );
     };
-
+    // The main input handler, covers movement, switching between notation and not, and entering numbers
     const handleInput = (event: KeyboardEvent) => {
       console.log(event)
       const acceptedKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
       const arrowKeys = ["ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp"];
       // Address of cursor
       let { row, col } = users.value[id.value].focus;
-      // Check for null
+      // If cursor isn't anywhere (i.e. puzzle was just generated), then set it to the middle of the puzzle
+      // TODO figure out why row & col get set to 1 each, and why commenting out this code results in errors
       if (row == null || col == null) {
         // Set to middle
         row = 5;
@@ -367,7 +368,10 @@ export default {
       // Only allow change of non-givens
       if (
         !sudokuObj?.value?.[`r${row}c${col}`]?.given &&
-        acceptedKeys.includes(event.key)
+        acceptedKeys.includes(event.key) &&
+        // Check for meta keys, don't do anything if any of them are pressed,
+        // So that we don't get rid of function like tab switching
+        !event.altKey && !event.metaKey && !event.ctrlKey
       ) {
         event.preventDefault();
         if (notating.value) {
@@ -391,7 +395,10 @@ export default {
             sudokuObj?.value?.[`r${row}c${col}`] as Cell
           );
         }
-      } else if (event.key == "Backspace") {
+      } else if (event.key == "Backspace" &&
+        // Check for meta keys, don't do anything if any of them are pressed,
+        // So that we don't get rid of function like tab switching
+        !event.altKey && !event.metaKey && !event.ctrlKey) {
         event.preventDefault();
 
         // Check if in notation mode
@@ -418,7 +425,10 @@ export default {
           // Change local copy of puzzle
           updates.updateNumber({ numberUpdate });
         }
-      } else if (arrowKeys.includes(event.key)) {
+      } else if (arrowKeys.includes(event.key) &&
+        // Check for meta keys, don't do anything if any of them are pressed, 
+        // So that we don't get rid of function like tab switching
+        !event.altKey && !event.metaKey && !event.ctrlKey) {
         event.preventDefault();
         switch (event.key) {
           case "ArrowRight":
@@ -434,10 +444,16 @@ export default {
             move(row, col, -1, 0);
             break;
         }
-      } else if (event.key == "Shift") {
+      } else if (event.key == "Shift" &&
+        // Check for meta keys, don't do anything if any of them are pressed, 
+        // So that we don't get rid of function like tab switching
+        !event.altKey && !event.metaKey && !event.ctrlKey) {
         notating.value = !notating.value;
         // Check for ctrl/command z : classic undo combo
-      } else if (event.key.toLowerCase() == "z" && event.metaKey) {
+      } else if (event.key.toLowerCase() == "z" && event.metaKey &&
+        // Check for other meta keys, don't do anything if any of them are pressed, 
+        // So that we don't get rid of function like tab switching
+        !event.altKey && !event.ctrlKey) {
         // Update local
         updates.undo(id.value);
         socket.send(JSON.stringify({ undo: id.value }));

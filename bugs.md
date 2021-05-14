@@ -15,3 +15,5 @@
 - [ ] If there are no hints available, it sends back the entire puzzle obj
 - [ ] Naked pair sometimes comes up with a hidden pair
 - [ ] SudokuObj possibly undefined PuzzleView.vue
+- [x] Currently unable to switch tabs with puzzle open
+- [ ] Commenting out code that sets row & col to 5 in handeInput() causes errors, despite it being seemingly useless due to the cursor always starting at 1 (and what does that?)

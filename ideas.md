@@ -17,9 +17,14 @@
 - [ ] Check puzzle
   - [ ] If wrong, option to go back to last valid state
 - [ ] Hold (some key) to skip over numbers or loop around to other side
+  - Idea:
+    - Shift for skipping
+    - P for pencilmarks
 - [ ] Difficulty Selector
   - [ ] Serverside
-    - [ ] Including required specific techniques
+    - [x] Including required specific techniques (05-14-2021)
+      - Basic support exists, not currently able to do from UI
+    - [ ] UI
 - [x] Populate all candidates with basic rules (17/07/2020)
   - [ ] Not paying attention to non givens?
   - [ ] Per cell option
