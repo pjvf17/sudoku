@@ -20,11 +20,6 @@
   - Idea:
     - Shift for skipping
     - P for pencilmarks
-- [ ] Difficulty Selector
-  - [ ] Serverside
-    - [x] Including required specific techniques (05-14-2021)
-      - Basic support exists, not currently able to do from UI
-    - [ ] UI
 - [x] Populate all candidates with basic rules (17/07/2020)
   - [ ] Not paying attention to non givens?
   - [ ] Per cell option
@@ -73,6 +68,10 @@
   - [ ] Recolor yourself
 - [ ] Indication of loading
 - [ ] Indication/celebration of complete
+- [ ] Difficulty Selector
+  - [x] Including required specific techniques (05-14-2021)
+    - Basic support exists, not currently able to do from UI
+  - [ ] UI
 
 ## Finishing touches
 
