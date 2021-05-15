@@ -428,7 +428,7 @@ export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
         });
         // For each non number in the row, add the unseenNumbers to the candidates array
         for (const cellAddress in unit) {
-          if (Object.prototype.hasOwnProperty.call(units, cellAddress)) {
+          if (Object.prototype.hasOwnProperty.call(unit, cellAddress)) {
             if (unit[cellAddress].number == ".") {
               // If we're not on the first iteration of both the inner and outer loops
               // Get previous candidates of cell
