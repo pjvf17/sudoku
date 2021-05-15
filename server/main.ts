@@ -236,6 +236,15 @@ const userTimers: { [index: string]: any } = {};
 // Sets a User's "active" field to false
 const deactivate = (room: WSRoom, id: User["id"]) => {
   room.WSUsers[id].active = false;
+  const activeUpdate: ActiveUpdate = { id, active: false };
+  for (const client of room.WSSockets) {
+    // Send only to open clients, and not the one who sent a message
+    if (!client.isClosed && client != room.WSUsers[id].ws) {
+      client.send(
+        JSON.stringify({ activeUpdate }),
+      );
+    }
+  }
 };
 
 // Sets a User's "active" field to true

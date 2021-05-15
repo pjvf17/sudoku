@@ -275,7 +275,9 @@ export default {
         updates.updatePencilMarks({ pencilMarkUpdate }, false, true);
       }
       if (activeUpdate) {
+        console.log("recieved activeUpdate");
         users.value[activeUpdate.id].active = activeUpdate.active;
+        console.log(users.value[activeUpdate.id].active)
       }
       // undo a move
       if (undo) {
@@ -289,6 +291,8 @@ export default {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
           // Check if user is active
+          console.log("in checkFocus()")
+          console.log(user.active)
           if (user.active) {
             focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
           }
