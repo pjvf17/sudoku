@@ -21,4 +21,6 @@
   - Caused type errors, changed type def in types.d.ts to not include the null possiblity, having been solved by onConnection setting the values
 - [ ] Assigning null to User.focus.row/col error
   - Used for taking someone's cursor off the page if they're inactive
-  - Fix by making an "active" switch that will hide a person's cursor if it's false 
+  - Fix by making an "active" switch that will hide a person's cursor if it's false
+    - Would be useful for other reasons too
+    - Such as if there's a list of people on the sudoku you can mark someone as inactive
