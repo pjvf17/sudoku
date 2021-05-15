@@ -1,10 +1,14 @@
+import type { Difficulty } from "./difficulties.ts";
+// Exports the above import, so that files only need import this file for type defs
+export { Difficulty };
+
 export interface Address {
   r: number;
   c: number;
-  /* 
+  /*
   This produced errors:
   r: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-  c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; 
+  c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   */
 }
 
@@ -13,7 +17,7 @@ export interface FocusUpdate {
   focus: {
     row: number;
     col: number;
-  }
+  };
 }
 
 export interface NumberUpdate {
@@ -77,13 +81,6 @@ export interface User {
 export interface Users {
   [propName: string]: User;
 }
-
-export type Difficulty =
-  | "easy"
-  | "medium"
-  | "hard"
-  | "insane"
-  | "diabolical";
 
 export type Technique =
   | "hiddenSingle"

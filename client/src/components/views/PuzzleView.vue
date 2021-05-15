@@ -119,7 +119,12 @@
             <div class="select">
               <span>Difficulty</span>
               <select name="difficulty" id="difficulty"
-                ><option value="Hard">Hard</option></select
+                ><option
+                  v-for="difficulty in difficulties"
+                  :key="difficulty"
+                  :value="capitalizeFirstLetter(difficulty)"
+                  >{{ capitalizeFirstLetter(difficulty) }}</option
+                ></select
               >
             </div>
           </div>
@@ -143,7 +148,13 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
+import { difficulties } from "../../difficulties";
 
+
+// https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript
+function capitalizeFirstLetter(string:string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 import { ref, onBeforeUnmount, onBeforeUpdate, toRaw, computed } from "vue";
 
@@ -419,7 +430,7 @@ export default {
           updates.updateNumber({ numberUpdate });
         }
       } else if (arrowKeys.includes(event.key) &&
-        // Check for meta keys, don't do anything if any of them are pressed, 
+        // Check for meta keys, don't do anything if any of them are pressed,
         // So that we don't get rid of function like tab switching
         !event.altKey && !event.metaKey && !event.ctrlKey) {
         event.preventDefault();
@@ -438,13 +449,13 @@ export default {
             break;
         }
       } else if (event.key == "Shift" &&
-        // Check for meta keys, don't do anything if any of them are pressed, 
+        // Check for meta keys, don't do anything if any of them are pressed,
         // So that we don't get rid of function like tab switching
         !event.altKey && !event.metaKey && !event.ctrlKey) {
         notating.value = !notating.value;
         // Check for ctrl/command z : classic undo combo
       } else if (event.key.toLowerCase() == "z" && event.metaKey &&
-        // Check for other meta keys, don't do anything if any of them are pressed, 
+        // Check for other meta keys, don't do anything if any of them are pressed,
         // So that we don't get rid of function like tab switching
         !event.altKey && !event.ctrlKey) {
         // Update local
@@ -511,6 +522,8 @@ export default {
       loading,
       requestHint,
       hint,
+      difficulties,
+      capitalizeFirstLetter
     };
   },
   components: {
