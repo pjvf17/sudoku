@@ -109,7 +109,7 @@ class Updates {
     // Denotes if we're undoing a move
     undo = false,
   ) {
-    let { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
+    const { address, pencilMark, pencilMarks, id } = pencilMarkUpdate;
     // To return original state for undoing
     const originalState: boolean[] = [
       ...this.sudokuObj.puzzle[`r${address.r}c${address.c}`].pencilMarks,

@@ -30,6 +30,12 @@ export interface PencilMarkUpdate {
   id: string;
 }
 
+// Sent when a user becomes active or unactive
+export interface ActiveUpdate {
+  id: User["id"];
+  active: boolean;
+}
+
 export interface Cell {
   number: number | string;
   given: boolean;
@@ -61,6 +67,7 @@ export interface User {
     row: number;
     col: number;
   };
+  active: boolean;
   id: string;
   moves: Move[];
   // deno-lint-ignore no-explicit-any

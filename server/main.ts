@@ -1,21 +1,22 @@
 import { Application, send } from "https://deno.land/x/oak@v6.2.0/mod.ts";
 import {
-  puzzleToString,
   createPuzzle,
-  solver,
   // printSudokuToConsole,
   parsePuzzle,
+  puzzleToString,
+  solver,
 } from "./generator.ts";
 // import Validation from "./serverSidePuzzleValidation.ts";
 import Updates from "./serverSidePuzzleUpdates.ts";
 import type {
-  PencilMarkUpdate,
-  NumberUpdate,
+  ActiveUpdate,
   FocusUpdate,
-  Users,
-  User,
   Move,
+  NumberUpdate,
+  PencilMarkUpdate,
   Puzzle,
+  User,
+  Users,
   // Cell,
 } from "../client/src/types.d.ts";
 
@@ -138,11 +139,11 @@ app.use(async (context) => {
 });
 
 type color = {
-  value: string
-  used: boolean | WebSocket
-}
+  value: string;
+  used: boolean | WebSocket;
+};
 
-const colors:color[] = [
+const colors: color[] = [
   { value: "#bf616a88", used: false },
   { value: "#d0877088", used: false },
   { value: "#ebcb8b88", used: false },
@@ -208,6 +209,7 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
     id,
     focus: { row: 1, col: 1 },
     // name: null,
+    active: true,
     color,
     ws,
     moves,
@@ -231,9 +233,27 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
 // deno-lint-ignore no-explicit-any
 const userTimers: { [index: string]: any } = {};
 
+// Sets a User's "active" field to false
+const deactivate = (room: WSRoom, id: User["id"]) => {
+  room.WSUsers[id].active = false;
+};
+
+// Sets a User's "active" field to true
+const reactivate = (room: WSRoom, id: User["id"]) => {
+  room.WSUsers[id].active = true;
+  const activeUpdate: ActiveUpdate = { id, active: true };
+  for (const client of room.WSSockets) {
+    // Send only to open clients, and not the one who sent a message
+    if (!client.isClosed && client != room.WSUsers[id].ws) {
+      client.send(
+        JSON.stringify({ activeUpdate }),
+      );
+    }
+  }
+};
+
 const updateFocus = (
   room: WSRoom,
-  ws: WebSocket,
   { id, focus }: { id: User["id"]; focus: User["focus"] },
 ) => {
   if (userTimers[id]) {
@@ -241,22 +261,12 @@ const updateFocus = (
   }
   if (room.WSUsers[id]) {
     room.WSUsers[id].focus = focus;
+    // If User is marked as inactive, reactivate
+    reactivate(room, id);
   }
   // If user goes over timeout, take them off the page
-  // TODO fix
   userTimers[id] = setTimeout(() => {
-    updateFocus(room, ws, { id, focus: { row: null, col: null } });
-    // Get rid of cursor
-    for (const client of room.WSSockets) {
-      // Send only to open clients, and not the one who sent a message
-      if (!client.isClosed && client != ws) {
-        client.send(
-          JSON.stringify({
-            focusUpdate: { id, focus: { row: null, col: null } },
-          }),
-        );
-      }
-    }
+    deactivate(room, id);
   }, 180000);
 };
 
@@ -277,6 +287,7 @@ const onMessage = (
     numberUpdate: NumberUpdate;
     pencilMarkUpdate: PencilMarkUpdate;
     // Catch the rest until I type them
+    // TODO type these
     // deno-lint-ignore no-explicit-any
     [propName: string]: any;
   } = JSON.parse(message);
@@ -308,7 +319,7 @@ const onMessage = (
   // Recieved movement/focus update
   if (focusUpdate) {
     // update user
-    updateFocus(room, ws, focusUpdate);
+    updateFocus(room, focusUpdate);
   }
   // Recieved number update
   if (numberUpdate) {
@@ -335,7 +346,7 @@ const onMessage = (
     );
     startGameWorker.postMessage("");
     startGameWorker.onmessage = (message) => {
-      room.updates.updateSudokuObj( message.data );
+      room.updates.updateSudokuObj(message.data);
       console.log(room.updates.sudokuObj);
       // Update updates and validation
       // For each user

@@ -157,6 +157,7 @@ import type {
   Cell,
   Puzzle,
   Users,
+  ActiveUpdate,
 } from "../../types";
 import router from '../../router';
 interface Ref<T> {
@@ -211,6 +212,8 @@ export default {
         focusUpdate,
         // NumberUpdate, sent whenever someone changes a number
         numberUpdate,
+        // ActiveUpdate, sent whenever a user becomes active or unactive
+        activeUpdate,
         // PencilMarkUpdate, sent whenever someone changes a pencil mark
         pencilMarkUpdate,
         // Undo request
@@ -220,6 +223,7 @@ export default {
       }: {
         numberUpdate: NumberUpdate;
         pencilMarkUpdate: PencilMarkUpdate;
+        activeUpdate: ActiveUpdate;
         sentid: string;
         sentColor: string;
         sentUsers: Users;
@@ -270,6 +274,9 @@ export default {
       if (pencilMarkUpdate) {
         updates.updatePencilMarks({ pencilMarkUpdate }, false, true);
       }
+      if (activeUpdate) {
+        users.value[activeUpdate.id].active = activeUpdate.active;
+      }
       // undo a move
       if (undo) {
         updates.undo(undo);
@@ -281,7 +288,10 @@ export default {
       for (const userId in users.value) {
         if (Object.prototype.hasOwnProperty.call(users.value, userId)) {
           const user = users.value[userId];
-          focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
+          // Check if user is active
+          if (user.active) {
+            focused[`r${user.focus.row}c${user.focus.col}`] = user.color;
+          }
         }
       }
       return focused;

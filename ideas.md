@@ -40,6 +40,10 @@
 - [x] Send all initial values at once
 - [ ] On fill in candidates, send updates in a bundle
   - [ ] pencilMarkUpdate in array form
+- [ ] List of accepted actions
+  - [ ] Like focusUpdate
+- [ ] JSDoc things up
+- [ ] Send function, instead of copy/pasting for loops
 
 ## Typescript
 
