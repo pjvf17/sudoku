@@ -1,0 +1,15 @@
+{
+    "typescript.validate.enable": true,
+    "deno.enable": true,
+
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "vue"
+        ],
+        "deno.import_intellisense_origins": {
+          "https://deno.land": true
+        },
+        "deno.unstable": true,
+        "deno.lint": true,
+}

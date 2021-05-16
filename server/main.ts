@@ -1,4 +1,4 @@
-import { Application, send } from "https://deno.land/x/oak@v6.2.0/mod.ts";
+import { Application, send } from "https://deno.land/x/oak@v7.4.1/mod.ts";
 import {
   createPuzzle,
   // printSudokuToConsole,
@@ -82,7 +82,7 @@ app.use(async (context) => {
       try {
         // Looks to see if there are the correct corrosponding files
         await send(context, pathname, {
-          root: "dist",
+          root: `dist`,
           index: "index.html",
         });
       } catch {
@@ -90,7 +90,7 @@ app.use(async (context) => {
         // This allows Vue Router to work in History Mode
         // See more here: https://router.vuejs.org/guide/essentials/history-mode.html#example-server-configurations
         await send(context, "/", {
-          root: "dist",
+          root: `dist`,
           index: "index.html",
         });
       }
@@ -356,10 +356,11 @@ const onMessage = (
       new URL("./Workers/startGameWorker.ts", import.meta.url).href,
       { type: "module", deno: true },
     );
-    startGameWorker.postMessage("");
+    console.log(newGame);
+    startGameWorker.postMessage(newGame);
     startGameWorker.onmessage = (message) => {
       room.updates.updateSudokuObj(message.data);
-      console.log(room.updates.sudokuObj);
+      // console.log(room.updates.sudokuObj);
       // Update updates and validation
       // For each user
       for (const id in room.WSUsers) {
@@ -381,7 +382,6 @@ const onMessage = (
         }
       }
     };
-    console.log("after");
   } else if (!hint) {
     // Send to all connected
     for (const client of room.WSSockets) {

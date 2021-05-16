@@ -118,7 +118,7 @@
             >
             <div class="select">
               <span>Difficulty</span>
-              <select name="difficulty" id="difficulty"
+              <select name="difficulty" id="difficulty" v-model="difficulty"
                 ><option
                   v-for="difficulty in difficulties"
                   :key="difficulty"
@@ -148,7 +148,7 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
-import { difficulties } from "../../difficulties";
+import { difficulties, Difficulty } from "../../difficulties";
 
 
 // https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript
@@ -192,6 +192,7 @@ export default {
     socket.onopen = function() {
       console.log(`Connected established to ${wsUrl}`);
     };
+    const difficulty = ref<Difficulty>();
     const color = ref<string>("");
     const sudokuObj = ref<Puzzle>();
     const users = ref<Users>({});
@@ -490,7 +491,7 @@ export default {
         checkNew.value = true;
       } else {
         console.log("Sending new game request to server");
-        socket.send(JSON.stringify({ newGame: true }));
+        socket.send(JSON.stringify({ newGame: difficulty.value }));
         checkNew.value = false;
       }
     };
@@ -523,7 +524,8 @@ export default {
       requestHint,
       hint,
       difficulties,
-      capitalizeFirstLetter
+      capitalizeFirstLetter,
+      difficulty
     };
   },
   components: {

@@ -24,3 +24,4 @@
   - Fix by making an "active" switch that will hide a person's cursor if it's false
     - Would be useful for other reasons too
     - Such as if there's a list of people on the sudoku you can mark someone as inactive
+- [ ] Debugging starts from different root, and has an error of upgrading to ws not working
