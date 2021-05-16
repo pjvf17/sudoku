@@ -15,6 +15,7 @@
 	"settings": {
 		"deno.enable": true,
 		"deno.lint": true,
-		"deno.unstable": true
+		"deno.unstable": true,
+		"debug.javascript.unmapMissingSources": true
 	}
 }

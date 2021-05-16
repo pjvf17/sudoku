@@ -6,7 +6,7 @@ import {
   parsePuzzle,
   puzzleToString,
   solver,
-} from "../generator.ts";
+  } from "../generator.ts";
 
 const startNewGame = (difficulty: Difficulty) => {
   const puzzle = parsePuzzle(puzzleToString(createPuzzle(difficulty)));
@@ -17,9 +17,11 @@ const startNewGame = (difficulty: Difficulty) => {
 
 self.onmessage = function (msg) {
   const difficulty:Difficulty = msg.data;
-  console.log("difficulty:");
-  console.log(difficulty);
-
   console.log("WebWorker Starting New Game");
   postMessage(startNewGame(difficulty));
 };
+
+self.onerror = function(smth) {
+  console.log(smth)
+  console.log('There is an error with your worker!');
+}

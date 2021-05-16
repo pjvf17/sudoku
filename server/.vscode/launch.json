@@ -7,7 +7,7 @@
          "request": "launch",
          "cwd": "${workspaceFolder}",
          "runtimeExecutable": "deno",
-         "runtimeArgs": ["run", "--inspect-brk", "--allow-net", "--allow-read", "--allow-write", "--allow-plugin", "--allow-env", "--unstable", "${file}"],
+         "runtimeArgs": ["run", "--inspect", "--allow-net", "--allow-read", "--allow-write", "--allow-plugin", "--allow-env", "--unstable", "${file}"],
          "attachSimplePort": 9229,
          "console": "integratedTerminal"
       }

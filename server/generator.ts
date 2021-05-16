@@ -1723,7 +1723,6 @@ export const createPuzzle = (
   // Object whose keys are puzzle strings
   // Values will be untred addresses
   let triedConfigurations: any = {};
-
   // Remove pairs till we've reached our target
   while (
     totalCost <= targetRange.min ||

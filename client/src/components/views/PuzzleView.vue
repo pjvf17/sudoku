@@ -491,7 +491,7 @@ export default {
         checkNew.value = true;
       } else {
         console.log("Sending new game request to server");
-        socket.send(JSON.stringify({ newGame: difficulty.value }));
+        socket.send(JSON.stringify({ newGame: difficulty.value?.toLowerCase() }));
         checkNew.value = false;
       }
     };

@@ -206,7 +206,7 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
   // For undoing
   const moves: Move[] = [];
   // Save to WSusers
-  const focus:User["focus"] = {row:1, col:1};
+  const focus: User["focus"] = { row: 1, col: 1 };
   room.WSUsers[id] = {
     id,
     focus,
@@ -223,7 +223,7 @@ const onConnection = (ws: WebSocket, room: WSRoom) => {
     ),
   );
   // Starts timer so that if they don't move they still get unactivated
-  updateFocus(room, {id, focus});
+  updateFocus(room, { id, focus });
   // Send to everyone else updated users
   for (const user of room.WSSockets) {
     // Send only to open clients, and not the one who sent a message
@@ -355,9 +355,13 @@ const onMessage = (
   if (newGame) {
     const startGameWorker = new Worker(
       new URL("./Workers/startGameWorker.ts", import.meta.url).href,
-      { type: "module", deno: true },
+      {
+        type: "module",
+        deno: {
+          namespace: true,
+        },
+      },
     );
-    console.log(newGame);
     startGameWorker.postMessage(newGame);
     startGameWorker.onmessage = (message) => {
       room.updates.updateSudokuObj(message.data);
