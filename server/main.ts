@@ -1,4 +1,4 @@
-import { Application, send } from "https://deno.land/x/oak@v7.4.1/mod.ts";
+import { Application, send } from "https://deno.land/x/oak@v6.5.1/mod.ts";
 import {
   createPuzzle,
   // printSudokuToConsole,
@@ -76,6 +76,7 @@ const WSRoomNames = new Set<string>();
 app.use(async (context) => {
   const pathname = context.request.url.pathname;
   console.log(pathname);
+  console.log(Deno.cwd());
   try {
     // If not upgradeable, send to vue
     if (!context.isUpgradable) {

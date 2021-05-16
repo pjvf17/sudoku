@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"name": "client",
+			"path": "client"
+		},
+		{
+			"name": "server",
+			"path": "server"
+		},
+		{
+			"path": "notes"
+		}
+	],
+	"settings": {
+		"deno.enable": true,
+		"deno.lint": true,
+		"deno.unstable": true
+	}
+}
