@@ -98,11 +98,18 @@ export const makeSquares = (puzzle: Puzzle) => {
   return squares;
 };
 
+/**
+ *
+ * @param cell
+ * @param param1
+ * @param number
+ * @returns true if peers cells do not contain number
+ */
 export const validateCell = (
   cell: Cell,
   { rows, cols, squares }: { rows: Units; cols: Units; squares: Units },
   number: Cell["number"],
-) => {
+): boolean => {
   const row: Unit = rows[`r${cell.address.r}`];
   const col: Unit = cols[`c${cell.address.c}`];
   const square: Unit = squares[getSquare(cell)];
@@ -295,19 +302,48 @@ export const puzzleToString = (puzzle: Puzzle) => {
   return puzzleString;
 };
 
-export const fillInRemaining = (): Puzzle => {
+/**
+ *
+ * @param checkSolutionCount if true, returns the number of solutions there are for the passed in puzzle
+ * @returns Number of solutions if checkSolutionCount == true
+ * @returns Filled in puzzle if false
+ */
+export function fillInRemaining(
+  checkSolutionCount: boolean,
+  puzzleToCheck: Puzzle,
+): number;
+/**
+ * @returns puzzle
+ */
+export function fillInRemaining(): Puzzle;
+export function fillInRemaining(
+  checkSolutionCount?: boolean,
+  puzzleToCheck?: Puzzle,
+): Puzzle | number {
+  let puzzle: Puzzle;
+  if (checkSolutionCount) {
+    if (puzzleToCheck == undefined) {
+      throw new Error(
+        "checkSolutionCount is true but puzzleToCheck is undefined",
+      );
+    }
+    puzzle = puzzleToCheck;
+  } else {
+    puzzle = new BlankPuzzle();
+  }
   let address: Address = { r: 1, c: 1 };
-  let puzzle: Puzzle = new BlankPuzzle();
   let addressesComplete: Address[] = [];
   let rows = makeRows(puzzle);
   let squares = makeSquares(puzzle);
+  let solutionCount = 0;
   // const cols = makeCols(puzzle);
 
   let count = 0;
-  // WHile we're not at the last cell
+  // While we're not at the last cell
   while (address.c < 10 && address.r < 10) {
     count++;
-    if (count == 600) {
+    // Reset at 600, unless we're looking for number of solutions
+    if (count == 600 && !checkSolutionCount) {
       puzzle = new BlankPuzzle();
       // puzzle = generateDiagonalSquares(puzzle);
       rows = makeRows(puzzle);
@@ -315,6 +351,45 @@ export const fillInRemaining = (): Puzzle => {
       count = 0;
       address = { r: 1, c: 1 };
       addressesComplete = [];
+    }
+    // Skip over filled cells
+    // Used only when checking a puzzles solution count
+    if (puzzle[`r${address.r}c${address.c}`].number != ".") {
+      // If not checking solution count, something went wrong
+      if (!checkSolutionCount) {
+        throw new Error(
+          "Found filled cell when not checking solution count in fillInRemaining()",
+        );
+      }
+      // Update address
+      // If not at end of columns
+      if (address.c != 9) {
+        // Increase column by one
+        address.c++;
+        continue;
+        // If not at end of rows
+      } else if (address.r != 9) {
+        // Reset column
+        address.c = 1;
+        // Increase row by one
+        address.r++;
+        continue;
+      } else {
+        // Since being at the end of the puzzle
+        // Just means that the last cell is a given
+        // Go back to most recent address.
+        // It also means we've filled the puzzle, finding a solution
+        solutionCount++;
+        if (solutionCount >= 2) {
+          return solutionCount
+        }
+        if (addressesComplete.length) {
+          address = addressesComplete.pop() as Address;
+        } else {
+          // No address to backtrack to, throw error for now
+          throw new Error("End of puzzle no address to backtrack to");
+        }
+      }
     }
     // Check to see if there are untriedNumbers
     if (puzzle[`r${address.r}c${address.c}`].untriedNumbers!.length != 0) {
@@ -329,6 +404,7 @@ export const fillInRemaining = (): Puzzle => {
 
         const cols = makeCols(puzzle);
 
+        // Check if any peers have the number
         const valid = validateCell(
           puzzle[`r${address.r}c${address.c}`],
           { rows, cols, squares },
@@ -352,7 +428,6 @@ export const fillInRemaining = (): Puzzle => {
             // Increase column by one
             address.c++;
             break;
-            // return fillInRemaining(address, puzzle, addressesComplete);
             // If not at end of rows
           } else if (address.r != 9) {
             // Reset column
@@ -360,15 +435,27 @@ export const fillInRemaining = (): Puzzle => {
             // Increase row by one
             address.r++;
             break;
-            // return fillInRemaining(address, puzzle, addressesComplete);
           } else {
-            return puzzle;
+            // At end of both columns and rows, if not checking solution count, return puzzle
+            if (!checkSolutionCount) {
+              return puzzle;
+            }
+            // Found a solution, increment
+            solutionCount++;
+            if (solutionCount >= 2) {
+              return solutionCount
+            }
+            // Reset number
+            puzzle[`r${address.r}c${address.c}`].number = ".";
+            puzzle[`r${address.r}c${address.c}`].valid = true;
+            // Pop from addressCompleted
+            addressesComplete.pop();
           }
         }
       }
     } else {
-      // No numbers left
-      // Reset numbers
+      // No numbers left, backtrack
+      // Reset numbers at cell
       puzzle[
         `r${address.r}c${address.c}`
       ].untriedNumbers = createRandomOneNine();
@@ -378,14 +465,17 @@ export const fillInRemaining = (): Puzzle => {
         // Reset the number at the address we're backtracking to
         puzzle[`r${address.r}c${address.c}`].number = ".";
       } else {
-        // If nothing to backtrack to, give up
+        // If nothing to backtrack to, we're done
+        if (checkSolutionCount) {
+          return solutionCount;
+        }
         return puzzle;
       }
     }
   }
 
   return puzzle;
-};
+}
 
 export const firstPassCandidateCalculator = (puzzle: Puzzle) => {
   const rows = makeRows(puzzle);
@@ -475,7 +565,7 @@ export const updatePeerCandidates = (
   const col: Unit = cols[`c${cell.address.c}`];
   const square: Unit = squares[getSquare(cell)];
   // console.log(rows, cols, squares);
-  
+
   const peers: Cell[] = [
     ...Object.values(row),
     ...Object.values(col),
@@ -717,7 +807,7 @@ export const pointingLockedCandidatesSolver = (
             We only do this if rowcol is "empty" meaning that no other thing has been set
             Or if it's the same (we're assigning rowcol to "col", when it was previously "col")
            */
-            let rowcol:string|null = "empty";
+            let rowcol: string | null = "empty";
             // Loop through filteredCells
             for (
               let cellIndex = 1;
@@ -1118,7 +1208,7 @@ export const hiddenPairSolver = (
 
             // Keep track of seen combinations of 1 and 2
             // TODO change this from any[]
-            const seenCombinations:any[] = [];
+            const seenCombinations: any[] = [];
             // Keep track of any hidden pairs we find
             const pairs = [];
 
@@ -1664,6 +1754,19 @@ export const solver = (puzzle: Puzzle, difficulty?: string, hint?: boolean) => {
   // Need to keep track of changes for each method
 };
 
+/**
+ *
+ * @param puzzle
+ * @returns {boolean} True if puzzle only has 1 solution, false otherwise
+ */
+export const hasUniqueSolution = (puzzle: Puzzle): boolean => {
+  const ret = fillInRemaining(true, puzzle)
+  if (ret > 1) {
+    return false;
+  }
+  return true;
+};
+
 export const createPuzzle = (
   difficulty?: Difficulty,
   reqTechs?: Technique[],
@@ -1684,7 +1787,7 @@ export const createPuzzle = (
   const targetRanges = {
     easy: { min: 4300, max: 5500 },
     medium: { min: 5800, max: 6900 },
-    hard: { min: 6900, max: 93000 },
+    hard: { min: 8300, max: 93000 },
     insane: { min: 8300, max: 14000 },
     diabolical: { min: 11000, max: 25000 },
   };
@@ -1698,9 +1801,18 @@ export const createPuzzle = (
   let puzzle = createFilledPuzzle();
 
   // Array to hold removed numbers
-  let removed: any[] = [];
+  // let secondNumber: Cell["number"];
+  let removed: {
+    firstAddress: number;
+    secondAddress: number;
+    firstNumber: Cell["number"];
+    secondNumber: Cell["number"];
+  }[] = [];
   // Iterations, so we can reset if needed
+  // Resets happen currently if iterations == 500
   let iterations = 0;
+  // Once the puzzle is solved, (happens at the end of the while loop)
+  // The cost is stored in here
   let totalCost = 0;
   const populateAddresses = () => {
     let addresses: Address[] = [];
@@ -1723,16 +1835,16 @@ export const createPuzzle = (
   // Object whose keys are puzzle strings
   // Values will be untred addresses
   let triedConfigurations: any = {};
-  // Remove pairs till we've reached our target
+  // Remove pairs till we've reached our target cost
   while (
+    // Check that cost is le than min
     totalCost <= targetRange.min ||
+    // Check if required techniques have been used yet
     reqTechs?.some((tech) => cost[tech].total == 0)
   ) {
     iterations++;
     let firstAddress: number;
     let secondAddress: number;
-    let firstNumber: Cell["number"];
-    let secondNumber: Cell["number"];
 
     if (iterations % 500 == 0) {
       // console.log("resetting " + iterations / 500);
@@ -1746,7 +1858,12 @@ export const createPuzzle = (
       triedConfigurations = {};
     }
     // Test if triedConfigurations has current config
-    if (!Object.prototype.hasOwnProperty.call(triedConfigurations, (puzzleToString(puzzle)))) {
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        triedConfigurations,
+        (puzzleToString(puzzle)),
+      )
+    ) {
       // If not, populate it
       triedConfigurations[puzzleToString(puzzle)] = populateAddresses();
     }
@@ -1759,6 +1876,9 @@ export const createPuzzle = (
       while (!triedConfigurations[puzzleToString(puzzle)].length) {
         // Backtrack
         const toReset = removed.pop();
+        if (toReset == undefined) {
+          throw new Error("toReset is undefined");
+        }
         // Reset first number
         puzzle[`r${toReset.firstAddress}c${toReset.secondAddress}`].number =
           toReset.firstNumber;
@@ -1773,8 +1893,9 @@ export const createPuzzle = (
     } while (puzzle[`r${firstAddress}c${secondAddress}`].number == ".");
 
     // Save number (for backtracking)
-    firstNumber = { ...puzzle[`r${firstAddress}c${secondAddress}`] }.number;
-    secondNumber = {
+    const firstNumber =
+      { ...puzzle[`r${firstAddress}c${secondAddress}`] }.number;
+    const secondNumber = {
       ...puzzle[`r${10 - firstAddress}c${10 - secondAddress}`],
     }.number;
 
@@ -1785,18 +1906,20 @@ export const createPuzzle = (
     // Add numbers to removed
     removed.push({ firstAddress, secondAddress, firstNumber, secondNumber });
 
-    // Attempt to solve
-    let attemptedPuzzle: Puzzle;
+    // Attempt to solve with techniques lower than or equal to 'difficulty'
     const attemptedPuzzleObj = solver(
       JSON.parse(JSON.stringify(puzzle)),
       difficulty,
     );
-    attemptedPuzzle = attemptedPuzzleObj.puzzle;
+    const attemptedPuzzle = attemptedPuzzleObj.puzzle;
     totalCost = attemptedPuzzleObj.totalCost;
     cost = attemptedPuzzleObj.cost as ScoreClass;
     // Validate, check if valid, AND check if full
     const valid = validatePuzzle(attemptedPuzzle) &&
       puzzleToString(attemptedPuzzle).indexOf(".") == -1;
+
+    // TODO check if puzzle has more than one solution
+
     // If invalid, or at a greater totalCost than the max
     if (!valid || totalCost > targetRange.max) {
       // if (totalCost > targetRange.max) {

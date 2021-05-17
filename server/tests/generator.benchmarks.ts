@@ -3,7 +3,7 @@ import {
   createPuzzle,
 } from "../generator.ts";
 
-import { runBenchmarks, bench } from "https://deno.land/std/testing/bench.ts";
+import { runBenchmarks, bench } from "https://deno.land/std@0.96.0/testing/bench.ts";
 
 await bench({
   name: "Fill in remaining",

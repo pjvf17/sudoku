@@ -10,6 +10,33 @@
          "runtimeArgs": ["run", "--inspect", "--allow-net", "--allow-read", "--allow-write", "--allow-plugin", "--allow-env", "--unstable", "${file}"],
          "attachSimplePort": 9229,
          "console": "integratedTerminal"
-      }
+      },
+      {
+         "type": "pwa-node",
+         "request": "launch",
+         "name": "Run Tests",
+         "runtimeExecutable": "deno",
+         "runtimeArgs": [
+           "test",
+           "--inspect-brk"
+         ],
+         "attachSimplePort": 9229,
+         "console": "integratedTerminal"
+       },
+       {
+         "type": "pwa-node",
+         "request": "launch",
+         "name": "Debug Selected Test Case",
+         "runtimeExecutable": "deno",
+         "runtimeArgs": [
+           "test",
+           "${file}",
+           "--filter",
+           "${selectedText}",
+           "--inspect"
+         ],
+         "attachSimplePort": 9229,
+         "console": "integratedTerminal"
+       }
    ]
 }

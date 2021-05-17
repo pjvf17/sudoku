@@ -1,19 +1,23 @@
 import {
+  createPuzzle,
   fillInRemaining,
-  puzzleToString,
-  validatePuzzle,
+  hasUniqueSolution,
   hiddenAndNakedSingleSolver,
   parsePuzzle,
-  createPuzzle,
+  printSudokuToConsole,
+  puzzleToString,
   solver,
-  printSudokuToConsole
+  validatePuzzle,
 } from "../generator.ts";
-import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.96.0/testing/asserts.ts";
 
 Deno.test({
   name: "Fill in remaining creates a filled puzzle",
   fn(): void {
-    let newPuzzle = fillInRemaining();
+    const newPuzzle = fillInRemaining();
     assert(puzzleToString(newPuzzle).indexOf(".") == -1);
   },
 });
@@ -38,7 +42,7 @@ Deno.test({
       "276518349814639527359742618132976854947185263685324971791253486423867195568491732";
     const solvedBySolver = hiddenAndNakedSingleSolver(
       parsePuzzle(easyPuzzleString),
-      false
+      false,
     ).puzzle;
     assertEquals(puzzleToString(solvedBySolver), solvedPuzzle);
   },
@@ -63,7 +67,7 @@ Deno.test({
       "175932864832645179496187523951476238643258791287319456714593682529861347368724915";
     assert(
       puzzleToString(solver(parsePuzzle(lockedTestPuzzle)).puzzle),
-      solvedLockedTestPuzzle
+      solvedLockedTestPuzzle,
     );
   },
 });
@@ -76,10 +80,9 @@ Deno.test({
       "..5.2......26...57.7.5..3....41...6..5.496.1..8...25....8..4.3.49...51......3.4..";
     const solvedTestPuzzle =
       "345729681812643957679581324934158762257496813186372549768914235493265178521837496";
-    // printSudokuToConsole(solver(parsePuzzle(testPuzzle)).puzzle);
     assert(
       puzzleToString(solver(parsePuzzle(testPuzzle)).puzzle),
-      solvedTestPuzzle
+      solvedTestPuzzle,
     );
   },
 });
@@ -90,8 +93,28 @@ Deno.test({
     const testPuzzle =
       "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
     const solvedPuzzle = solver(parsePuzzle(testPuzzle)).puzzle;
-    printSudokuToConsole(solver(parsePuzzle(testPuzzle)).puzzle);
     assert(puzzleToString(solvedPuzzle).indexOf(".") == -1);
+  },
+});
+
+Deno.test({
+  name: "hasUniqueSolution correctly identifies unique and non-unique puzzles",
+  fn(): void {
+    // For the following two examples, see:
+    // https://www.sudokudragon.com/unsolvable.htm
+    const testPuzzle1 =
+      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+    let unique = hasUniqueSolution(parsePuzzle(testPuzzle1));
+    const testPuzzle2 =
+      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+    // Assert that the puzzle is not unique
+    unique = hasUniqueSolution(parsePuzzle(testPuzzle2));
+    assert(!unique);
+    // Took this puzzle from test above this, solving a puzzle with xwing
+    const testPuzzle3 =
+      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+    unique = hasUniqueSolution(parsePuzzle(testPuzzle3));
+    assert(unique);
   },
 });
 
