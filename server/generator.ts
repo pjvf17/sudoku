@@ -1940,8 +1940,8 @@ export const createPuzzle = (
       totalCost = 0;
     }
   }
-  console.log(iterations / 500);
-  console.log(`\n\ntotalCost: ${totalCost}`);
-  console.log(cost);
+  // console.log(iterations / 500);
+  // console.log(`\n\ntotalCost: ${totalCost}`);
+  // console.log(cost);
   return puzzle;
 };

@@ -13,6 +13,11 @@ import {
   assert,
   assertEquals,
 } from "https://deno.land/std@0.96.0/testing/asserts.ts";
+import {
+  convertToAddress,
+  Puzzle,
+  validateCell,
+} from "../recursiveGenerator.ts";
 
 Deno.test({
   name: "Fill in remaining creates a filled puzzle",
@@ -84,6 +89,19 @@ Deno.test({
       puzzleToString(solver(parsePuzzle(testPuzzle)).puzzle),
       solvedTestPuzzle,
     );
+  },
+});
+
+Deno.test({
+  name:
+    "recursiveGenerator's validateCell validates the cells of filled puzzles",
+  fn(): void {
+    const testPuzzle =
+      "345729681812643957679581324934158762257496813186372549768914235493265178521837496";
+    const puzzle = new Puzzle(testPuzzle);
+    for (let i = 0; i < puzzle.cells.length; i++) {
+      assert(validateCell(convertToAddress(i), puzzle, puzzle.cells[i] as number));
+    }
   },
 });
 
