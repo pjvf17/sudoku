@@ -1,13 +1,13 @@
-// A recursive version of some generator.ts functions
+// recursiveGenerator.ts
 
-import { Address } from "../client/src/types.d.ts";
-import { createRandomOneNine } from "./generator.ts";
-
-/**
+/** A recursive version of some generator.ts functions
  * Changes from generator.ts:
  * Puzzles are redefined as arrays, creating less overhead
  * parsePuzzle does not exist, instead Puzzle is a class with a constructor
 */
+
+import { Address } from "../client/src/types.d.ts";
+import { createRandomOneNine } from "./generator.ts";
 
 export class Puzzle {
   // Numbers or "."
@@ -21,7 +21,10 @@ export class Puzzle {
     for (let i = 0; i < 81; i++) {
       const char = puzzleToParse.charAt(i);
       const charAsNumber = parseInt(char);
-      if (char != "." && (charAsNumber < 1 || charAsNumber > 9)) {
+      if (
+        char != "." &&
+        (isNaN(charAsNumber) || charAsNumber < 1 || charAsNumber > 9)
+      ) {
         throw new Error("puzzleToParse contains invalid digit");
       }
       this.cells[i] = char;
@@ -129,7 +132,7 @@ export const validateCell = (
 };
 
 /**
- * Returns peers of cell, not including the cell itself
+ * Returns indexes of peers of cell, not including the cell itself
  *
  * @param address Address of cell to get peers of
  * @returns
@@ -240,7 +243,7 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
   puzzle.cells[index] = number;
   const peers = getPeers(address);
   // Update peers
-  for (let i = 0, index; i < peers.length; i++) {
+  for (const i of peers) {
     // Skip over filled cells
     if (puzzle.cells[i] != ".") {
       continue;
@@ -253,13 +256,4 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
   }
   // Return 0 on success
   return 0;
-}
-
-const testPuzzle1 =
-  "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-const unique = fillInRemaining(true, new Puzzle(testPuzzle1));
-if (typeof unique == "number") {
-  console.log(unique);
-} else {
-  console.log(unique.cells);
 }

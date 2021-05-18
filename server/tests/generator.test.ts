@@ -93,19 +93,6 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "recursiveGenerator's validateCell validates the cells of filled puzzles",
-  fn(): void {
-    const testPuzzle =
-      "345729681812643957679581324934158762257496813186372549768914235493265178521837496";
-    const puzzle = new Puzzle(testPuzzle);
-    for (let i = 0; i < puzzle.cells.length; i++) {
-      assert(validateCell(convertToAddress(i), puzzle, puzzle.cells[i] as number));
-    }
-  },
-});
-
-Deno.test({
   name: "Solve Puzzle with xwing",
   fn(): void {
     const testPuzzle =
@@ -115,26 +102,26 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "hasUniqueSolution correctly identifies unique and non-unique puzzles",
-  fn(): void {
-    // For the following two examples, see:
-    // https://www.sudokudragon.com/unsolvable.htm
-    const testPuzzle1 =
-      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    let unique = hasUniqueSolution(parsePuzzle(testPuzzle1));
-    const testPuzzle2 =
-      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-    // Assert that the puzzle is not unique
-    unique = hasUniqueSolution(parsePuzzle(testPuzzle2));
-    assert(!unique);
-    // Took this puzzle from test above this, solving a puzzle with xwing
-    const testPuzzle3 =
-      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-    unique = hasUniqueSolution(parsePuzzle(testPuzzle3));
-    assert(unique);
-  },
-});
+// Deno.test({
+//   name: "hasUniqueSolution correctly identifies unique and non-unique puzzles",
+//   fn(): void {
+//     // For the following two examples, see:
+//     // https://www.sudokudragon.com/unsolvable.htm
+//     const testPuzzle1 =
+//       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+//     let unique = hasUniqueSolution(parsePuzzle(testPuzzle1));
+//     const testPuzzle2 =
+//       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+//     // Assert that the puzzle is not unique
+//     unique = hasUniqueSolution(parsePuzzle(testPuzzle2));
+//     assert(!unique);
+//     // Took this puzzle from test above this, solving a puzzle with xwing
+//     const testPuzzle3 =
+//       "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+//     unique = hasUniqueSolution(parsePuzzle(testPuzzle3));
+//     assert(unique);
+//   },
+// });
 
 // setTimeout(()=>{
 //     console.log("timeout!");
