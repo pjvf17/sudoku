@@ -2,12 +2,14 @@ import {
   createPuzzle,
   fillInRemaining,
   hasUniqueSolution,
-  parsePuzzle
+  parsePuzzle,
 } from "../generator.ts";
 import {
   fillInRemaining as recursiveFillInRemaining,
+  hasUniqueSolution as recursiveHasUniqueSolution,
   Puzzle as RecursivePuzzle,
-  hasUniqueSolution as recursiveHasUniqueSolution
+  search,
+  setUntriedNumbers,
 } from "../recursiveGenerator.ts";
 
 import {
@@ -16,31 +18,31 @@ import {
 } from "https://deno.land/std@0.96.0/testing/bench.ts";
 import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 
-await bench({
-  name: "Fill in remaining",
-  runs: 500,
-  func(b): void {
-    b.start();
-    fillInRemaining();
-    b.stop();
-  },
-});
+// await bench({
+//   name: "Fill in remaining",
+//   runs: 500,
+//   func(b): void {
+//     b.start();
+//     fillInRemaining();
+//     b.stop();
+//   },
+// });
 
-/** 19/05/21 10:43:58
- * Fill in remaning – 10000 runs avg: 12.6372ms
- * Recursive fill in remaining – 10000 runs avg: 4.868ms
- * Or 2.59597371 times faster, or > 2 and a half times faster
- */
+// /** 19/05/21 10:43:58
+//  * Fill in remaning – 10000 runs avg: 12.6372ms
+//  * Recursive fill in remaining – 10000 runs avg: 4.868ms
+//  * Or 2.59597371 times faster, or > 2 and a half times faster
+//  */
 
-await bench({
-  name: "Recursive fill in remaining",
-  runs: 500,
-  func(b): void {
-    b.start();
-    recursiveFillInRemaining();
-    b.stop();
-  },
-});
+// await bench({
+//   name: "Recursive fill in remaining",
+//   runs: 500,
+//   func(b): void {
+//     b.start();
+//     recursiveFillInRemaining();
+//     b.stop();
+//   },
+// });
 
 // await bench({
 //   name: "Solve easy puzzle",
@@ -117,50 +119,77 @@ await bench({
 // })
 // 17/05/21 1:32pm 612.24ms 100 runs
 
+// await bench({
+//   name: "Recursive – check uniqueness",
+//   runs: 10,
+//   func(b): void {
+//     b.start();
+//     // For the following two examples, see:
+//     // https://www.sudokudragon.com/unsolvable.htm
+//     const testPuzzle1 =
+//       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle1));
+//     const testPuzzle2 =
+//       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+//     // Assert that the puzzle is not unique
+//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle2));
+//     // Took this puzzle from test above this, solving a puzzle with xwing
+//     const testPuzzle3 =
+//       "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle3));
+//     b.stop();
+//   },
+// });
+
+// await bench({
+//   name: "Check uniqueness",
+//   runs: 10,
+//   func(b):void {
+//     b.start();
+//     // For the following two examples, see:
+//     // https://www.sudokudragon.com/unsolvable.htm
+//     const testPuzzle1 =
+//       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+//     hasUniqueSolution(parsePuzzle(testPuzzle1));
+//     const testPuzzle2 =
+//       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+//     // Assert that the puzzle is not unique
+//     hasUniqueSolution(parsePuzzle(testPuzzle2));
+//     // Took this puzzle from test above this, solving a puzzle with xwing
+//     const testPuzzle3 =
+//       "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+//     hasUniqueSolution(parsePuzzle(testPuzzle3));
+//     b.stop();
+//   }
+// })
+
 await bench({
-  name: "Recursive – check uniqueness",
-  runs: 10,
+  name: "filling, 6 spots unfilled",
+  runs: 100,
   func(b): void {
-    b.start();
-    // For the following two examples, see:
-    // https://www.sudokudragon.com/unsolvable.htm
     const testPuzzle1 =
       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle1));
-    const testPuzzle2 =
-      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-    // Assert that the puzzle is not unique
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle2));
-    // Took this puzzle from test above this, solving a puzzle with xwing
-    const testPuzzle3 =
-      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle3));
+    const puzzle = new RecursivePuzzle(testPuzzle1);
+    b.start();
+    recursiveFillInRemaining(puzzle);
     b.stop();
   },
+  // 5.6ms 100 run avg
 });
 
 await bench({
-  name: "Check uniqueness",
-  runs: 10,
-  func(b):void {
-    b.start();
-    // For the following two examples, see:
-    // https://www.sudokudragon.com/unsolvable.htm
+  name: "filling, many spots unfilled",
+  runs: 100,
+  func(b): void {
     const testPuzzle1 =
-      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    hasUniqueSolution(parsePuzzle(testPuzzle1));
-    const testPuzzle2 =
       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-    // Assert that the puzzle is not unique
-    hasUniqueSolution(parsePuzzle(testPuzzle2));
-    // Took this puzzle from test above this, solving a puzzle with xwing
-    const testPuzzle3 =
-      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-    hasUniqueSolution(parsePuzzle(testPuzzle3));
+
+    const puzzle = new RecursivePuzzle(testPuzzle1);
+    b.start();
+    recursiveFillInRemaining(puzzle);
     b.stop();
-  }
-})
-
-
+  },
+  // 5.24ms 100 run avg
+});
 
 runBenchmarks();

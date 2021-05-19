@@ -215,7 +215,7 @@ export function fillInRemaining(
 
     return true;
   } else {
-    puzzle = new Puzzle();
+    puzzle = puzzleToCheck == undefined ? new Puzzle() : puzzleToCheck;
     const ret = search(puzzle);
     if (typeof ret == "number") {
       throw new Error("search returned a number");
