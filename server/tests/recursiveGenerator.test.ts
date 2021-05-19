@@ -76,8 +76,10 @@ Deno.test({
   name: "recursiveGenerator – fillInRemaining returns a complete puzzle",
   fn(): void {
     const puzzle = fillInRemaining();
-    for (const cell of puzzle.cells) {
-      assert(cell != ".");
+    for (let i = 0; i < puzzle.cells.length; i++) {
+      const cell = puzzle.cells[i];
+      assert(cell != ".", "puzzle contains empty cell");
+      assert(validateCell(convertToAddress(i), puzzle, cell as number));
     }
   },
 });
@@ -133,19 +135,19 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "recursiveGenerator – assign correctly updates peers",
-  fn(): void {
-    const puzzleString =
-      ".................................................................................";
-    const puzzle = new Puzzle(puzzleString);
-    assign(0, puzzle, 2);
-    const peers = getPeers(convertToAddress(0));
-    for (const index of peers) {
-      assert(
-        !puzzle.untriedNumbers[index].includes(2),
-        "peer untriedNumbers contains number",
-      );
-    }
-  },
-});
+// Deno.test({
+//   name: "recursiveGenerator – assign correctly updates peers",
+//   fn(): void {
+//     const puzzleString =
+//       ".................................................................................";
+//     const puzzle = new Puzzle(puzzleString);
+//     assign(0, puzzle, 2);
+//     const peers = getPeers(convertToAddress(0));
+//     for (const index of peers) {
+//       assert(
+//         !puzzle.untriedNumbers[index].includes(2),
+//         "peer untriedNumbers contains number",
+//       );
+//     }
+//   },
+// });

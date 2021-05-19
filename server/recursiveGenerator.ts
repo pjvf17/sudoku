@@ -12,7 +12,7 @@ import { createRandomOneNine } from "./generator.ts";
 export class Puzzle {
   // Numbers or "."
   cells: (number | string)[] = [];
-  given: boolean[] = [];
+  givens: boolean[] = [];
   untriedNumbers: number[][] = [];
   constructor(puzzleToParse: string) {
     if (puzzleToParse.length != 81) {
@@ -28,12 +28,23 @@ export class Puzzle {
         throw new Error("puzzleToParse contains invalid digit");
       }
       this.cells[i] = char;
-      this.given[i] = char != ".";
+      this.givens[i] = char != ".";
       // If it's an empty cell, create untriedNumbers array
-      if (!this.given[i]) {
+      if (!this.givens[i]) {
         this.untriedNumbers[i] = createRandomOneNine();
       }
     }
+  }
+  public clone(): Puzzle {
+    const puzzle = new Puzzle(
+      ".................................................................................",
+    );
+    puzzle.cells = [...this.cells];
+    for (let i = 0; i < this.untriedNumbers.length; i++) {
+      puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
+    }
+    puzzle.givens = [...this.givens];
+    return puzzle;
   }
 }
 
@@ -191,37 +202,54 @@ export function fillInRemaining(
  *
  * @param puzzle
  */
-export function search(puzzle: Puzzle): (Puzzle | number) {
+export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
   // Return puzzle if full
   if (!puzzle.cells.includes(".")) {
     return puzzle;
   }
-  // Select cell with fewest possibilities
-  // https://stackoverflow.com/questions/18277774/whats-the-best-way-to-find-the-shortest-array-in-a-two-dimensional-array
-  let shortestIndex = 0;
 
-  puzzle.untriedNumbers.reduce(function (p, c, i) {
-    shortestIndex = p.length > c.length ? i : shortestIndex;
-    // If cell is filled, return previous
-    if (puzzle.cells[shortestIndex] != ".") {
-      return p;
+  // Update the peers of the most recent cell update
+  if (mostRecent) {
+    if (puzzle.cells[mostRecent] == ".") {
+      throw new Error("mostRecent cell not filled");
     }
-    return p.length > c.length ? c : p;
-  }, { length: Infinity });
-  // If no more untried numbers, return -1
-  if (puzzle.untriedNumbers[shortestIndex].length == 0) {
-    return -1;
+    // Can be sure that the cell contains a number, now
+    updatePeers(mostRecent, puzzle, puzzle.cells[mostRecent] as number);
   }
-  let number = puzzle.untriedNumbers[shortestIndex].pop() as number;
-  while (assign(shortestIndex.valueOf(), puzzle, number) == -1) {
+
+  // Select cell with fewest possibilities
+  // Find first empty cell
+  let shortestIndex = puzzle.cells.findIndex((cell) => cell == ".");
+
+  for (let i = 0; i < puzzle.untriedNumbers.length; i++) {
+    // Skip filled
+    if (puzzle.cells[i] != ".") {
+      continue;
+    }
+    // If current untried numbers arr length is less than previous, update
+    shortestIndex = puzzle.untriedNumbers[i].length <
+        puzzle.untriedNumbers[shortestIndex].length
+      ? i
+      : shortestIndex;
+  }
+  let ret;
+  do {
     // If no more untried numbers, return -1
     if (puzzle.untriedNumbers[shortestIndex].length == 0) {
       return -1;
     }
-    number = puzzle.untriedNumbers[shortestIndex].pop() as number;
-  }
-  // If here, assign() was successful
-  return search(puzzle);
+    let number = puzzle.untriedNumbers[shortestIndex].pop() as number;
+    while (assign(shortestIndex.valueOf(), puzzle, number) == -1) {
+      // If no more untried numbers, return -1
+      if (puzzle.untriedNumbers[shortestIndex].length == 0) {
+        return -1;
+      }
+      number = puzzle.untriedNumbers[shortestIndex].pop() as number;
+    }
+    // If here, assign() was successful
+    ret = search(puzzle.clone(), shortestIndex);
+  } while (ret == -1);
+  return ret;
 }
 
 /**
@@ -241,7 +269,12 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
   }
   // Update cell
   puzzle.cells[index] = number;
-  const peers = getPeers(address);
+  // Return 0 on success
+  return 0;
+}
+
+export function updatePeers(index: number, puzzle: Puzzle, number: number) {
+  const peers = getPeers(convertToAddress(index));
   // Update peers
   for (const i of peers) {
     // Skip over filled cells
@@ -254,6 +287,10 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
       puzzle.untriedNumbers[i].splice(index, 1);
     }
   }
-  // Return 0 on success
-  return 0;
 }
+
+const puzzle = fillInRemaining();
+if (puzzle.cells == undefined) {
+  console.log(puzzle);
+}
+console.log(puzzle.cells);
