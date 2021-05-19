@@ -14,7 +14,11 @@ export class Puzzle {
   cells: (number | string)[] = [];
   givens: boolean[] = [];
   untriedNumbers: number[][] = [];
-  constructor(puzzleToParse: string) {
+  constructor(puzzleToParse?: string) {
+    if (puzzleToParse == undefined) {
+      puzzleToParse =
+        ".................................................................................";
+    }
     if (puzzleToParse.length != 81) {
       throw new Error("puzzle length is != 81");
     }
@@ -36,12 +40,13 @@ export class Puzzle {
     }
   }
   public clone(): Puzzle {
-    const puzzle = new Puzzle(
-      ".................................................................................",
-    );
+    const puzzle = new Puzzle();
     puzzle.cells = [...this.cells];
     for (let i = 0; i < this.untriedNumbers.length; i++) {
-      puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
+      // Skip over givens (they don't have untriedNumbers)
+      if (!this.givens[i]) {
+        puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
+      }
     }
     puzzle.givens = [...this.givens];
     return puzzle;
@@ -168,17 +173,18 @@ export const getPeers = (address: Address): number[] => {
  * @returns Filled in puzzle if false
  */
 export function fillInRemaining(
-  checkSolutionCount: boolean,
   puzzleToCheck: Puzzle,
-): number | Puzzle;
+  checkSolutionCount: boolean,
+): boolean;
 /**
   * @returns puzzle
   */
+export function fillInRemaining(puzzleToCheck: Puzzle): Puzzle;
 export function fillInRemaining(): Puzzle;
 export function fillInRemaining(
-  checkSolutionCount?: boolean,
   puzzleToCheck?: Puzzle,
-): Puzzle | number {
+  checkSolutionCount?: boolean,
+): Puzzle | boolean {
   let puzzle: Puzzle;
   if (checkSolutionCount) {
     if (puzzleToCheck == undefined) {
@@ -186,15 +192,42 @@ export function fillInRemaining(
         "checkSolutionCount is true but puzzleToCheck is undefined",
       );
     }
-    puzzle = puzzleToCheck;
+    // If checking, create two puzzles, cloned from original
+    // Untried numbers will be in ascending order for one, descending for the other:
+    const puzzle1 = puzzleToCheck.clone();
+    setUntriedNumbers(puzzle1, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const puzzle2 = puzzleToCheck.clone();
+    setUntriedNumbers(puzzle2, [9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    const puzzle1Search = search(puzzle1);
+    const puzzle2Search = search(puzzle2);
+    if (typeof puzzle1Search == "number") {
+      throw new Error("puzzle1 failed");
+    }
+    if (typeof puzzle2Search == "number") {
+      throw new Error("puzzle2 failed");
+    }
+    // Test if all cells are the same
+    // https://stackoverflow.com/questions/7837456/how-to-compare-arrays-in-javascript
+    let i = puzzle1Search.cells.length;
+    while (i--) {
+      if(puzzle1Search.cells[i] !== puzzle2Search.cells[i]) return false
+    }
+
+    return true;
   } else {
-    puzzle = new Puzzle(
-      ".................................................................................",
-    );
+    puzzle = new Puzzle();
+    const ret = search(puzzle);
+    if (typeof ret == "number") {
+      throw new Error("search returned a number");
+    }
+    return ret;
   }
-  let address: Address = { r: 1, c: 1 };
-  let solutionCount = 0;
-  return search(puzzle);
+}
+
+export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
+  for (let i = 0; i < puzzle.cells.length; i++) {
+    puzzle.untriedNumbers[i] = [...arr];
+  }
 }
 
 /**
@@ -289,8 +322,7 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
   }
 }
 
-const puzzle = fillInRemaining();
-if (puzzle.cells == undefined) {
-  console.log(puzzle);
+export function hasUniqueSolution(puzzle: Puzzle): boolean {
+  const ret = fillInRemaining(puzzle, true);
+  return ret;
 }
-console.log(puzzle.cells);

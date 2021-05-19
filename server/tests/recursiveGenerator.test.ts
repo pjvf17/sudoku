@@ -8,6 +8,7 @@ import {
   convertToAddress,
   fillInRemaining,
   getPeers,
+hasUniqueSolution,
   Puzzle,
   validateCell,
 } from "../recursiveGenerator.ts";
@@ -89,13 +90,9 @@ Deno.test({
   fn(): void {
     const testPuzzle =
       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    const puzzle = fillInRemaining(true, new Puzzle(testPuzzle));
-    if (typeof puzzle != "number") {
-      for (const cell of puzzle.cells) {
-        assert(cell != ".", "puzzle has empty cell");
-      }
-    } else {
-      assert(puzzle != -1, "Returned -1");
+    const puzzle = fillInRemaining(new Puzzle(testPuzzle));
+    for (const cell of puzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
     }
   },
 });
@@ -132,6 +129,27 @@ Deno.test({
       peers,
       expected,
     );
+  },
+});
+
+Deno.test({
+  name: "recursiveGenerator – hasUniqueSolution correctly identifies unique and non-unique puzzles",
+  fn(): void {
+    // For the following two examples, see:
+    // https://www.sudokudragon.com/unsolvable.htm
+    const testPuzzle1 =
+      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+    let unique = hasUniqueSolution(new Puzzle(testPuzzle1));
+    const testPuzzle2 =
+      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+    // Assert that the puzzle is not unique
+    unique = hasUniqueSolution(new Puzzle(testPuzzle2));
+    assert(!unique);
+    // Took this puzzle from test above this, solving a puzzle with xwing
+    const testPuzzle3 =
+      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+    unique = hasUniqueSolution(new Puzzle(testPuzzle3));
+    assert(unique);
   },
 });
 
