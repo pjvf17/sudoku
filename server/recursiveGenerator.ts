@@ -14,9 +14,6 @@ export class Puzzle {
   cells: (number | string)[] = [];
   givens: boolean[] = [];
   untriedNumbers: number[][] = [];
-  solutions = 0;
-  // Checking solution count? default to false
-  checking = false;
   constructor(puzzleToParse: string) {
     if (puzzleToParse.length != 81) {
       throw new Error("puzzle length is != 81");
@@ -44,14 +41,9 @@ export class Puzzle {
     );
     puzzle.cells = [...this.cells];
     for (let i = 0; i < this.untriedNumbers.length; i++) {
-      // Skip over givens (they don't have untriedNumbers)
-      if (!this.givens[i]) {
-        puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
-      }
+      puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
     }
     puzzle.givens = [...this.givens];
-    puzzle.solutions = this.solutions;
-    puzzle.checking = this.checking;
     return puzzle;
   }
 }
@@ -176,14 +168,16 @@ export const getPeers = (address: Address): number[] => {
  * @returns Filled in puzzle if false
  */
 export function fillInRemaining(
-  puzzleToCheck: Puzzle,
   checkSolutionCount: boolean,
-): number;
-export function fillInRemaining(puzzleToCheck: Puzzle): Puzzle;
+  puzzleToCheck: Puzzle,
+): number | Puzzle;
+/**
+  * @returns puzzle
+  */
 export function fillInRemaining(): Puzzle;
 export function fillInRemaining(
-  puzzleToCheck?: Puzzle,
   checkSolutionCount?: boolean,
+  puzzleToCheck?: Puzzle,
 ): Puzzle | number {
   let puzzle: Puzzle;
   if (checkSolutionCount) {
@@ -193,82 +187,73 @@ export function fillInRemaining(
       );
     }
     puzzle = puzzleToCheck;
-    puzzle.checking = true;
   } else {
     puzzle = new Puzzle(
       ".................................................................................",
     );
   }
+  let address: Address = { r: 1, c: 1 };
+  let solutionCount = 0;
+  return search(puzzle);
+}
 
-  let solutions = 0;
-  /**
-  * Finds values to put in cells. Inside fillInRemaining in order to have
-  * 'solutions' variable as something search can access
-  * @param puzzle
-  */
-  function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
-    // Return puzzle if full
-    if (!puzzle.cells.includes(".")) {
-      solutions++;
-      return puzzle;
+/**
+ * Finds values to put in cells
+ *
+ * @param puzzle
+ */
+export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
+  // Return puzzle if full
+  if (!puzzle.cells.includes(".")) {
+    return puzzle;
+  }
+
+  // Update the peers of the most recent cell update
+  if (mostRecent) {
+    if (puzzle.cells[mostRecent] == ".") {
+      throw new Error("mostRecent cell not filled");
     }
+    // Can be sure that the cell contains a number, now
+    updatePeers(mostRecent, puzzle, puzzle.cells[mostRecent] as number);
+  }
 
-    // Update the peers of the most recent cell update
-    if (mostRecent) {
-      if (puzzle.cells[mostRecent] == ".") {
-        throw new Error("mostRecent cell not filled");
-      }
-      // Can be sure that the cell contains a number, now
-      updatePeers(mostRecent, puzzle, puzzle.cells[mostRecent] as number);
+  // Select cell with fewest possibilities
+  // Find first empty cell
+  let shortestIndex = puzzle.cells.findIndex((cell) => cell == ".");
+
+  for (let i = 0; i < puzzle.untriedNumbers.length; i++) {
+    // Skip filled
+    if (puzzle.cells[i] != ".") {
+      continue;
     }
-
-    // Select cell with fewest possibilities
-    // Find first empty cell
-    let shortestIndex = puzzle.cells.findIndex((cell) => cell == ".");
-
-    for (let i = 0; i < puzzle.untriedNumbers.length; i++) {
-      // Skip filled
-      if (puzzle.cells[i] != ".") {
-        continue;
-      }
-      // If current untried numbers arr length is less than previous, update
-      shortestIndex = puzzle.untriedNumbers[i].length <
-          puzzle.untriedNumbers[shortestIndex].length
-        ? i
-        : shortestIndex;
+    // If current untried numbers arr length is less than previous, update
+    shortestIndex = puzzle.untriedNumbers[i].length <
+        puzzle.untriedNumbers[shortestIndex].length
+      ? i
+      : shortestIndex;
+  }
+  let ret;
+  do {
+    // If no more untried numbers, return -1
+    if (puzzle.untriedNumbers[shortestIndex].length == 0) {
+      return -1;
     }
-    let ret;
-    do {
+    let number = puzzle.untriedNumbers[shortestIndex].pop() as number;
+    while (assign(shortestIndex.valueOf(), puzzle, number) == -1) {
       // If no more untried numbers, return -1
       if (puzzle.untriedNumbers[shortestIndex].length == 0) {
         return -1;
       }
-      let number = puzzle.untriedNumbers[shortestIndex].pop() as number;
-      while (assign(shortestIndex.valueOf(), puzzle, number) == -1) {
-        // If no more untried numbers, return -1
-        if (puzzle.untriedNumbers[shortestIndex].length == 0) {
-          return -1;
-        }
-        number = puzzle.untriedNumbers[shortestIndex].pop() as number;
-      }
-      // If here, assign() was successful
-      ret = search(puzzle.clone(), shortestIndex);
-    } while (ret == -1 || (checkSolutionCount == true && solutions <= 1));
-    return ret;
-  }
-  const ret = search(puzzle);
-
-  if (checkSolutionCount == true) {
-    return solutions;
-  }
-  if (typeof ret == "number") {
-    throw new Error("fillInRemaining – search returned number");
-  }
+      number = puzzle.untriedNumbers[shortestIndex].pop() as number;
+    }
+    // If here, assign() was successful
+    ret = search(puzzle.clone(), shortestIndex);
+  } while (ret == -1);
   return ret;
 }
 
 /**
- * Attempts to assign a number to a cell, if it's valid
+ * Attempts to assign a number to a cell, and updates all peers
  *
  * @param index: Cell index to assign number to
  * @param number: Number to assign
@@ -288,13 +273,6 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
   return 0;
 }
 
-/**
- * Updates a cells peers to remove number
- *
- * @param index index of cell that's benig updated
- * @param puzzle
- * @param number number to update cell to
- */
 export function updatePeers(index: number, puzzle: Puzzle, number: number) {
   const peers = getPeers(convertToAddress(index));
   // Update peers
@@ -311,13 +289,8 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
   }
 }
 
-export function hasUniqueSolution(puzzle: Puzzle): boolean {
-  const ret = fillInRemaining(puzzle, true);
-  if (ret > 1) {
-    return false;
-  }
-  if (ret == 1) {
-    return true;
-  }
-  throw new Error("Solution count was < 1");
+const puzzle = fillInRemaining();
+if (puzzle.cells == undefined) {
+  console.log(puzzle);
 }
+console.log(puzzle.cells);

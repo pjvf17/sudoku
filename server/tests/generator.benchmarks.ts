@@ -2,13 +2,8 @@ import {
   createPuzzle,
   fillInRemaining,
   hasUniqueSolution,
-parsePuzzle,
 } from "../generator.ts";
-import {
-  fillInRemaining as recursiveFillInRemaining,
-  Puzzle as RecursivePuzzle,
-  hasUniqueSolution as recursiveHasUniqueSolution
-} from "../recursiveGenerator.ts";
+import { fillInRemaining as recursiveFillInRemaining } from "../recursiveGenerator.ts";
 
 import {
   bench,
@@ -18,7 +13,7 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 
 await bench({
   name: "Fill in remaining",
-  runs: 100,
+  runs: 10000,
   func(b): void {
     b.start();
     fillInRemaining();
@@ -34,7 +29,7 @@ await bench({
 
 await bench({
   name: "Recursive fill in remaining",
-  runs: 100,
+  runs: 10000,
   func(b): void {
     b.start();
     recursiveFillInRemaining();
@@ -115,53 +110,6 @@ await bench({
 //     b.stop()
 //   }
 // })
-
-await bench({
-  name: "Recursive – check uniqueness",
-  runs: 10,
-  func(b): void {
-    b.start();
-    // For the following two examples, see:
-    // https://www.sudokudragon.com/unsolvable.htm
-    const testPuzzle1 =
-      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle1));
-    const testPuzzle2 =
-      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-    // Assert that the puzzle is not unique
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle2));
-    // Took this puzzle from test above this, solving a puzzle with xwing
-    const testPuzzle3 =
-      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle3));
-    b.stop();
-  },
-});
-
-await bench({
-  name: "Check uniqueness",
-  runs: 10,
-  func(b):void {
-    b.start();
-    // For the following two examples, see:
-    // https://www.sudokudragon.com/unsolvable.htm
-    const testPuzzle1 =
-      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    hasUniqueSolution(parsePuzzle(testPuzzle1));
-    const testPuzzle2 =
-      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-    // Assert that the puzzle is not unique
-    hasUniqueSolution(parsePuzzle(testPuzzle2));
-    // Took this puzzle from test above this, solving a puzzle with xwing
-    const testPuzzle3 =
-      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-    hasUniqueSolution(parsePuzzle(testPuzzle3));
-    b.stop();
-  }
-})
-
-
-
 // 17/05/21 1:32pm 612.24ms 100 runs
 
 runBenchmarks();
