@@ -8,7 +8,7 @@ import {
   convertToAddress,
   fillInRemaining,
   getPeers,
-hasUniqueSolution,
+  hasUniqueSolution,
   Puzzle,
   validateCell,
 } from "../recursiveGenerator.ts";
@@ -98,6 +98,32 @@ Deno.test({
 });
 
 Deno.test({
+  name:
+    "recursiveGenerator – fillInRemaining completes a puzzle with many cells empty",
+  fn(): void {
+    const testPuzzle =
+      ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
+    const puzzle = fillInRemaining(new Puzzle(testPuzzle));
+    for (const cell of puzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "recursiveGenerator – fillInRemaining completes a puzzle with many cells empty, harder puzzle",
+  fn(): void {
+    const testPuzzle =
+      ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+    const puzzle = fillInRemaining(new Puzzle(testPuzzle));
+    for (const cell of puzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+  },
+});
+
+Deno.test({
   name: "recursiveGenerator – getPeers returns correct peers",
   fn(): void {
     const peers = getPeers(convertToAddress(5));
@@ -133,7 +159,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "recursiveGenerator – hasUniqueSolution correctly identifies unique and non-unique puzzles",
+  name:
+    "recursiveGenerator – hasUniqueSolution correctly identifies unique and non-unique puzzles",
   fn(): void {
     // For the following two examples, see:
     // https://www.sudokudragon.com/unsolvable.htm

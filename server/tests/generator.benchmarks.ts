@@ -34,15 +34,15 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 //  * Or 2.59597371 times faster, or > 2 and a half times faster
 //  */
 
-// await bench({
-//   name: "Recursive fill in remaining",
-//   runs: 500,
-//   func(b): void {
-//     b.start();
-//     recursiveFillInRemaining();
-//     b.stop();
-//   },
-// });
+await bench({
+  name: "Recursive fill in remaining",
+  runs: 500,
+  func(b): void {
+    b.start();
+    recursiveFillInRemaining();
+    b.stop();
+  },
+});
 
 // await bench({
 //   name: "Solve easy puzzle",
@@ -119,27 +119,50 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 // })
 // 17/05/21 1:32pm 612.24ms 100 runs
 
-// await bench({
-//   name: "Recursive – check uniqueness",
-//   runs: 10,
-//   func(b): void {
-//     b.start();
-//     // For the following two examples, see:
-//     // https://www.sudokudragon.com/unsolvable.htm
-//     const testPuzzle1 =
-//       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle1));
-//     const testPuzzle2 =
-//       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-//     // Assert that the puzzle is not unique
-//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle2));
-//     // Took this puzzle from test above this, solving a puzzle with xwing
-//     const testPuzzle3 =
-//       "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
-//     recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle3));
-//     b.stop();
-//   },
-// });
+await bench({
+  name: "filling, 6 spots unfilled",
+  runs: 100,
+  func(b): void {
+    const testPuzzle1 =
+    "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+    const puzzle = new RecursivePuzzle(testPuzzle1);
+    b.start();
+    recursiveFillInRemaining(puzzle);
+    b.stop();
+  },
+  // 0.44ms 100 run avg
+});
+
+await bench({
+  name: "filling, many spots unfilled, easier puzzle",
+  runs: 100,
+  func(b): void {
+    const testPuzzle1 =
+    ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
+    
+    const puzzle = new RecursivePuzzle(testPuzzle1);
+    b.start();
+    recursiveFillInRemaining(puzzle);
+    b.stop();
+  },
+  // 138.44ms 50 run avg
+  // With updatePeers in puzzle constructor: 4.16ms 100 run avgç
+});
+await bench({
+  name: "filling, many spots unfilled",
+  runs: 100,
+  func(b): void {
+    const testPuzzle1 =
+    ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
+    
+    const puzzle = new RecursivePuzzle(testPuzzle1);
+    b.start();
+    recursiveFillInRemaining(puzzle);
+    b.stop();
+  },
+  // 5356ms 5 run avg
+  // With updatePeers in puzzle constructor: 14.62ms 100 run avg
+});
 
 // await bench({
 //   name: "Check uniqueness",
@@ -161,35 +184,31 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 //     hasUniqueSolution(parsePuzzle(testPuzzle3));
 //     b.stop();
 //   }
+//   // 15450.8ms 10 run avg
 // })
 
+
 await bench({
-  name: "filling, 6 spots unfilled",
+  name: "Recursive – check uniqueness",
   runs: 100,
   func(b): void {
+    b.start();
+    // For the following two examples, see:
+    // https://www.sudokudragon.com/unsolvable.htm
     const testPuzzle1 =
       "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
-    const puzzle = new RecursivePuzzle(testPuzzle1);
-    b.start();
-    recursiveFillInRemaining(puzzle);
-    b.stop();
-  },
-  // 5.6ms 100 run avg
-});
-
-await bench({
-  name: "filling, many spots unfilled",
-  runs: 100,
-  func(b): void {
-    const testPuzzle1 =
+    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle1));
+    const testPuzzle2 =
       ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
-
-    const puzzle = new RecursivePuzzle(testPuzzle1);
-    b.start();
-    recursiveFillInRemaining(puzzle);
+    // Assert that the puzzle is not unique
+    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle2));
+    // Took this puzzle from test above this, solving a puzzle with xwing
+    const testPuzzle3 =
+      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+    recursiveHasUniqueSolution(new RecursivePuzzle(testPuzzle3));
     b.stop();
   },
-  // 5.24ms 100 run avg
+  // 63.88ms 100 runs avg
 });
 
 runBenchmarks();

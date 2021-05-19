@@ -31,11 +31,16 @@ export class Puzzle {
       ) {
         throw new Error("puzzleToParse contains invalid digit");
       }
-      this.cells[i] = char;
+      this.cells[i] = isNaN(charAsNumber) ? char : charAsNumber;
       this.givens[i] = char != ".";
       // If it's an empty cell, create untriedNumbers array
       if (!this.givens[i]) {
         this.untriedNumbers[i] = createRandomOneNine();
+      }
+    }
+    for (let i = 0; i < 81; i++) {
+      if (this.cells[i] != ".") {
+        updatePeers(i, this, this.cells[i] as number);
       }
     }
   }
@@ -210,7 +215,7 @@ export function fillInRemaining(
     // https://stackoverflow.com/questions/7837456/how-to-compare-arrays-in-javascript
     let i = puzzle1Search.cells.length;
     while (i--) {
-      if(puzzle1Search.cells[i] !== puzzle2Search.cells[i]) return false
+      if (puzzle1Search.cells[i] !== puzzle2Search.cells[i]) return false;
     }
 
     return true;
@@ -228,6 +233,11 @@ export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
   for (let i = 0; i < puzzle.cells.length; i++) {
     puzzle.untriedNumbers[i] = [...arr];
   }
+  for (let i = 0; i < 81; i++) {
+    if (puzzle.cells[i] != ".") {
+      updatePeers(i, puzzle, puzzle.cells[i] as number);
+    }
+  }
 }
 
 /**
@@ -235,8 +245,10 @@ export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
  *
  * @param puzzle
  */
+let iterations = 0;
 export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
   // Return puzzle if full
+  iterations++;
   if (!puzzle.cells.includes(".")) {
     return puzzle;
   }
@@ -326,3 +338,15 @@ export function hasUniqueSolution(puzzle: Puzzle): boolean {
   const ret = fillInRemaining(puzzle, true);
   return ret;
 }
+
+// fillInRemaining(new Puzzle());
+// console.log(iterations);
+// iterations = 0;
+// const testPuzzle1 =
+//   ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
+
+// const puzzle = new Puzzle(testPuzzle1);
+// // setUntriedNumbers(puzzle, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+// fillInRemaining(puzzle);
+// console.log(iterations);
+// iterations = 0;
