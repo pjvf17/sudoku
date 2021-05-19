@@ -1,18 +1,38 @@
 import {
-  fillInRemaining,
   createPuzzle,
-hasUniqueSolution,
+  fillInRemaining,
+  hasUniqueSolution,
 } from "../generator.ts";
+import { fillInRemaining as recursiveFillInRemaining } from "../recursiveGenerator.ts";
 
-import { runBenchmarks, bench } from "https://deno.land/std@0.96.0/testing/bench.ts";
-import { Puzzle, Difficulty } from "../../client/src/types.d.ts";
+import {
+  bench,
+  runBenchmarks,
+} from "https://deno.land/std@0.96.0/testing/bench.ts";
+import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 
 await bench({
   name: "Fill in remaining",
-  runs: 100,
+  runs: 10000,
   func(b): void {
     b.start();
     fillInRemaining();
+    b.stop();
+  },
+});
+
+/** 19/05/21 10:43:58
+ * Fill in remaning – 10000 runs avg: 12.6372ms
+ * Recursive fill in remaining – 10000 runs avg: 4.868ms
+ * Or 2.59597371 times faster, or > 2 and a half times faster
+ */
+
+await bench({
+  name: "Recursive fill in remaining",
+  runs: 10000,
+  func(b): void {
+    b.start();
+    recursiveFillInRemaining();
     b.stop();
   },
 });
@@ -68,31 +88,28 @@ await bench({
 // With triedConfigruations at 100. No secondary backtrack, 100 runs, reset at 200:  2339.88ms;
 // With triedConfigruations at 100. No secondary backtrack, 100 runs, reset at 50: 2122.58ms
 
-await bench({
-  name: "check uniqueness",
-  runs: 100,
-  func(b): void {
-    const puzzles:Puzzle[] = [];
-    let difficulty:Difficulty = "easy";
-    for (let i = 0; i < 3; i++) {
-      puzzles[i] = createPuzzle(difficulty);
-      if (i == 1) {
-        difficulty = "medium";
-      }
-      if (i == 2) {
-        difficulty = "hard";
-      }
-    }
-    b.start();
-    for (let i = 0; i < puzzles.length; i++) {
-      hasUniqueSolution(puzzles[i]);
-    }
-    b.stop()
-  }
-})
+// await bench({
+//   name: "check uniqueness",
+//   runs: 100,
+//   func(b): void {
+//     const puzzles:Puzzle[] = [];
+//     let difficulty:Difficulty = "easy";
+//     for (let i = 0; i < 3; i++) {
+//       puzzles[i] = createPuzzle(difficulty);
+//       if (i == 1) {
+//         difficulty = "medium";
+//       }
+//       if (i == 2) {
+//         difficulty = "hard";
+//       }
+//     }
+//     b.start();
+//     for (let i = 0; i < puzzles.length; i++) {
+//       hasUniqueSolution(puzzles[i]);
+//     }
+//     b.stop()
+//   }
+// })
 // 17/05/21 1:32pm 612.24ms 100 runs
-
-
-
 
 runBenchmarks();
