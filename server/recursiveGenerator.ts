@@ -15,6 +15,7 @@ export class Puzzle {
   givens: boolean[] = [];
   untriedNumbers: number[][] = [];
   constructor(puzzleToParse?: string) {
+    const newPuzzle = puzzleToParse == undefined;
     if (puzzleToParse == undefined) {
       puzzleToParse =
         ".................................................................................";
@@ -35,7 +36,10 @@ export class Puzzle {
       this.givens[i] = char != ".";
       // If it's an empty cell, create untriedNumbers array
       if (!this.givens[i]) {
-        this.untriedNumbers[i] = createRandomOneNine();
+        // If puzzle was passed in, create random array, otherwise create fixed array
+        this.untriedNumbers[i] = newPuzzle
+          ? createRandomOneNine()
+          : [1, 2, 3, 4, 5, 6, 7, 8, 9];
       }
     }
     for (let i = 0; i < 81; i++) {
@@ -47,10 +51,12 @@ export class Puzzle {
   public clone(): Puzzle {
     const puzzle = new Puzzle();
     puzzle.cells = [...this.cells];
-    for (let i = 0; i < this.untriedNumbers.length; i++) {
-      // Skip over givens (they don't have untriedNumbers)
-      if (!this.givens[i]) {
-        puzzle.untriedNumbers[i] = this.untriedNumbers[i].slice();
+    for (let i = 0; i < 81; i++) {
+      // Set given cells untriedNumbers to []
+      if (this.givens[i]) {
+        puzzle.untriedNumbers[i] = [];
+      } else {
+        puzzle.untriedNumbers[i] = this.untriedNumbers[i]?.slice();
       }
     }
     puzzle.givens = [...this.givens];
@@ -231,7 +237,9 @@ export function fillInRemaining(
 
 export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
   for (let i = 0; i < puzzle.cells.length; i++) {
-    puzzle.untriedNumbers[i] = [...arr];
+    if (puzzle.cells[i] == ".") {
+      puzzle.untriedNumbers[i] = [...arr];
+    }
   }
   for (let i = 0; i < 81; i++) {
     if (puzzle.cells[i] != ".") {
@@ -245,10 +253,8 @@ export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
  *
  * @param puzzle
  */
-let iterations = 0;
 export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
   // Return puzzle if full
-  iterations++;
   if (!puzzle.cells.includes(".")) {
     return puzzle;
   }
@@ -260,6 +266,16 @@ export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
     }
     // Can be sure that the cell contains a number, now
     updatePeers(mostRecent, puzzle, puzzle.cells[mostRecent] as number);
+  }
+
+  let ret: (Puzzle | number) = eliminate(puzzle);
+  // If eliminate fails, puzzle in current config not solvable
+  if (ret == -1) {
+    return -1;
+  }
+  // Return puzzle if full
+  if (!puzzle.cells.includes(".")) {
+    return puzzle;
   }
 
   // Select cell with fewest possibilities
@@ -277,7 +293,6 @@ export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
       ? i
       : shortestIndex;
   }
-  let ret;
   do {
     // If no more untried numbers, return -1
     if (puzzle.untriedNumbers[shortestIndex].length == 0) {
@@ -318,6 +333,13 @@ export function assign(index: number, puzzle: Puzzle, number: number): number {
   return 0;
 }
 
+/**
+ * Removes all instances of number from peers of cell at index
+ *
+ * @param index index of cell
+ * @param puzzle
+ * @param number number to remove from peers
+ */
 export function updatePeers(index: number, puzzle: Puzzle, number: number) {
   const peers = getPeers(convertToAddress(index));
   // Update peers
@@ -332,6 +354,40 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
       puzzle.untriedNumbers[i].splice(index, 1);
     }
   }
+}
+
+/**
+ * Solver function that uses standard sudoku rules to solve
+ * Locates any cells with untriedNumbers.length = 1 and assigns that number and updates peers
+ *
+ * @param puzzle
+ * @returns status code, 0 on success, -1 on failure (meaning encountered a spot that means this puzzle can't be solved as is)
+ */
+export function eliminate(puzzle: Puzzle): number {
+  let length: number;
+  let ret: number;
+  let number: number;
+  for (let i = 0; i < 81; i++) {
+    // skip filled
+    if (puzzle.cells[i] != ".") {
+      continue;
+    }
+    length = puzzle.untriedNumbers[i].length;
+    if (length == 1) {
+      number = puzzle.untriedNumbers[i].pop() as number;
+      ret = assign(i, puzzle, number);
+      // If unable to assign, return -1
+      if (ret == -1) {
+        return ret;
+      }
+      updatePeers(i, puzzle, number);
+    }
+    if (length == 0) {
+      return -1;
+    }
+  }
+  // If no errors encountered, return 0 on success
+  return 0;
 }
 
 export function hasUniqueSolution(puzzle: Puzzle): boolean {

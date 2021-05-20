@@ -42,6 +42,7 @@ await bench({
     recursiveFillInRemaining();
     b.stop();
   },
+  // With eliminate() implemented: 3.716ms 500 run avg
 });
 
 // await bench({
@@ -121,7 +122,7 @@ await bench({
 
 await bench({
   name: "filling, 6 spots unfilled",
-  runs: 100,
+  runs: 1000,
   func(b): void {
     const testPuzzle1 =
     "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
@@ -131,11 +132,12 @@ await bench({
     b.stop();
   },
   // 0.44ms 100 run avg
+  // With eliminate() implemented: 0.156ms 1000 run avg
 });
 
 await bench({
   name: "filling, many spots unfilled, easier puzzle",
-  runs: 100,
+  runs: 1000,
   func(b): void {
     const testPuzzle1 =
     ".76...3.9...639.2....7..61....9.6.54....8....68.3.4....91..3....2.867...5.8...73.";
@@ -146,7 +148,8 @@ await bench({
     b.stop();
   },
   // 138.44ms 50 run avg
-  // With updatePeers in puzzle constructor: 4.16ms 100 run avgç
+  // With updatePeers in puzzle constructor: 4.16ms 100 run avg
+  // With eliminate() implemented: 1.168ms 1000 run avg
 });
 await bench({
   name: "filling, many spots unfilled",
@@ -162,6 +165,7 @@ await bench({
   },
   // 5356ms 5 run avg
   // With updatePeers in puzzle constructor: 14.62ms 100 run avg
+  // With eliminate() implemented: 9.54ms 100 run avg
 });
 
 // await bench({
@@ -209,6 +213,7 @@ await bench({
     b.stop();
   },
   // 63.88ms 100 runs avg
+  // With eliminate() implemented: 18.32 100 run avg
 });
 
 runBenchmarks();
