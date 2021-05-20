@@ -367,25 +367,30 @@ export function eliminate(puzzle: Puzzle): number {
   let length: number;
   let ret: number;
   let number: number;
-  for (let i = 0; i < 81; i++) {
-    // skip filled
-    if (puzzle.cells[i] != ".") {
-      continue;
-    }
-    length = puzzle.untriedNumbers[i].length;
-    if (length == 1) {
-      number = puzzle.untriedNumbers[i].pop() as number;
-      ret = assign(i, puzzle, number);
-      // If unable to assign, return -1
-      if (ret == -1) {
-        return ret;
+  let changes:number;
+  do {
+    changes = 0
+    for (let i = 0; i < 81; i++) {
+      // skip filled
+      if (puzzle.cells[i] != ".") {
+        continue;
       }
-      updatePeers(i, puzzle, number);
+      length = puzzle.untriedNumbers[i].length;
+      if (length == 1) {
+        number = puzzle.untriedNumbers[i].pop() as number;
+        ret = assign(i, puzzle, number);
+        // If unable to assign, return -1
+        if (ret == -1) {
+          return ret;
+        }
+        updatePeers(i, puzzle, number);
+        changes++;
+      }
+      if (length == 0) {
+        return -1;
+      }
     }
-    if (length == 0) {
-      return -1;
-    }
-  }
+  } while (changes);
   // If no errors encountered, return 0 on success
   return 0;
 }

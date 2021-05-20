@@ -43,6 +43,7 @@ await bench({
     b.stop();
   },
   // With eliminate() implemented: 3.716ms 500 run avg
+  // With eliminate() looping until 0 changes: 3.476ms 5000 run avg
 });
 
 // await bench({
@@ -133,6 +134,7 @@ await bench({
   },
   // 0.44ms 100 run avg
   // With eliminate() implemented: 0.156ms 1000 run avg
+  // With eliminate() looping until 0 changes: 0.108ms 1000 run avg
 });
 
 await bench({
@@ -150,6 +152,7 @@ await bench({
   // 138.44ms 50 run avg
   // With updatePeers in puzzle constructor: 4.16ms 100 run avg
   // With eliminate() implemented: 1.168ms 1000 run avg
+  // With eliminate() looping until 0 changes: 0.686ms 1000 run avg
 });
 await bench({
   name: "filling, many spots unfilled",
@@ -166,6 +169,7 @@ await bench({
   // 5356ms 5 run avg
   // With updatePeers in puzzle constructor: 14.62ms 100 run avg
   // With eliminate() implemented: 9.54ms 100 run avg
+  // With eliminate() looping until 0 changes: 6.48ms 100 run avg
 });
 
 // await bench({
@@ -214,6 +218,7 @@ await bench({
   },
   // 63.88ms 100 runs avg
   // With eliminate() implemented: 18.32 100 run avg
+  // With eliminate() looping until 0 changes: 12.92ms 100 run avg
 });
 
 runBenchmarks();
