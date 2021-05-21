@@ -28,11 +28,11 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 //   },
 // });
 
-// /** 19/05/21 10:43:58
-//  * Fill in remaning – 10000 runs avg: 12.6372ms
-//  * Recursive fill in remaining – 10000 runs avg: 4.868ms
-//  * Or 2.59597371 times faster, or > 2 and a half times faster
-//  */
+/** 19/05/21 10:43:58
+ * Fill in remaning – 10000 runs avg: 12.6372ms
+ * Recursive fill in remaining – 10000 runs avg: 4.868ms
+ * Or 2.59597371 times faster, or > 2 and a half times faster
+ */
 
 await bench({
   name: "Recursive fill in remaining",

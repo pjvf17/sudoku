@@ -477,6 +477,10 @@ export function eliminate(puzzle: Puzzle, useUnits:boolean): number {
         }
       }
     }
+    // Return puzzle if full
+    if (!puzzle.cells.includes(".")) {
+      return 0;
+    }
   } while (changes);
   // If no errors encountered, return 0 on success
   return 0;
