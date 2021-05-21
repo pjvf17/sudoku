@@ -74,7 +74,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "recursiveGenerator – fillInRemaining returns a complete puzzle",
+  name: "recursiveGenerator – fillInRemaining returns a complete and valid puzzle",
   fn(): void {
     const puzzle = fillInRemaining();
     for (let i = 0; i < puzzle.cells.length; i++) {

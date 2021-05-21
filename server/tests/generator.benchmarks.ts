@@ -36,7 +36,7 @@ import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 
 await bench({
   name: "Recursive fill in remaining",
-  runs: 500,
+  runs: 1000,
   func(b): void {
     b.start();
     recursiveFillInRemaining();
@@ -45,6 +45,7 @@ await bench({
   // With eliminate() implemented: 3.716ms 500 run avg
   // With eliminate() looping until 0 changes: 3.476ms 5000 run avg
   // With eliminate() checking units: 8.688ms 1000 run avg
+  // With eliminate() not checking units for new puzzles: 3.538 1000 run avg
 });
 
 // await bench({

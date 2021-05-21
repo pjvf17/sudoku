@@ -261,7 +261,7 @@ export function fillInRemaining(
     return true;
   } else {
     puzzle = puzzleToCheck == undefined ? new Puzzle() : puzzleToCheck;
-    const ret = search(puzzle);
+    const ret = search(puzzle, undefined, puzzleToCheck !== undefined);
     if (typeof ret == "number") {
       throw new Error("search returned a number");
     }
@@ -287,7 +287,7 @@ export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
  *
  * @param puzzle
  */
-export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
+export function search(puzzle: Puzzle, mostRecent?: number, useUnits = true): (Puzzle | number) {
   // Return puzzle if full
   if (!puzzle.cells.includes(".")) {
     return puzzle;
@@ -302,7 +302,7 @@ export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
     updatePeers(mostRecent, puzzle, puzzle.cells[mostRecent] as number);
   }
 
-  let ret: (Puzzle | number) = eliminate(puzzle);
+  let ret: (Puzzle | number) = eliminate(puzzle, useUnits);
   // If eliminate fails, puzzle in current config not solvable
   if (ret == -1) {
     return -1;
@@ -341,7 +341,7 @@ export function search(puzzle: Puzzle, mostRecent?: number): (Puzzle | number) {
       number = puzzle.untriedNumbers[shortestIndex].pop() as number;
     }
     // If here, assign() was successful
-    ret = search(puzzle.clone(), shortestIndex);
+    ret = search(puzzle.clone(), shortestIndex, useUnits);
   } while (ret == -1);
   return ret;
 }
@@ -397,13 +397,16 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
  * @param puzzle
  * @returns status code, 0 on success, -1 on failure (meaning encountered a spot that means this puzzle can't be solved as is)
  */
-export function eliminate(puzzle: Puzzle): number {
+export function eliminate(puzzle: Puzzle, useUnits:boolean): number {
   let length: number;
   let ret: number;
   let number: number;
   let changes: number;
   let index: number;
-  const units = makeUnits();
+  let units:number[][] = [];
+  if (useUnits) {
+    units = makeUnits();
+  }
   do {
     changes = 0;
     // Loop through all cells and checks how many numbers can go in each cell
@@ -432,6 +435,10 @@ export function eliminate(puzzle: Puzzle): number {
     // Return puzzle if full
     if (!puzzle.cells.includes(".")) {
       return 0;
+    }
+    // If not checking units
+    if (!useUnits) {
+      continue;
     }
     // Loop through rows, columns, and squares
     for (const unit of units) {
