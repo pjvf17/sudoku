@@ -44,11 +44,12 @@ await bench({
   },
   // With eliminate() implemented: 3.716ms 500 run avg
   // With eliminate() looping until 0 changes: 3.476ms 5000 run avg
+  // With eliminate() checking units: 8.688ms 1000 run avg
 });
 
 // await bench({
 //   name: "Solve easy puzzle",
-//   runs: 100,
+//   runs: 1000,
 //   func(b): void {
 //     b.start();
 //     singleCandidateAndPositionSolver(parsePuzzle(easyPuzzleString));
@@ -99,7 +100,7 @@ await bench({
 
 // await bench({
 //   name: "check uniqueness",
-//   runs: 100,
+//   runs: 1000,
 //   func(b): void {
 //     const puzzles:Puzzle[] = [];
 //     let difficulty:Difficulty = "easy";
@@ -135,6 +136,7 @@ await bench({
   // 0.44ms 100 run avg
   // With eliminate() implemented: 0.156ms 1000 run avg
   // With eliminate() looping until 0 changes: 0.108ms 1000 run avg
+  // With eliminate() checking units: 0.18ms 1000 run avg
 });
 
 await bench({
@@ -153,10 +155,11 @@ await bench({
   // With updatePeers in puzzle constructor: 4.16ms 100 run avg
   // With eliminate() implemented: 1.168ms 1000 run avg
   // With eliminate() looping until 0 changes: 0.686ms 1000 run avg
+  // With eliminate() checking units: 0.472ms 1000 run avg
 });
 await bench({
   name: "filling, many spots unfilled",
-  runs: 100,
+  runs: 1000,
   func(b): void {
     const testPuzzle1 =
     ".8...9743.5...8.1..1.......8....5......8.4......3....6.......7..3.5...8.9724...5.";
@@ -170,6 +173,7 @@ await bench({
   // With updatePeers in puzzle constructor: 14.62ms 100 run avg
   // With eliminate() implemented: 9.54ms 100 run avg
   // With eliminate() looping until 0 changes: 6.48ms 100 run avg
+  // With eliminate() checking units: 1.308ms 1000 run avg
 });
 
 // await bench({
@@ -198,7 +202,7 @@ await bench({
 
 await bench({
   name: "Recursive – check uniqueness",
-  runs: 100,
+  runs: 1000,
   func(b): void {
     b.start();
     // For the following two examples, see:
@@ -219,6 +223,7 @@ await bench({
   // 63.88ms 100 runs avg
   // With eliminate() implemented: 18.32 100 run avg
   // With eliminate() looping until 0 changes: 12.92ms 100 run avg
+  // With eliminate() checking units: 7.042ms 1000 run avg
 });
 
 runBenchmarks();

@@ -120,6 +120,40 @@ export const getSquare = (address: Address): number[] => {
 };
 
 /**
+ * Returns an array of units
+ *
+ * @returns Array of arrays of indexes of cells
+ */
+export function makeUnits(): number[][] {
+  const arr: number[][] = [];
+  const address = { r: 1, c: 1 };
+  // Rows
+  for (let i = 0; i < 9; i++) {
+    address.r = i + 1;
+    arr[i] = getRow(address);
+  }
+  // Columns
+  address.r = 1;
+  for (let i = 0; i < 9; i++) {
+    address.c = i + 1;
+    // i + 9 because we've already written to the first 9 indices
+    arr[i + 9] = getCol(address);
+  }
+  // Squares
+  for (let i = 0; i < 63; i += 3) {
+    // If not at first index, and at % 9 == 0
+    // We're at the beginning of a row
+    // Too not add the same square, jump down 2 rows, by adding 18
+    if (i != 0 && i % 9 == 0) {
+      i += 18;
+    }
+    // Not gonna bother updating the address, this is less complicated
+    arr.push(getSquare(convertToAddress(i)));
+  }
+  return arr;
+}
+
+/**
  *
  * @param index
  * @returns address version of the index
@@ -367,9 +401,13 @@ export function eliminate(puzzle: Puzzle): number {
   let length: number;
   let ret: number;
   let number: number;
-  let changes:number;
+  let changes: number;
+  let index: number;
+  const units = makeUnits();
   do {
-    changes = 0
+    changes = 0;
+    // Loop through all cells and checks how many numbers can go in each cell
+    // If the answer is 1, update it
     for (let i = 0; i < 81; i++) {
       // skip filled
       if (puzzle.cells[i] != ".") {
@@ -384,10 +422,52 @@ export function eliminate(puzzle: Puzzle): number {
           return ret;
         }
         updatePeers(i, puzzle, number);
+        // TODO can we loop over just peers?
         changes++;
       }
       if (length == 0) {
         return -1;
+      }
+    }
+    // Return puzzle if full
+    if (!puzzle.cells.includes(".")) {
+      return 0;
+    }
+    // Loop through rows, columns, and squares
+    for (const unit of units) {
+      // Loop through numbers
+      for (let i = 0; i < 9; i++) {
+        const containsNumber = [];
+        // Get untriedNumbers for indices
+        const untried = unit.map((i) => puzzle.untriedNumbers[i]);
+        // Get cells for indices
+        const cells = unit.map((i) => puzzle.cells[i]);
+        // Skip if number is contained in a cell
+        if (cells.includes(i + 1)) {
+          continue;
+        }
+        for (let j = 0; j < 9; j++) {
+          // Skipping filled
+          if (cells[j] != ".") {
+            continue;
+          }
+          if (untried[j].includes(i + 1)) {
+            // Add to indices that contain number
+            containsNumber.push(j);
+          }
+        }
+        if (containsNumber.length == 1) {
+          index = unit[containsNumber[0]];
+          number = i + 1;
+          ret = assign(index, puzzle, number);
+          // If unable to assign, return -1
+          if (ret == -1) {
+            return ret;
+          }
+          updatePeers(index, puzzle, number);
+          // TODO can we loop over just peers?
+          changes++;
+        }
       }
     }
   } while (changes);
