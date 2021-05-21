@@ -10,7 +10,7 @@ import {
   Puzzle as RecursivePuzzle,
   search,
   setUntriedNumbers,
-} from "../recursiveGenerator.ts";
+} from "../Generator/recursiveGenerator.ts";
 
 import {
   bench,

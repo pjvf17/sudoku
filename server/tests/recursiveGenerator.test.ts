@@ -11,7 +11,7 @@ import {
   hasUniqueSolution,
   Puzzle,
   validateCell,
-} from "../recursiveGenerator.ts";
+} from "../Generator/recursiveGenerator.ts";
 
 Deno.test({
   name:

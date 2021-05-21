@@ -17,7 +17,7 @@ import {
   convertToAddress,
   Puzzle,
   validateCell,
-} from "../recursiveGenerator.ts";
+} from "../Generator/recursiveGenerator.ts";
 
 Deno.test({
   name: "Fill in remaining creates a filled puzzle",

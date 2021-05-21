@@ -6,8 +6,8 @@
  * parsePuzzle does not exist, instead Puzzle is a class with a constructor
 */
 
-import { Address } from "../client/src/types.d.ts";
-import { createRandomOneNine } from "./generator.ts";
+import { Address } from "../../client/src/types.d.ts";
+import { createRandomOneNine } from "../generator.ts";
 
 export class Puzzle {
   // Numbers or "."
