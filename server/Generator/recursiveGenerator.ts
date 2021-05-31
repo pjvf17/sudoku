@@ -393,18 +393,24 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
 /**
  * Solver function that uses standard sudoku rules to solve
  * Locates any cells with untriedNumbers.length = 1 and assigns that number and updates peers
+ * 
  *
  * @param puzzle
+ * @param hiddenSingles
+ * 
+ * Determines whether to check for hidden singles in units. 
+ * (speeds up everything but raw puzzle creation, which it slows).
+ * 
  * @returns status code, 0 on success, -1 on failure (meaning encountered a spot that means this puzzle can't be solved as is)
  */
-export function eliminate(puzzle: Puzzle, useUnits:boolean): number {
+export function eliminate(puzzle: Puzzle, hiddenSingles:boolean): number {
   let length: number;
   let ret: number;
   let number: number;
   let changes: number;
   let index: number;
   let units:number[][] = [];
-  if (useUnits) {
+  if (hiddenSingles) {
     units = makeUnits();
   }
   do {
@@ -437,7 +443,7 @@ export function eliminate(puzzle: Puzzle, useUnits:boolean): number {
       return 0;
     }
     // If not checking units
-    if (!useUnits) {
+    if (!hiddenSingles) {
       continue;
     }
     // Loop through rows, columns, and squares

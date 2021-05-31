@@ -7,7 +7,7 @@ Each solver will:
 Accept the puzzle as the first paramater
 Accept an optional input of units
 Keep track of changes in order to make hint creation simple
-Return the puzzle and changes */
+Returns changes */
 
 // List of solvers
 type solver =
@@ -24,7 +24,9 @@ type solver =
 
 /**
  * address[]: Location(s) that the change effects
+ * 
  * number: which number is being effected
+ * 
  * type: which solver is used
  */
 type change = {
