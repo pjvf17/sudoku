@@ -1,6 +1,11 @@
 // solvers.ts
 import { Address } from "../../client/src/types.d.ts";
-import { Puzzle } from "./recursiveGenerator.ts";
+import {
+  assign,
+  convertToAddress,
+  Puzzle,
+  updatePeers,
+} from "./recursiveGenerator.ts";
 
 /* A collection of functions that represent human solving methods
 Each solver will:
@@ -24,9 +29,9 @@ type solver =
 
 /**
  * address[]: Location(s) that the change effects
- * 
+ *
  * number: which number is being effected
- * 
+ *
  * type: which solver is used
  */
 type change = {
@@ -37,12 +42,46 @@ type change = {
 
 // TODO Naked Single Solver
 /**
- * 
- * @param puzzle 
- * @param units Optional array of units
+ *
+ * @param puzzle
+ * @returns changes, or -1 on error
  */
-export function nakedSingleSolver (puzzle:Puzzle, units?:number[][]):change[] {
-   return [];
+export function nakedSingleSolver(
+  puzzle: Puzzle,
+): change[] | number {
+  const changes: change[] = [];
+  const type: solver = "nakedSingle";
+  let ret: number;
+  // Keeps track of amount of changes per while loop iteration
+  let changeCount;
+  // While making changes 
+  do {
+    changeCount = 0;
+    // Loop through all cells
+    for (let i = 0; i < 81; i++) {
+      // Skip over filled
+      if (puzzle.cells[i] != ".") continue;
+      // Check if there's only one candidate
+      if (puzzle.untriedNumbers[i].length == 1) {
+        const number = puzzle.untriedNumbers[i][0];
+        // Assign
+        ret = assign(i, puzzle, number);
+        if (ret == -1) {
+          return -1;
+        }
+        // Update peers
+        updatePeers(i, puzzle, number);
+        // Save change
+        changes.push({
+          address: [convertToAddress(i)],
+          number,
+          type,
+        });
+        changeCount++;
+      }
+    }
+  } while (changeCount)
+  return changes;
 }
 
 // TODO Hidden Single Solver
