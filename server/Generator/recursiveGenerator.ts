@@ -120,7 +120,7 @@ export const getSquare = (address: Address): number[] => {
 };
 
 /**
- * Returns an array of units
+ * Returns an array of units, rows, cols, squares
  *
  * @returns Array of arrays of indexes of cells
  */
@@ -287,7 +287,11 @@ export function setUntriedNumbers(puzzle: Puzzle, arr: number[]) {
  *
  * @param puzzle
  */
-export function search(puzzle: Puzzle, mostRecent?: number, useUnits = true): (Puzzle | number) {
+export function search(
+  puzzle: Puzzle,
+  mostRecent?: number,
+  useUnits = true,
+): (Puzzle | number) {
   // Return puzzle if full
   if (!puzzle.cells.includes(".")) {
     return puzzle;
@@ -393,23 +397,23 @@ export function updatePeers(index: number, puzzle: Puzzle, number: number) {
 /**
  * Solver function that uses standard sudoku rules to solve
  * Locates any cells with untriedNumbers.length = 1 and assigns that number and updates peers
- * 
+ *
  *
  * @param puzzle
  * @param hiddenSingles
- * 
- * Determines whether to check for hidden singles in units. 
+ *
+ * Determines whether to check for hidden singles in units.
  * (speeds up everything but raw puzzle creation, which it slows).
- * 
+ *
  * @returns status code, 0 on success, -1 on failure (meaning encountered a spot that means this puzzle can't be solved as is)
  */
-export function eliminate(puzzle: Puzzle, hiddenSingles:boolean): number {
+export function eliminate(puzzle: Puzzle, hiddenSingles: boolean): number {
   let length: number;
   let ret: number;
   let number: number;
   let changes: number;
   let index: number;
-  let units:number[][] = [];
+  let units: number[][] = [];
   if (hiddenSingles) {
     units = makeUnits();
   }
@@ -451,11 +455,11 @@ export function eliminate(puzzle: Puzzle, hiddenSingles:boolean): number {
       // Loop through numbers
       for (let i = 0; i < 9; i++) {
         const containsNumber = [];
-        // Get untriedNumbers for indices
+        // Get untriedNumbers for each index in unit
         const untried = unit.map((i) => puzzle.untriedNumbers[i]);
-        // Get cells for indices
+        // Get cells for each index in unit
         const cells = unit.map((i) => puzzle.cells[i]);
-        // Skip if number is contained in a cell
+        // Skip if number is contained in any of the cells in the unit
         if (cells.includes(i + 1)) {
           continue;
         }
@@ -464,11 +468,13 @@ export function eliminate(puzzle: Puzzle, hiddenSingles:boolean): number {
           if (cells[j] != ".") {
             continue;
           }
+          // Check if current index contains number
           if (untried[j].includes(i + 1)) {
-            // Add to indices that contain number
+            // Add to list of indices that can take this number
             containsNumber.push(j);
           }
         }
+        // If theres only one cell that can take this number
         if (containsNumber.length == 1) {
           index = unit[containsNumber[0]];
           number = i + 1;
