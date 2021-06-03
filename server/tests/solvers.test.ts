@@ -26,13 +26,13 @@ Problem is that it skips naked singles, and sudokus can be solved in any order
 So it's hard to test by an entire puzzle
 Might be possible to do it with an almost solved puzzle or something, I'm not sure
 */
+
 Deno.test({
   name: "hiddenSingleSolver gets to correct state",
   fn(): void {
     const testPuzzle =
       "1...9....2..4..6.9.5...8.17...14..837.58231.638..79...42.7...6.8.3..4.......8...4";
     const puzzle = new Puzzle(testPuzzle);
-    hiddenSingleSolver(puzzle);
     // Screenshot Jun 3rd 2021
     const result =
       "1...9....2.84..6.9.5...8.17..21457837.58231.638..79...42.7...6.8.3..4.......8...4";

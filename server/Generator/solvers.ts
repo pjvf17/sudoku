@@ -15,7 +15,7 @@ Accept an optional input of units
 Keep track of changes in order to make hint creation simple
 Returns changes */
 
-/* TODO add check somewhere to verify that no empty cell has 
+/* TODO add check somewhere to verify that no empty cell has
 0 candidates */
 
 // List of solvers
@@ -101,8 +101,9 @@ export function hiddenSingleSolver(puzzle: Puzzle): change[] | number {
   let index: number,
     number: number,
     ret: number,
-    changeCount: number,
-    changes: change[];
+    changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "hiddenSingle";
 
   // While there are changes
   do {
@@ -135,7 +136,7 @@ export function hiddenSingleSolver(puzzle: Puzzle): change[] | number {
         // If theres only one cell that can take this number
         if (containsNumber.length == 1) {
           index = unit[containsNumber[0]];
-          // If cell number of candidates is == 1, 
+          // If cell number of candidates is == 1,
           // It's a naked single, not hidden
           if (puzzle.untriedNumbers[index].length == 1) continue;
           number = i + 1;
@@ -145,12 +146,18 @@ export function hiddenSingleSolver(puzzle: Puzzle): change[] | number {
             return ret;
           }
           updatePeers(index, puzzle, number);
+          // Save change
+          changes.push({
+            address: [convertToAddress(index)],
+            number,
+            type,
+          });
           changeCount++;
         }
       }
     }
   } while (changeCount);
-  return -1;
+  return changes;
 }
 
 // TODO Naked Pair Solver
