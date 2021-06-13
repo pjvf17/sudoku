@@ -1,6 +1,7 @@
-import type { Difficulty } from "./difficulties.ts";
+import type { Difficulty } from "./constants.ts";
+import { scores } from "./constants.ts"
 // Exports the above import, so that files only need import this file for type defs
-export { Difficulty };
+export { Difficulty, scores };
 
 export interface Address {
   r: number;
@@ -11,6 +12,35 @@ export interface Address {
   c: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   */
 }
+
+// List of solvers
+export type solver =
+  | "nakedSingle"
+  | "hiddenSingle"
+  | "nakedPair"
+  | "hiddenPair"
+  | "nakedTriple"
+  | "hiddenTriple"
+  | "nakedQuad"
+  | "hiddenQuad"
+  | "pointing"
+  | "claiming"
+  | "xwing";
+
+/**
+ * address[]: Location(s) that the change effects
+ *
+ * number: which number is being effected
+ *
+ * type: which solver is used
+ */
+export type change = {
+  address: Address[];
+  number: number;
+  type: solver;
+};
+
+export type Scores = { [K in solver]: Cost };
 
 export interface FocusUpdate {
   id: string;

@@ -1,5 +1,5 @@
 // solvers.ts
-import { Address } from "../../client/src/types.d.ts";
+import { Address, change, solver } from "../../client/src/types.d.ts";
 import {
   assign,
   convertToAddress,
@@ -17,32 +17,6 @@ Returns changes */
 
 /* TODO add check somewhere to verify that no empty cell has
 0 candidates */
-
-// List of solvers
-type solver =
-  | "nakedSingle"
-  | "hiddenSingle"
-  | "nakedPair"
-  | "hiddenPair"
-  | "nakedTriple"
-  | "hiddenTriple"
-  | "nakedQuad"
-  | "hiddenQuad"
-  | "pointing"
-  | "claiming";
-
-/**
- * address[]: Location(s) that the change effects
- *
- * number: which number is being effected
- *
- * type: which solver is used
- */
-type change = {
-  address: Address[];
-  number: number;
-  type: solver;
-};
 
 /**
  *
