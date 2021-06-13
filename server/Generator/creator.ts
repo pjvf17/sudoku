@@ -1,20 +1,23 @@
 // creator.ts
 
+import { solverArr } from "./solvers.ts";
+
 import {
   change,
   Cost,
   Difficulty,
   Puzzle,
-Scores,
+  Scores,
+  scores,
   solver,
 } from "../../client/src/types.d.ts";
 import { makeUnits } from "./recursiveGenerator.ts";
+import { difficulties } from "../../client/src/constants.ts";
 
 /**
  * This file is devoted to the actual creation of an unsolved
  * sudoku puzzle.
  */
-
 
 /**
  * Solves a puzzle using solvers from solvers.ts
@@ -42,5 +45,21 @@ export function mainSolver(
   if (hint) {
     throw new Error("This function is not implemented yet");
   }
+  // Make units once to pass them to solvers, instead of having solvers remake them everytime
   const units = makeUnits();
+  // Set diffIndex to max it could be
+  let diffIndex:number = difficulties.length;
+  // If a difficulty was supplied, reset diffIndex to that difficulty index
+  if (difficulty != undefined) { 
+    diffIndex = difficulties.indexOf(difficulty);
+  }
+  // While changes are made, loop through functions
+  for (const solverName in scores) {
+    if (Object.prototype.hasOwnProperty.call(scores, solverName)) {
+      const solverObj = scores[solverName as solver];
+      // if difficulty of solver is less than or equal to supplied difficult
+      if (difficulties.indexOf(solverObj.difficulty) <= diffIndex) {
+      }
+    }
+  }
 }

@@ -69,7 +69,7 @@ export const scores: Scores = {
     total: 0,
     difficulty: "hard",
   },
-};
+} as const;
 
 export const difficulties = [
   "easy",

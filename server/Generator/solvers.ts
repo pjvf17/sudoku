@@ -134,6 +134,9 @@ export function hiddenSingleSolver(puzzle: Puzzle): change[] | number {
   return changes;
 }
 
+// Object of solver functions
+export const solverObj = { nakedSingleSolver, hiddenSingleSolver };
+
 // TODO Naked Pair Solver
 // TODO Hidden Pair Solver
 // TODO Naked Triple Solver
