@@ -1,17 +1,16 @@
 // creator.ts
 
-import { solverArr } from "./solvers.ts";
+import { solverObj } from "./solvers.ts";
 
 import {
   change,
   Cost,
   Difficulty,
-  Puzzle,
   Scores,
   scores,
   solver,
 } from "../../client/src/types.d.ts";
-import { makeUnits } from "./recursiveGenerator.ts";
+import { makeUnits, Puzzle, solverFunction } from "./recursiveGenerator.ts";
 import { difficulties } from "../../client/src/constants.ts";
 
 /**
@@ -48,17 +47,19 @@ export function mainSolver(
   // Make units once to pass them to solvers, instead of having solvers remake them everytime
   const units = makeUnits();
   // Set diffIndex to max it could be
-  let diffIndex:number = difficulties.length;
+  let diffIndex: number = difficulties.length;
   // If a difficulty was supplied, reset diffIndex to that difficulty index
-  if (difficulty != undefined) { 
+  if (difficulty != undefined) {
     diffIndex = difficulties.indexOf(difficulty);
   }
   // While changes are made, loop through functions
   for (const solverName in scores) {
     if (Object.prototype.hasOwnProperty.call(scores, solverName)) {
-      const solverObj = scores[solverName as solver];
-      // if difficulty of solver is less than or equal to supplied difficult
-      if (difficulties.indexOf(solverObj.difficulty) <= diffIndex) {
+      const costObj = scores[solverName as solver];
+      // Check if difficulty of solver is less than or equal to supplied difficulty
+      if (difficulties.indexOf(costObj.difficulty) <= diffIndex) {
+        // Call solver
+        solverObj[solverName as solverFunction](puzzle);
       }
     }
   }
