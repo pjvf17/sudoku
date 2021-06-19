@@ -4,7 +4,10 @@ import {
   assertThrows,
 } from "https://deno.land/std@0.96.0/testing/asserts.ts";
 import { mainSolver } from "../Generator/creator.ts";
-import { printSudokuToConsole, Puzzle } from "../Generator/recursiveGenerator.ts";
+import {
+  printSudokuToConsole,
+  Puzzle,
+} from "../Generator/recursiveGenerator.ts";
 
 import { hiddenSingleSolver, nakedSingleSolver } from "../Generator/solvers.ts";
 
@@ -45,14 +48,26 @@ Deno.test({
   name: "hiddenSingleSolver gets to correct state",
   fn(): void {
     const testPuzzle =
-      "1...9....2..4..6.9.5...8.17...14..837.58231.638..79...42.7...6.8.3..4.......8...4";
-    const puzzle = new Puzzle(testPuzzle);
-    // Screenshot Jun 3rd 2021
+      ".67....2.3...........62.43.5...1279.2..5.7..6.7136...2.35.41...........8.9....61.";
     const result =
-      "1...9....2.84..6.9.5...8.17..21457837.58231.638..79...42.7...6.8.3..4.......8...4";
+      "467139825352784961819625437586412793243597186971368542635841279124976358798253614";
+    const puzzle = new Puzzle(testPuzzle);
     // Solve puzzle
     mainSolver(puzzle);
-    console.log("debugg");
+    assertEquals(puzzle.cells, new Puzzle(result).cells);
+  },
+});
+
+Deno.test({
+  name: "hiddenSingleSolver gets to correct state 2",
+  fn(): void {
+    const testPuzzle =
+      ".....51.7.........9..64..38.4..1672..6.....1..7538..6.83..61..2.........7.18.....";
+    const result =
+      "683295147457138296912647538348916725269754813175382469834561972526479381791823654";
+    const puzzle = new Puzzle(testPuzzle);
+    // Solve puzzle
+    mainSolver(puzzle);
     assertEquals(puzzle.cells, new Puzzle(result).cells);
   },
 });
