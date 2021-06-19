@@ -10,7 +10,7 @@ import type {
   solver,
 } from "../../client/src/types.d.ts";
 import { scores } from "../../client/src/constants.ts";
-import { makeUnits, Puzzle, solverFunction } from "./recursiveGenerator.ts";
+import { makeUnits, printSudokuToConsole, Puzzle, solverFunction } from "./recursiveGenerator.ts";
 import { difficulties } from "../../client/src/constants.ts";
 
 /**

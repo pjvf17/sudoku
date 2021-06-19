@@ -9,16 +9,45 @@
 // List of implemented solver functions
 export type solverFunction =
   | "nakedSingleSolver"
-  | "hiddenSingleSolver"
-  // | "nakedPairSolver"
-  // | "hiddenPairSolver"
-  // | "nakedTripleSolver"
-  // | "hiddenTripleSolver"
-  // | "nakedQuadSolver"
-  // | "hiddenQuadSolver"
-  // | "pointingSolver"
-  // | "claimingSolver"
-  // | "xwingSolver";
+  | "hiddenSingleSolver";
+// | "nakedPairSolver"
+// | "hiddenPairSolver"
+// | "nakedTripleSolver"
+// | "hiddenTripleSolver"
+// | "nakedQuadSolver"
+// | "hiddenQuadSolver"
+// | "pointingSolver"
+// | "claimingSolver"
+// | "xwingSolver";
+
+/**
+ * Prints sudoku to console, accepting either a puzzle class or string
+ * @param puzzle 
+ */
+export function printSudokuToConsole(puzzle: (Puzzle | string)): void {
+  // Make puzzle a Puzzle if string
+  if (typeof puzzle == "string") {
+    puzzle = new Puzzle(puzzle);
+  }
+  let displayString = "\n";
+  for (let i = 0; i < puzzle.cells.length; i++) {
+    const element = puzzle.cells[i];
+    displayString += ` ${element}`;
+    // Horizontal edge of box and not last box
+    if (i % 27 === 26 && i < 70) {
+      displayString += "\n-------+--------+-------";
+    }
+    // End of line
+    if (i % 9 === 8) {
+      displayString += "\n";
+    }
+    // Vertical end of box
+    else if (i % 3 === 2) {
+      displayString += " | "
+    }
+  }
+  console.log(displayString)
+}
 
 export type SolverFunction = (puzzle: Puzzle) => change[] | number;
 export type SolverObj = { [K in solverFunction]: SolverFunction };

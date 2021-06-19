@@ -4,7 +4,7 @@ import {
   assertThrows,
 } from "https://deno.land/std@0.96.0/testing/asserts.ts";
 import { mainSolver } from "../Generator/creator.ts";
-import { Puzzle } from "../Generator/recursiveGenerator.ts";
+import { printSudokuToConsole, Puzzle } from "../Generator/recursiveGenerator.ts";
 
 import { hiddenSingleSolver, nakedSingleSolver } from "../Generator/solvers.ts";
 
