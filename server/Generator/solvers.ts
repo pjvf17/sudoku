@@ -5,6 +5,7 @@ import {
   convertToAddress,
   makeUnits,
   Puzzle,
+  SolverObj,
   updatePeers,
 } from "./recursiveGenerator.ts";
 
@@ -134,8 +135,8 @@ export function hiddenSingleSolver(puzzle: Puzzle): change[] | number {
   return changes;
 }
 
-// Object of solver functions
-export const solverObj = { nakedSingleSolver, hiddenSingleSolver };
+// Used to easily call solver functions from creator.ts
+export const solverObj: SolverObj = { nakedSingleSolver, hiddenSingleSolver };
 
 // TODO Naked Pair Solver
 // TODO Hidden Pair Solver

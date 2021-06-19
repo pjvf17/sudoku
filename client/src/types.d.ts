@@ -1,7 +1,8 @@
 import type { Difficulty } from "./constants.ts";
-import { scores } from "./constants.ts"
+import { scores } from "./constants.ts";
 // Exports the above import, so that files only need import this file for type defs
-export { Difficulty, scores };
+export type { Difficulty };
+export { scores };
 
 export interface Address {
   r: number;

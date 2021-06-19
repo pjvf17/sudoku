@@ -6,7 +6,24 @@
  * parsePuzzle does not exist, instead Puzzle is a class with a constructor
 */
 
-import { Address } from "../../client/src/types.d.ts";
+// List of implemented solver functions
+export type solverFunction =
+  | "nakedSingleSolver"
+  | "hiddenSingleSolver"
+  // | "nakedPairSolver"
+  // | "hiddenPairSolver"
+  // | "nakedTripleSolver"
+  // | "hiddenTripleSolver"
+  // | "nakedQuadSolver"
+  // | "hiddenQuadSolver"
+  // | "pointingSolver"
+  // | "claimingSolver"
+  // | "xwingSolver";
+
+export type SolverFunction = (puzzle: Puzzle) => change[] | number;
+export type SolverObj = { [K in solverFunction]: SolverFunction };
+
+import { Address, change } from "../../client/src/types.d.ts";
 import { createRandomOneNine } from "../generator.ts";
 
 export class Puzzle {
