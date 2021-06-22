@@ -9,20 +9,20 @@
 // List of implemented solver functions
 export type solverFunction =
   | "nakedSingleSolver"
-  | "hiddenSingleSolver";
-// | "nakedPairSolver"
-// | "hiddenPairSolver"
-// | "nakedTripleSolver"
-// | "hiddenTripleSolver"
-// | "nakedQuadSolver"
-// | "hiddenQuadSolver"
-// | "pointingSolver"
+  | "hiddenSingleSolver"
+  // | "nakedPairSolver"
+  // | "hiddenPairSolver"
+  // | "nakedTripleSolver"
+  // | "hiddenTripleSolver"
+  // | "nakedQuadSolver"
+  // | "hiddenQuadSolver"
+  | "pointingSolver";
 // | "claimingSolver"
 // | "xwingSolver";
 
 /**
  * Prints sudoku to console, accepting either a puzzle class or string
- * @param puzzle 
+ * @param puzzle
  */
 export function printSudokuToConsole(puzzle: (Puzzle | string)): void {
   // Make puzzle a Puzzle if string
@@ -40,13 +40,12 @@ export function printSudokuToConsole(puzzle: (Puzzle | string)): void {
     // End of line
     if (i % 9 === 8) {
       displayString += "\n";
-    }
-    // Vertical end of box
+    } // Vertical end of box
     else if (i % 3 === 2) {
-      displayString += " | "
+      displayString += " | ";
     }
   }
-  console.log(displayString)
+  console.log(displayString);
 }
 
 export type SolverFunction = (puzzle: Puzzle) => change[] | number;
@@ -166,7 +165,13 @@ export const getSquare = (address: Address): number[] => {
 };
 
 /**
- * Returns an array of units, rows, cols, squares
+ * Returns an array of units: rows, cols, squares
+ *
+ * Rows are indices 0-8
+ *
+ * Cols are indices 9-17
+ *
+ * Squares are indices 18-26
  *
  * @returns Array of arrays of indexes of cells
  */
@@ -542,6 +547,34 @@ export function eliminate(puzzle: Puzzle, hiddenSingles: boolean): number {
   } while (changes);
   // If no errors encountered, return 0 on success
   return 0;
+}
+
+/**
+ *
+ * @param puzzle
+ * @param peers: array of cell indices to update
+ * @param number: number to remove from candidate list
+ * @returns number of changes
+ */
+export function updateSpecificPeers(
+  puzzle: Puzzle,
+  peers: number[],
+  number: number,
+): number {
+  let index;
+  let changes = 0;
+  for (const cellIndex of peers) {
+    // If cell is empty
+    if (puzzle.cells[cellIndex] == ".") {
+      index = puzzle.untriedNumbers[cellIndex].indexOf(number);
+      // If untriedNumbers contains number, remove it
+      if (index != -1) {
+        puzzle.untriedNumbers[cellIndex].splice(index, 1);
+        changes++;
+      }
+    }
+  }
+  return changes;
 }
 
 export function hasUniqueSolution(puzzle: Puzzle): boolean {

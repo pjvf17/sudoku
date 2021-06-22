@@ -148,7 +148,7 @@
 <script lang="ts">
 import BaseButton from "../Base/BaseButton.vue";
 import BasePopup from "../Base/BasePopup.vue";
-import { difficulties, Difficulty } from "../../difficulties";
+import { difficulties, Difficulty } from "../../constants";
 
 
 // https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript

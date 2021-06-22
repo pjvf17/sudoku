@@ -1,6 +1,8 @@
 // File to store types or constants that are used
+/// <reference path="./types.d.ts"
 
-import { Scores } from "./types.d.ts";
+//  @ts-ignore necessary
+import type { Scores } from "./types.d.ts";
 
 export const scores: Scores = {
   hiddenSingle: {

@@ -71,3 +71,16 @@ Deno.test({
     assertEquals(puzzle.cells, new Puzzle(result).cells);
   },
 });
+Deno.test({
+  name: "mainSolver gets to correct state with pointing puzzle",
+  fn(): void {
+    const testPuzzle =
+      "..253....6.8........3.7.2.4.2.16..8..4.....6..8..47.2.9.5.1.6........1.2....945..";
+    const result =
+      "472539816658421379193876254729165483341982765586347921935218647864753192217694538";
+    const puzzle = new Puzzle(testPuzzle);
+    // Solve puzzle
+    mainSolver(puzzle);
+    assertEquals(puzzle.cells, new Puzzle(result).cells);
+  },
+});
