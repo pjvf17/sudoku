@@ -210,12 +210,14 @@ export function pointingSolver(
             if (filteredCellIndices.length == 3) {
               address.push(convertToAddress(filteredCellIndices[2]));
             }
-            changes.push({
-              address,
-              number,
-              type,
-            });
-            if (updateSpecificPeers(puzzle, unit, number)) changeCount++;
+            if (updateSpecificPeers(puzzle, unit, number)) {
+              changeCount++;
+              changes.push({
+                address,
+                number,
+                type,
+              });
+            }
           } // Check if cells are in a col
           else if (
             filteredCellIndices[1] == filteredCellIndices[0] + 9 &&
@@ -238,12 +240,15 @@ export function pointingSolver(
             if (filteredCellIndices.length == 3) {
               address.push(convertToAddress(filteredCellIndices[2]));
             }
-            changes.push({
-              address,
-              number,
-              type,
-            });
-            if (updateSpecificPeers(puzzle, unit, number)) changeCount++;
+
+            if (updateSpecificPeers(puzzle, unit, number)) {
+              changeCount++;
+              changes.push({
+                address,
+                number,
+                type,
+              });
+            }
           }
         }
       }
@@ -268,8 +273,111 @@ export function pointingSolver(
 
 // As defined at https://www.sudokuoftheday.com/techniques/double-pairs/
 // TODO Double Pairs Solver
+export function doublePairsSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[],
+    // Successful pointing unit to update
+    unit: number[],
+    // Holds potential pairs to check, indexed by number (- 1)
+    rowCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    colCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "pointing";
 
-
+  // While there are changes
+  do {
+    changeCount = 0;
+    /**
+     * Loop through squares (units indices 18-26)
+     * Search squares that have only 2 locations for a certain number possible, which are both in the same row or col
+     * Store them in candidates array at index associated with number
+     *
+     * Second loop: loop through candidates array by index (number), find a pair of addresses that satisfy double pairs
+    */
+    for (let i = 18; i <= 26; i++) {
+      // Loop through numbers from 1-9
+      for (let number = 1; number <= 9; number++) {
+        // Filter cells by if they have number as a candidate
+        const filteredCellIndices = units[i].filter((cellIndex) => {
+          // Return true if cell is empty and contains number as candidate
+          return puzzle.cells[cellIndex] == "." &&
+            puzzle.untriedNumbers[cellIndex].includes(number);
+        });
+        // If length > 2, guaranteed not to work for double pairs
+        if (filteredCellIndices.length <= 2) {
+          /**
+           * Three situations:
+           * 1. Two cells are in a row, seperated by no more than 2
+           * 2. Two cells are in a col, separated by 9 or 18
+           * 3. Cells are not in a row or col, no double pairs
+           */
+          // Check if cells are in a row
+          if (
+            filteredCellIndices[1] - filteredCellIndices[0] <= 2
+          ) {
+            address = [
+              convertToAddress(filteredCellIndices[0]),
+              convertToAddress(filteredCellIndices[1]),
+            ];
+            rowCandidates[number - 1].push(address);
+          } // Check if cells are in a col
+          else if (
+            filteredCellIndices[1] == filteredCellIndices[0] + 9 ||
+            filteredCellIndices[1] == filteredCellIndices[0] + 18
+          ) {
+            address = [
+              convertToAddress(filteredCellIndices[0]),
+              convertToAddress(filteredCellIndices[1]),
+            ];
+            colCandidates[number - 1].push(address);
+          }
+        }
+      }
+    }
+    let c1:number;
+    let r1:number;
+    let c2:number;
+    let r2:number;
+    let peers:number[];
+    let rowCandidatesArr:Address[][];
+    for (let number = 1; number <= 9; number++) {
+      rowCandidatesArr = rowCandidates[number - 1];
+      for (let i = 0; i < rowCandidatesArr.length; i++) {
+        const element = rowCandidatesArr[i];
+        // Look for another set of addresses with the same columns
+        c1 = element[0].c;
+        c2 = element[1].c;
+        let pair:Address[][];
+        for (let j = i+1; j < rowCandidatesArr.length; j++) {
+          if (rowCandidatesArr[j][0].c == c1 && rowCandidatesArr[j][1].c == c2) {
+            pair = [element, rowCandidatesArr[j]];
+            // Update puzzle
+            peers = [...getCol(element[0]), ...getCol(element[1])];
+            r1 = element[0].r;
+            r2 = rowCandidatesArr[j][0].r;
+            peers = peers.filter(index=>!(convertToAddress(index).r == r1 || convertToAddress(index).r == r2));
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: pair,
+                number,
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
 
 // As defined at https://www.sudokuoftheday.com/techniques/multiple-lines/
 // TODO Multiple Lines Solver
@@ -279,4 +387,5 @@ export const solverObj: SolverObj = {
   nakedSingleSolver,
   hiddenSingleSolver,
   pointingSolver,
+  doublePairsSolver,
 };

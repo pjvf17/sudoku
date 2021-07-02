@@ -23,6 +23,12 @@ export const scores: Scores = {
     total: 0,
     difficulty: "medium",
   },
+  doublePairs: {
+    firstUse: 500,
+    subUses: 250,
+    total: 0,
+    difficulty: "medium",
+  },
   hiddenPair: {
     firstUse: 1500,
     subUses: 1200,

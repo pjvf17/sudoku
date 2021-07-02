@@ -10,13 +10,14 @@
 export type solverFunction =
   | "nakedSingleSolver"
   | "hiddenSingleSolver"
+  | "pointingSolver"
+  | "doublePairsSolver";
   // | "nakedPairSolver"
   // | "hiddenPairSolver"
   // | "nakedTripleSolver"
   // | "hiddenTripleSolver"
   // | "nakedQuadSolver"
   // | "hiddenQuadSolver"
-  | "pointingSolver";
 // | "claimingSolver"
 // | "xwingSolver";
 

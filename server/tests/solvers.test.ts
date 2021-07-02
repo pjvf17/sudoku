@@ -84,3 +84,15 @@ Deno.test({
     assertEquals(puzzle.cells, new Puzzle(result).cells);
   },
 });
+// TODO this puzzle is getting to a state that's unsolvable. Why?
+Deno.test({
+  name: "mainSolver gets to correct state with double pair puzzle",
+  fn(): void {
+    const testPuzzle =
+      "934.6..5...6..4923..89...468..546..76...1...55..39..6236.4.127.47.6..5...8....634";
+    const puzzle = new Puzzle(testPuzzle);
+    // Solve puzzle
+    mainSolver(puzzle);
+    assertEquals(puzzle.cells[75], 7);
+  },
+});

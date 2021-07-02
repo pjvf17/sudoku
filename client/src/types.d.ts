@@ -20,6 +20,7 @@ export type solver =
   | "hiddenSingle"
   | "nakedPair"
   | "hiddenPair"
+  | "doublePairs"
   | "nakedTriple"
   | "hiddenTriple"
   | "nakedQuad"
@@ -36,7 +37,7 @@ export type solver =
  * type: which solver is used
  */
 export type change = {
-  address: Address[];
+  address: Address[]|Address[][];
   number: number;
   type: solver;
 };
