@@ -293,6 +293,8 @@ export function doublePairsSolver(
   // While there are changes
   do {
     changeCount = 0;
+    rowCandidates = [[], [], [], [], [], [], [], [], []];
+    colCandidates = [[], [], [], [], [], [], [], [], []];
     /**
      * Loop through squares (units indices 18-26)
      * Search squares that have only 2 locations for a certain number possible, which are both in the same row or col

@@ -5,6 +5,7 @@ import {
 } from "https://deno.land/std@0.96.0/testing/asserts.ts";
 import { mainSolver } from "../Generator/creator.ts";
 import {
+fillInRemaining,
   printSudokuToConsole,
   Puzzle,
 } from "../Generator/recursiveGenerator.ts";
@@ -55,6 +56,7 @@ Deno.test({
     // Solve puzzle
     mainSolver(puzzle);
     assertEquals(puzzle.cells, new Puzzle(result).cells);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });
 
@@ -69,6 +71,7 @@ Deno.test({
     // Solve puzzle
     mainSolver(puzzle);
     assertEquals(puzzle.cells, new Puzzle(result).cells);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });
 Deno.test({
@@ -82,9 +85,9 @@ Deno.test({
     // Solve puzzle
     mainSolver(puzzle);
     assertEquals(puzzle.cells, new Puzzle(result).cells);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });
-// TODO this puzzle is getting to a state that's unsolvable. Why?
 Deno.test({
   name: "mainSolver gets to correct state with double pair puzzle",
   fn(): void {
@@ -94,5 +97,6 @@ Deno.test({
     // Solve puzzle
     mainSolver(puzzle);
     assertEquals(puzzle.cells[75], 7);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });
