@@ -11,7 +11,8 @@ export type solverFunction =
   | "nakedSingleSolver"
   | "hiddenSingleSolver"
   | "pointingSolver"
-  | "doublePairsSolver";
+  | "doublePairsSolver"
+  | "multipleLinesSolver";
   // | "nakedPairSolver"
   // | "hiddenPairSolver"
   // | "nakedTripleSolver"

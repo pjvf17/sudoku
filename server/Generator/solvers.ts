@@ -3,6 +3,7 @@ import { Address, change, solver } from "../../client/src/types.d.ts";
 import {
   assign,
   convertToAddress,
+  convertToIndex,
   getCol,
   getRow,
   makeUnits,
@@ -272,7 +273,6 @@ export function pointingSolver(
 // TODO X-Wing Solver
 
 // As defined at https://www.sudokuoftheday.com/techniques/double-pairs/
-// TODO Double Pairs Solver
 export function doublePairsSolver(
   puzzle: Puzzle,
   units?: number[][],
@@ -281,14 +281,12 @@ export function doublePairsSolver(
     units = makeUnits();
   }
   let address: Address[],
-    // Successful pointing unit to update
-    unit: number[],
     // Holds potential pairs to check, indexed by number (- 1)
     rowCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
     colCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
     changeCount: number;
   const changes: change[] = [];
-  const type: solver = "pointing";
+  const type: solver = "doublePairs";
 
   // While there are changes
   do {
@@ -342,12 +340,14 @@ export function doublePairsSolver(
         }
       }
     }
-    let c1:number;
-    let r1:number;
-    let c2:number;
-    let r2:number;
-    let peers:number[];
-    let rowCandidatesArr:Address[][];
+    let c1: number;
+    let r1: number;
+    let c2: number;
+    let r2: number;
+    let peers: number[];
+    let rowCandidatesArr: Address[][];
+    let colCandidatesArr: Address[][];
+    // Second loop: loop through candidates array by index (number), find a pair of addresses that satisfy double pairs
     for (let number = 1; number <= 9; number++) {
       rowCandidatesArr = rowCandidates[number - 1];
       for (let i = 0; i < rowCandidatesArr.length; i++) {
@@ -355,15 +355,52 @@ export function doublePairsSolver(
         // Look for another set of addresses with the same columns
         c1 = element[0].c;
         c2 = element[1].c;
-        let pair:Address[][];
-        for (let j = i+1; j < rowCandidatesArr.length; j++) {
-          if (rowCandidatesArr[j][0].c == c1 && rowCandidatesArr[j][1].c == c2) {
+        let pair: Address[][];
+        for (let j = i + 1; j < rowCandidatesArr.length; j++) {
+          if (
+            rowCandidatesArr[j][0].c == c1 && rowCandidatesArr[j][1].c == c2
+          ) {
             pair = [element, rowCandidatesArr[j]];
             // Update puzzle
             peers = [...getCol(element[0]), ...getCol(element[1])];
             r1 = element[0].r;
             r2 = rowCandidatesArr[j][0].r;
-            peers = peers.filter(index=>!(convertToAddress(index).r == r1 || convertToAddress(index).r == r2));
+            peers = peers.filter((index) =>
+              !(convertToAddress(index).r == r1 ||
+                convertToAddress(index).r == r2)
+            );
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: pair,
+                number,
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+      colCandidatesArr = colCandidates[number - 1];
+      for (let i = 0; i < colCandidatesArr.length; i++) {
+        const element = colCandidatesArr[i];
+        // Look for another set of addresses with the same rows
+        r1 = element[0].r;
+        r2 = element[1].r;
+        let pair: Address[][];
+        for (let j = i + 1; j < colCandidatesArr.length; j++) {
+          if (
+            colCandidatesArr[j][0].r == r1 && colCandidatesArr[j][1].r == r2
+          ) {
+            pair = [element, colCandidatesArr[j]];
+            // Update puzzle
+            peers = [...getRow(element[0]), ...getRow(element[1])];
+            c1 = element[0].c;
+            c2 = colCandidatesArr[j][0].c;
+            peers = peers.filter((index) =>
+              !(convertToAddress(index).c == c1 ||
+                convertToAddress(index).c == c2)
+            );
             if (updateSpecificPeers(puzzle, peers, number)) {
               changeCount++;
               changes.push({
@@ -383,6 +420,203 @@ export function doublePairsSolver(
 
 // As defined at https://www.sudokuoftheday.com/techniques/multiple-lines/
 // TODO Multiple Lines Solver
+export function multipleLinesSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[],
+    // Holds potential pairs to check, indexed by number (- 1)
+    rowCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    colCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    // Holds 3 booleans for whether a specific row in a square has candidates for a certain number
+    r: boolean[],
+    // Holds 3 booleans for whether a specific col in a square has candidates for a certain number
+    c: boolean[],
+    // Count of true values in and r and c respectively
+    rNumTrue: number,
+    cNumTrue: number,
+    // index of first instance of a false value in r + c
+    indexOfFalse: number,
+    changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "multipleLines";
+
+  // While there are changes
+  do {
+    changeCount = 0;
+    rowCandidates = [[], [], [], [], [], [], [], [], []];
+    colCandidates = [[], [], [], [], [], [], [], [], []];
+    /**
+     * Loop through squares (units indices 18-26)
+     * Search squares where candidates for a certain number are constrained to two rows or columns
+     * Store them in candidates array at index associated with number
+     *
+     * Second loop: loop through candidates array by index (number), find a set of addresses that satisfy multiple lines
+    */
+    for (let i = 18; i <= 26; i++) {
+      // Loop through numbers from 1-9
+      for (let number = 1; number <= 9; number++) {
+        // Filter cells by if they have number as a candidate
+        const filteredCellIndices = units[i].filter((cellIndex) => {
+          // Return true if cell is empty and contains number as candidate
+          return puzzle.cells[cellIndex] == "." &&
+            puzzle.untriedNumbers[cellIndex].includes(number);
+        });
+        r = [false, false, false];
+        c = [false, false, false];
+        // Set booleans
+        for (const index of filteredCellIndices) {
+          r[Math.floor(index / 9) % 3] = true;
+          c[index % 3] = true;
+        }
+        /**
+         * At least one boolean in r + c needs to be false
+         * (there can't be a candidate in all rows and cols)
+         * At least two booleans must be true in each of r and c
+         *
+         * 3 can be true in either of r and c, but not both
+         *
+         * The technique operates on whichever r or c has only 2 trues (can be both)
+         */
+        indexOfFalse = [...r, ...c].indexOf(true);
+        rNumTrue = r.filter(Boolean).length;
+        cNumTrue = c.filter(Boolean).length;
+        // If there are no falses, or less than two trues in either c or r
+        if (indexOfFalse == -1 || rNumTrue < 2 || cNumTrue < 2) {
+          continue;
+        }
+        if (rNumTrue == 2) {
+          // reset address
+          address = [];
+          filteredCellIndices.forEach((index) =>
+            address.push(convertToAddress(index))
+          );
+          colCandidates[number - 1].push(address);
+        }
+        if (cNumTrue == 2) {
+          // reset address
+          address = [];
+          filteredCellIndices.forEach((index) =>
+            address.push(convertToAddress(index))
+          );
+          rowCandidates[number - 1].push(address);
+        }
+      }
+    }
+    let c1: number;
+    let r1: number;
+    let c2: number;
+    let r2: number;
+    let peers: number[];
+    let rowCandidatesArr: Address[][];
+    let colCandidatesArr: Address[][];
+    let candidates: Address[];
+    for (let number = 1; number <= 9; number++) {
+      rowCandidatesArr = rowCandidates[number - 1];
+      for (let i = 0; i < rowCandidatesArr.length; i++) {
+        // Sort candidates by column
+        candidates = rowCandidatesArr[i].sort((a, b) => {
+          if (a.c < b.c) return -1;
+          if (a.c > b.c) return 1;
+          return 0;
+        });
+        // First element's column and last elements column will be different
+        // This ensure we get both columns even if there are > 2 addresses
+        c1 = candidates[0].c;
+        c2 = candidates[candidates.length - 1].c;
+        if (c1 == c2) {
+          throw new Error("multiple lines solver: c1 and c2 are the same");
+        }
+        // Look for another set of addresses with the same columns
+        let set: Address[][];
+        for (let j = i + 1; j < rowCandidatesArr.length; j++) {
+          const secondCandidates = rowCandidatesArr[j].sort((a, b) => {
+            if (a.c < b.c) return -1;
+            if (a.c > b.c) return 1;
+            return 0;
+          });
+          if (
+            secondCandidates[0].c == c1 &&
+            secondCandidates[secondCandidates.length - 1].c == c2
+          ) {
+            set = [candidates, secondCandidates];
+            // Update puzzle
+            peers = [
+              ...getCol(candidates[0]),
+              ...getCol(candidates[candidates.length - 1]),
+            ];
+            const setIndices = [...candidates, ...secondCandidates].map((el) =>
+              convertToIndex(el)
+            );
+            peers = peers.filter((index) => !setIndices.includes(index));
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: set,
+                number,
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+      colCandidatesArr = colCandidates[number - 1];
+      for (let i = 0; i < colCandidatesArr.length; i++) {
+        // Sort candidates by rows
+        candidates = colCandidatesArr[i].sort((a, b) => {
+          if (a.r < b.r) return -1;
+          if (a.r > b.r) return 1;
+          return 0;
+        });
+        // First element's row and last elements row will be different
+        // This ensure we get both rows even if there are > 2 addresses
+        r1 = candidates[0].r;
+        r2 = candidates[candidates.length - 1].r;
+        if (r1 == r2) {
+          throw new Error("multiple lines solver: r1 and r2 are the same");
+        }
+        // Look for another set of addresses with the same columns
+        let set: Address[][];
+        for (let j = i + 1; j < colCandidatesArr.length; j++) {
+          const secondCandidates = colCandidatesArr[j].sort((a, b) => {
+            if (a.r < b.r) return -1;
+            if (a.r > b.r) return 1;
+            return 0;
+          });
+          if (
+            secondCandidates[0].r == r1 &&
+            secondCandidates[secondCandidates.length - 1].r == r2
+          ) {
+            set = [candidates, secondCandidates];
+            // Update puzzle
+            peers = [
+              ...getRow(candidates[0]),
+              ...getRow(candidates[candidates.length - 1]),
+            ];
+            const setIndices = [...candidates, ...secondCandidates].map((el) =>
+              convertToIndex(el)
+            );
+            peers = peers.filter((index) => !setIndices.includes(index));
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: set,
+                number,
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
 
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
@@ -390,4 +624,5 @@ export const solverObj: SolverObj = {
   hiddenSingleSolver,
   pointingSolver,
   doublePairsSolver,
+  multipleLinesSolver,
 };

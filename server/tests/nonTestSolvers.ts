@@ -5,7 +5,7 @@ import {
 } from "../Generator/recursiveGenerator.ts";
 
 const testPuzzle =
-  "934.6..5...6..4923..89...468..546..76...1...55..39..6236.4.127.47.6..5...8....634";
+  "..9.3.6...36.14.891..869.35.9....8...1.....9..68.9.17.6.19.3..297264.3....3.2.9.."
 const puzzle = new Puzzle(testPuzzle);
 // Screenshot Jun 3rd 2021
 // const result =

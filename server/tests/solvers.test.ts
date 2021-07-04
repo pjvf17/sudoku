@@ -5,7 +5,7 @@ import {
 } from "https://deno.land/std@0.96.0/testing/asserts.ts";
 import { mainSolver } from "../Generator/creator.ts";
 import {
-fillInRemaining,
+  fillInRemaining,
   printSudokuToConsole,
   Puzzle,
 } from "../Generator/recursiveGenerator.ts";
@@ -98,5 +98,23 @@ Deno.test({
     mainSolver(puzzle);
     assertEquals(puzzle.cells[75], 7);
     assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
+  },
+});
+Deno.test({
+  name: "mainSolver gets to correct state with multiple lines puzzle",
+  fn(): void {
+    const testPuzzle =
+      "..9.3.6...36.14.891..869.35.9....8...1.....9..68.9.17.6.19.3..297264.3....3.2.9..";
+    const puzzle = new Puzzle(testPuzzle);
+    assert(puzzle.untriedNumbers[27].includes(5));
+    assert(puzzle.untriedNumbers[36].includes(5));
+    assert(puzzle.untriedNumbers[45].includes(5));
+    // Solve puzzle
+    mainSolver(puzzle);
+    // Solver correctly got rid of this numbers from candidancy
+    assert(!puzzle.untriedNumbers[27].includes(5));
+    assert(!puzzle.untriedNumbers[36].includes(5));
+    assert(!puzzle.untriedNumbers[45].includes(5));
+    // assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });

@@ -21,6 +21,7 @@ export type solver =
   | "nakedPair"
   | "hiddenPair"
   | "doublePairs"
+  | "multipleLines"
   | "nakedTriple"
   | "hiddenTriple"
   | "nakedQuad"

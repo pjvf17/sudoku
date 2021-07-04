@@ -29,6 +29,12 @@ export const scores: Scores = {
     total: 0,
     difficulty: "medium",
   },
+  multipleLines: {
+    firstUse: 700,
+    subUses: 400,
+    total: 0, 
+    difficulty: "medium"
+  },
   hiddenPair: {
     firstUse: 1500,
     subUses: 1200,
