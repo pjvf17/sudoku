@@ -153,18 +153,25 @@ const targetRanges: { [K in Difficulty]: { min: number; max: number } } = {
 function createPuzzleHelper(
   difficulty: Difficulty,
   puzzle: Puzzle,
+  untriedIndices?: boolean[],
 ): Puzzle | number {
+  if (untriedIndices == undefined) {
+    untriedIndices = new Array(41).fill(false);
+  }
   let indexToRemove: number;
   let ret: number | Puzzle;
   do {
+    // I believe the current problem is that we have no way to track what
+    // We have done in previous attempts. So we get caught in a never
+    // Ending loop with most puzzles
     do {
       // Generate number from 0-40
       indexToRemove = Math.round(Math.random() * 40);
     } while (
-      // Continue until encountering a filled cell. No need to check counterpart of pair becuase
-      // We're removing in pairs so if there's a filled cell the counterpart is guaranteed to be filled
-      puzzle.cells[indexToRemove] == "."
+      // Continue until encountering an untried index
+      untriedIndices[indexToRemove]
     );
+    untriedIndices[indexToRemove] = true;
     // Counterpart of above
     const counterpart = 80 - indexToRemove;
     // Remove cells
@@ -176,16 +183,17 @@ function createPuzzleHelper(
     // If unsolved or cost > target's max
     if (
       testPuzzle.cells.includes(".") ||
-      cost > targetRanges[difficulty as Difficulty].max
+      cost > targetRanges[difficulty as Difficulty].max ||
+      (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true))
     ) {
-      ret = -1;
+      return -1;
     } else if (
       cost <= targetRanges[difficulty as Difficulty].max &&
       cost >= targetRanges[difficulty as Difficulty].min
     ) {
-      ret = puzzle;
+      return puzzle;
     } else {
-      ret = createPuzzleHelper(difficulty, puzzle);
+      ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
     }
   } while (ret == -1);
   return ret;
