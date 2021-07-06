@@ -11,7 +11,9 @@ import {
   search,
   setUntriedNumbers,
 } from "../Generator/recursiveGenerator.ts";
-
+import {
+  createPuzzle as createPuzzleNew
+} from "../Generator/creator.ts"
 import {
   bench,
   runBenchmarks,
@@ -60,13 +62,26 @@ await bench({
 
 // await bench({
 //   name: "Create easy puzzle",
-//   runs: 20,
+//   runs: 200,
 //   func(b): void {
 //     b.start();
 //     const puzzle = createPuzzle("easy");
 //     b.stop();
 //   },
 // });
+// 2021-07-06 5:44pm : 29.65ms 200 run
+
+// await bench({
+//   name: "Create easy puzzle new",
+//   runs: 200,
+//   func(b): void {
+//     b.start();
+//     const puzzle = createPuzzleNew("easy");
+//     b.stop();
+//   },
+// });
+// 2021-07-06 5:44pm : 39.9ms 200 run
+// 6:05pm With doing 15 pairs first: 29.3
 
 // await bench({
 //   name: "Create medium puzzle",
@@ -77,6 +92,20 @@ await bench({
 //     b.stop();
 //   },
 // });
+// 2021-07-06 6:00pm : 1823.66ms 200 run
+
+await bench({
+  name: "Create medium puzzle new",
+  runs: 20,
+  func(b): void {
+    b.start();
+    const puzzle = createPuzzleNew("medium");
+    b.stop();
+  },
+});
+// 2021-07-06 6:00pm : 1894.6ms 200 run
+// 6:05pm With doing 25 pairs first: 1705ms 20 run
+
 
 // await bench({
 //   name: "Create xwing required puzzle",
@@ -228,3 +257,207 @@ await bench({
 });
 
 runBenchmarks();
+
+// Medium iterations: 
+
+/* 
+1696
+    754
+    160
+    1826
+    81
+    25
+    423
+    288
+    410
+    473
+    51
+    267
+    462
+    452
+    232
+    224
+    485
+    2481
+    179
+    618
+    683
+    295
+    45
+    95
+    156
+    454
+    2190
+    355
+    311
+    49
+    1109
+    620
+    517
+    156
+    525
+    35
+    461
+    1389
+    816
+    686
+    2021
+    71
+    1093
+    161
+    3085
+    210
+    253
+    138
+    513
+    25
+    653
+    229
+    1200
+    226
+    301
+    966
+    402
+    88
+    164
+    2271
+    583
+    403
+    91
+    252
+    953
+    478
+    536
+    698
+    227
+    1124
+    1103
+    381
+    1279
+    1898
+    76
+    626
+    1397
+    77
+    1635
+    119
+    50
+    712
+    1256
+    946
+    41
+    37
+    448
+    135
+    297
+    137
+    1110
+    1410
+    506
+    86
+    431
+    1654
+    306
+    47
+    1284
+    1256
+    500
+    73
+    636
+    797
+    89
+    1754
+    291
+    86
+    921
+    286
+    106
+    654
+    86
+    413
+    60
+    230
+    1409
+    1562
+    577
+    62
+    83
+    325
+    859
+    726
+    150
+    2203
+    326
+    4620
+    809
+    831
+    112
+    43
+    249
+    369
+    319
+    1245
+    351
+    819
+    542
+    802
+    307
+    367
+    1621
+    599
+    819
+    272
+    779
+    1781
+    289
+    445
+    207
+    71
+    340
+    101
+    211
+    614
+    102
+    1193
+    1142
+    152
+    92
+    264
+    289
+    58
+    1125
+    65
+    863
+    27
+    164
+    81
+    226
+    495
+    131
+    340
+    343
+    631
+    909
+    787
+    155
+    959
+    2444
+    425
+    116
+    286
+    554
+    117
+    286
+    1083
+    2134
+    230
+    730
+    1481
+    510
+    758
+    199
+    212
+    3776
+    867
+    3462
+*/

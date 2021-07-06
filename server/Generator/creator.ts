@@ -136,16 +136,21 @@ export function createPuzzle(difficulty?: Difficulty): Puzzle | number {
   if (difficulty == undefined) {
     difficulty = "medium";
   }
-  return createPuzzleHelper(difficulty, fillInRemaining());
+  const ret = createPuzzleHelper(difficulty, fillInRemaining());
+  console.log(iterations);
+  iterations = 0;
+  return ret;
 }
 
 const targetRanges: { [K in Difficulty]: { min: number; max: number } } = {
   easy: { min: 4300, max: 5500 },
   medium: { min: 5800, max: 6900 },
-  hard: { min: 8300, max: 93000 },
+  hard: { min: 6500, max: 9300 },
   insane: { min: 8300, max: 14000 },
   diabolical: { min: 11000, max: 25000 },
 };
+
+let iterations = 0;
 
 /**
  * Private function for createPuzzle
@@ -155,15 +160,13 @@ function createPuzzleHelper(
   puzzle: Puzzle,
   untriedIndices?: boolean[],
 ): Puzzle | number {
+  iterations++;
   if (untriedIndices == undefined) {
     untriedIndices = new Array(41).fill(false);
   }
   let indexToRemove: number;
   let ret: number | Puzzle;
   do {
-    // I believe the current problem is that we have no way to track what
-    // We have done in previous attempts. So we get caught in a never
-    // Ending loop with most puzzles
     do {
       // Generate number from 0-40
       indexToRemove = Math.round(Math.random() * 40);
@@ -181,11 +184,14 @@ function createPuzzleHelper(
     const testPuzzle = puzzle.clone().resetUntriedNumbers();
     const { cost } = mainSolver(testPuzzle, difficulty);
     // If unsolved or cost > target's max
-    if (
+    if (iterations < 25) {
+      ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
+    }
+    else if (
       testPuzzle.cells.includes(".") ||
       cost > targetRanges[difficulty as Difficulty].max ||
       (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true))
-    ) {
+      ) {
       return -1;
     } else if (
       cost <= targetRanges[difficulty as Difficulty].max &&
