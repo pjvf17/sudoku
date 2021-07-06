@@ -180,6 +180,27 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "Puzzle's getString method works",
+  fn(): void {
+    const testPuzzle = 
+      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+    const puzzle = new Puzzle(testPuzzle);
+    assertEquals(testPuzzle, puzzle.getString());
+  }
+});
+
+Deno.test({
+  name: "Puzzle's resetUntriedNumbers method works",
+  fn(): void {
+    const testPuzzle = 
+      "2861597433576482194197..5688219654376938741257453..8965682..974134597682972486351";
+    const puzzle = new Puzzle(testPuzzle);
+    puzzle.untriedNumbers[0] = [0,9,8,7,6,5,41,2];
+    assert(puzzle.resetUntriedNumbers().untriedNumbers[0] == new Puzzle(testPuzzle).untriedNumbers[0]);
+  }
+})
+
 // Deno.test({
 //   name: "recursiveGenerator – assign correctly updates peers",
 //   fn(): void {

@@ -109,6 +109,22 @@ export class Puzzle {
     puzzle.givens = [...this.givens];
     return puzzle;
   }
+  /**
+   * Resets the untried numbers in a puzzle, similar to passing in a string to parse
+   */
+  public resetUntriedNumbers():Puzzle {
+    return new Puzzle(this.getString());
+  }
+  /**
+   * Returns the puzzle in string form
+   */
+  public getString(): string {
+    let string = "";
+    for (let i = 0; i < this.cells.length; i++) {
+      string += this.cells[i];
+    }
+    return string;
+  }
 }
 
 /**
