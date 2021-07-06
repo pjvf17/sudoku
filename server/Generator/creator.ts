@@ -34,19 +34,14 @@ import { shuffleArray } from "../generator.ts";
  * @param puzzle
  * @param difficulty If omitted, no cap on techniques
  * @param hint, determines if we are returning a hint or not
- * @returns change if hint is true, cost otherwise
+ * @returns cost and changes[]
  */
-export function mainSolver(puzzle: Puzzle, difficulty?: Difficulty): number;
+
 export function mainSolver(
   puzzle: Puzzle,
   difficulty?: Difficulty,
   hint?: boolean,
-): change;
-export function mainSolver(
-  puzzle: Puzzle,
-  difficulty?: Difficulty,
-  hint?: boolean,
-): number | change {
+): { cost: number; changes: change[] } {
   /**
     * TODO implement hint handling. Requires deciding if I'm changing puzzle representation
     * outside of generators.
@@ -59,7 +54,8 @@ export function mainSolver(
   // Return from solverFunction
   let ret: number | change[];
   // Tracks if we've made changes this iteration
-  let changes = 0;
+  let changeCount = 0;
+  let changes: change[] = [];
   // Set diffIndex to max it could be
   let diffIndex: number = difficulties.length;
   // Stores the overall cost of solving the puzzle
@@ -86,7 +82,7 @@ export function mainSolver(
   }
   // While changes are made, loop through functions
   do {
-    changes = 0;
+    changeCount = 0;
     for (const solverName in scores) {
       if (Object.prototype.hasOwnProperty.call(scores, solverName)) {
         const costObj = scores[solverName as solver];
@@ -107,7 +103,8 @@ export function mainSolver(
           } else {
             // Verify it's not a number
             if (typeof ret != "number") {
-              changes += ret.length;
+              changeCount += ret.length;
+              changes.push(...ret);
               if (ret.length) {
                 // Save cost
 
@@ -127,8 +124,8 @@ export function mainSolver(
         }
       }
     }
-  } while (changes);
-  return cost;
+  } while (changeCount);
+  return { cost, changes };
 }
 
 /**
@@ -158,7 +155,7 @@ function createPuzzleHelper(
   puzzle: Puzzle,
 ): Puzzle | number {
   let indexToRemove: number;
-  let ret:number|Puzzle;
+  let ret: number | Puzzle;
   do {
     do {
       // Generate number from 0-40
@@ -175,7 +172,7 @@ function createPuzzleHelper(
     puzzle.cells[counterpart] = ".";
     // Test if solvable
     const testPuzzle = puzzle.clone().resetUntriedNumbers();
-    const cost = mainSolver(testPuzzle, difficulty);
+    const { cost } = mainSolver(testPuzzle, difficulty);
     // If unsolved or cost > target's max
     if (
       testPuzzle.cells.includes(".") ||
@@ -190,6 +187,6 @@ function createPuzzleHelper(
     } else {
       ret = createPuzzleHelper(difficulty, puzzle);
     }
-  } while (ret == -1)
+  } while (ret == -1);
   return ret;
 }
