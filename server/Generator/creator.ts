@@ -136,9 +136,11 @@ export function createPuzzle(difficulty?: Difficulty): Puzzle | number {
   if (difficulty == undefined) {
     difficulty = "medium";
   }
+  max = targetRanges[difficulty as Difficulty].max;
+  min = targetRanges[difficulty as Difficulty].min;
+  iterations = 0;
   const ret = createPuzzleHelper(difficulty, fillInRemaining());
   console.log(iterations);
-  iterations = 0;
   return ret;
 }
 
@@ -151,7 +153,9 @@ const targetRanges: { [K in Difficulty]: { min: number; max: number } } = {
 };
 
 let iterations = 0;
-
+let max: number, min: number;
+let indexToRemove: number;
+let ret: number | Puzzle;
 /**
  * Private function for createPuzzle
  */
@@ -164,8 +168,6 @@ function createPuzzleHelper(
   if (untriedIndices == undefined) {
     untriedIndices = new Array(41).fill(false);
   }
-  let indexToRemove: number;
-  let ret: number | Puzzle;
   do {
     do {
       // Generate number from 0-40
@@ -186,16 +188,15 @@ function createPuzzleHelper(
     // If unsolved or cost > target's max
     if (iterations < 25) {
       ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
-    }
-    else if (
+    } else if (
       testPuzzle.cells.includes(".") ||
-      cost > targetRanges[difficulty as Difficulty].max ||
+      cost > max ||
       (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true))
-      ) {
+    ) {
       return -1;
     } else if (
-      cost <= targetRanges[difficulty as Difficulty].max &&
-      cost >= targetRanges[difficulty as Difficulty].min
+      cost <= max &&
+      cost >= min
     ) {
       return puzzle;
     } else {
