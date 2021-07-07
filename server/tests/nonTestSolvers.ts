@@ -5,11 +5,11 @@ import {
   Puzzle,
 } from "../Generator/recursiveGenerator.ts";
 
-const dif:Difficulty = "easy"
+const dif:Difficulty = "medium"
 const puzzle = createPuzzle(dif);
 if (typeof puzzle == "number") {
    console.log(puzzle)
 } else {
-   // console.log(mainSolver(puzzle.clone().resetUntriedNumbers(), dif).changes);
+   console.log(mainSolver(puzzle.clone().resetUntriedNumbers(), dif).changes);
    printSudokuToConsole(puzzle);
 }

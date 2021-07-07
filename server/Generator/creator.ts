@@ -138,8 +138,11 @@ export function createPuzzle(difficulty?: Difficulty): Puzzle | number {
   }
   max = targetRanges[difficulty as Difficulty].max;
   min = targetRanges[difficulty as Difficulty].min;
-  iterations = 0;
-  const ret = createPuzzleHelper(difficulty, fillInRemaining());
+  let ret: number | Puzzle;
+  do {
+    iterations = 0;
+    ret = createPuzzleHelper(difficulty, fillInRemaining());
+  } while (typeof ret == "number");
   console.log(iterations);
   return ret;
 }
@@ -165,6 +168,7 @@ function createPuzzleHelper(
   untriedIndices?: boolean[],
 ): Puzzle | number {
   iterations++;
+
   if (untriedIndices == undefined) {
     untriedIndices = new Array(41).fill(false);
   }
@@ -182,25 +186,29 @@ function createPuzzleHelper(
     // Remove cells
     puzzle.cells[indexToRemove] = ".";
     puzzle.cells[counterpart] = ".";
-    // Test if solvable
-    const testPuzzle = puzzle.clone().resetUntriedNumbers();
-    const { cost } = mainSolver(testPuzzle, difficulty);
-    // If unsolved or cost > target's max
     if (iterations < 25) {
       ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
-    } else if (
-      testPuzzle.cells.includes(".") ||
-      cost > max ||
-      (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true))
-    ) {
-      return -1;
-    } else if (
-      cost <= max &&
-      cost >= min
-    ) {
-      return puzzle;
     } else {
-      ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
+      // Test if solvable
+      const testPuzzle = puzzle.clone().resetUntriedNumbers();
+      const { cost } = mainSolver(testPuzzle, difficulty);
+      // If unsolved or cost > target's max
+      if (
+        testPuzzle.cells.includes(".") ||
+        cost > max ||
+        (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true)) || iterations >= 200
+      ) {
+        return -1;
+      } else if (
+        cost <= max &&
+        cost >= min
+      ) {
+        return puzzle;
+      } else {
+        ret = createPuzzleHelper(difficulty, puzzle.clone(), [
+          ...untriedIndices,
+        ]);
+      }
     }
   } while (ret == -1);
   return ret;

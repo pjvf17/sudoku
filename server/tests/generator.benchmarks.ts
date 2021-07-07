@@ -71,17 +71,18 @@ await bench({
 // });
 // 2021-07-06 5:44pm : 29.65ms 200 run
 
-// await bench({
-//   name: "Create easy puzzle new",
-//   runs: 200,
-//   func(b): void {
-//     b.start();
-//     const puzzle = createPuzzleNew("easy");
-//     b.stop();
-//   },
-// });
+await bench({
+  name: "Create easy puzzle new",
+  runs: 200,
+  func(b): void {
+    b.start();
+    const puzzle = createPuzzleNew("easy");
+    b.stop();
+  },
+});
 // 2021-07-06 5:44pm : 39.9ms 200 run
 // 6:05pm With doing 15 pairs first: 29.3
+// 7-7 2:53 reset at 100: 22.46ms 200 run
 
 // await bench({
 //   name: "Create medium puzzle",
@@ -105,7 +106,11 @@ await bench({
 });
 // 2021-07-06 6:00pm : 1894.6ms 200 run
 // 6:05pm With doing 25 pairs first: 1705ms 20 run
-
+// 07-07 2:43pm slight change in ifs, 1745.5ms 20 run (close enough that it's probably the same as above)
+// 2:50 resetting at 400: 1906.8ms 20
+// Resetting at 800: 2438.7ms
+// at 200: 1495.7ms, think this might be a fluke
+// at 100 with 15 pairs: 2409.8ms 20
 
 // await bench({
 //   name: "Create xwing required puzzle",
