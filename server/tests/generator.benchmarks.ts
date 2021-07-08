@@ -73,7 +73,7 @@ await bench({
 
 await bench({
   name: "Create easy puzzle new",
-  runs: 200,
+  runs: 1000,
   func(b): void {
     b.start();
     const puzzle = createPuzzleNew("easy");
@@ -83,6 +83,9 @@ await bench({
 // 2021-07-06 5:44pm : 39.9ms 200 run
 // 6:05pm With doing 15 pairs first: 29.3
 // 7-7 2:53 reset at 100: 22.46ms 200 run
+// 5:39 moved check unique: 16.1ms
+// With upgraded resetUntriedNumbers: 1000 runs avg: 15.1ms
+// Old: 1000 runs avg: 14.39ms
 
 // await bench({
 //   name: "Create medium puzzle",
@@ -111,6 +114,7 @@ await bench({
 // Resetting at 800: 2438.7ms
 // at 200: 1495.7ms, think this might be a fluke
 // at 100 with 15 pairs: 2409.8ms 20
+// 7:42 With moved check unique: 1247.9ms
 
 // await bench({
 //   name: "Create xwing required puzzle",

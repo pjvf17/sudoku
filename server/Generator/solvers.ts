@@ -43,9 +43,8 @@ export function nakedSingleSolver(
     // Loop through all cells
     for (let i = 0; i < 81; i++) {
       // Skip over filled
-      if (puzzle.cells[i] != ".") continue;
       // Check if there's only one candidate
-      if (puzzle.untriedNumbers[i].length == 1) {
+      if (puzzle.cells[i] == "." && puzzle.untriedNumbers[i]?.length == 1) {
         const number = puzzle.untriedNumbers[i][0];
         // Assign
         ret = assign(i, puzzle, number);

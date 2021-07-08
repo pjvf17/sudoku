@@ -5,7 +5,7 @@ import {
   Puzzle,
 } from "../Generator/recursiveGenerator.ts";
 
-const dif:Difficulty = "medium"
+const dif:Difficulty = "easy"
 const puzzle = createPuzzle(dif);
 if (typeof puzzle == "number") {
    console.log(puzzle)

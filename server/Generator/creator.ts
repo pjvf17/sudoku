@@ -103,11 +103,10 @@ export function mainSolver(
           } else {
             // Verify it's not a number
             if (typeof ret != "number") {
-              changeCount += ret.length;
-              changes.push(...ret);
               if (ret.length) {
+                changeCount += ret.length;
+                changes.push(...ret);
                 // Save cost
-
                 // If solver already used
                 if (solverUsed[solverName as solver]) {
                   cost += costObj.subUses * ret.length;
@@ -143,7 +142,6 @@ export function createPuzzle(difficulty?: Difficulty): Puzzle | number {
     iterations = 0;
     ret = createPuzzleHelper(difficulty, fillInRemaining());
   } while (typeof ret == "number");
-  console.log(iterations);
   return ret;
 }
 
@@ -190,18 +188,20 @@ function createPuzzleHelper(
       ret = createPuzzleHelper(difficulty, puzzle.clone(), [...untriedIndices]);
     } else {
       // Test if solvable
-      const testPuzzle = puzzle.clone().resetUntriedNumbers();
+      const testPuzzle = puzzle.resetUntriedNumbers();
       const { cost } = mainSolver(testPuzzle, difficulty);
       // If unsolved or cost > target's max
       if (
         testPuzzle.cells.includes(".") ||
         cost > max ||
-        (!fillInRemaining(puzzle.clone().resetUntriedNumbers(), true)) || iterations >= 200
+        iterations >= 200
       ) {
         return -1;
       } else if (
         cost <= max &&
-        cost >= min
+        cost >= min &&
+        // Checks if unique
+        fillInRemaining(puzzle.resetUntriedNumbers(), true)
       ) {
         return puzzle;
       } else {
