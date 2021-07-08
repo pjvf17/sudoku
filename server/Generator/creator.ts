@@ -197,6 +197,10 @@ function createPuzzleHelper(
         iterations >= 200
       ) {
         return -1;
+      } else if (cost < min) {
+        ret = createPuzzleHelper(difficulty, puzzle.clone(), [
+          ...untriedIndices,
+        ]);
       } else if (
         cost <= max &&
         cost >= min &&
@@ -204,10 +208,6 @@ function createPuzzleHelper(
         fillInRemaining(puzzle.resetUntriedNumbers(), true)
       ) {
         return puzzle;
-      } else {
-        ret = createPuzzleHelper(difficulty, puzzle.clone(), [
-          ...untriedIndices,
-        ]);
       }
     }
   } while (ret == -1);
