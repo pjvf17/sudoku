@@ -17,7 +17,7 @@ import {
 import {
   bench,
   runBenchmarks,
-} from "https://deno.land/std@0.96.0/testing/bench.ts";
+} from "https://deno.land/std@0.100.0/testing/bench.ts";
 import { Difficulty, Puzzle } from "../../client/src/types.d.ts";
 
 // await bench({

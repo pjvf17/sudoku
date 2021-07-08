@@ -2,7 +2,7 @@ import {
   assert,
   assertEquals,
   assertThrows,
-} from "https://deno.land/std@0.96.0/testing/asserts.ts";
+} from "https://deno.land/std@0.100.0/testing/asserts.ts";
 import { mainSolver } from "../Generator/creator.ts";
 import {
   fillInRemaining,
@@ -118,3 +118,22 @@ Deno.test({
     // assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
 });
+
+Deno.test({
+  name: "mainSolver gets to correct state with naked pairs puzzle",
+  fn(): void {
+    const puzzle = new Puzzle("4..27.6..798156234.2.84...7237468951849531726561792843.82.15479.7..243....4.87..2");
+    mainSolver(puzzle);
+    assertEquals(puzzle.cells[79], 6);
+  }
+})
+
+Deno.test({
+  name: "mainSolver solves puzzle with nakedSingle, nakedCandidate, Pointing, Double Pairs, Multiple Lines, and Naked Pairs",
+  fn(): void {
+    const testPuzzle = ".2.94.61.......5..7....8..4....1...3.67...94.2...9....3..4....6..4.......86.79.2.";
+    const puzzle = new Puzzle(testPuzzle);
+    mainSolver(puzzle);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
+  }
+})

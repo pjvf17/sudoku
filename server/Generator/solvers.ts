@@ -418,7 +418,6 @@ export function doublePairsSolver(
 }
 
 // As defined at https://www.sudokuoftheday.com/techniques/multiple-lines/
-// TODO Multiple Lines Solver
 export function multipleLinesSolver(
   puzzle: Puzzle,
   units?: number[][],
@@ -617,6 +616,20 @@ export function multipleLinesSolver(
   return changes;
 }
 
+// TODO Think about making untriedCandidates more indicitive of if there is a number there yet
+  // So if there's only one candidate, that means that there is a number there
+export function nakedPairSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[];
+  const changes: change[] = [];
+  const type: solver = "nakedPair";
+  return -1;
+}
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
   nakedSingleSolver,
