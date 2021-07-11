@@ -12,13 +12,13 @@ export type solverFunction =
   | "hiddenSingleSolver"
   | "pointingSolver"
   | "doublePairsSolver"
-  | "multipleLinesSolver";
-  // | "nakedPairSolver"
-  // | "hiddenPairSolver"
-  // | "nakedTripleSolver"
-  // | "hiddenTripleSolver"
-  // | "nakedQuadSolver"
-  // | "hiddenQuadSolver"
+  | "multipleLinesSolver"
+  | "nakedPairSolver";
+// | "hiddenPairSolver"
+// | "nakedTripleSolver"
+// | "hiddenTripleSolver"
+// | "nakedQuadSolver"
+// | "hiddenQuadSolver"
 // | "claimingSolver"
 // | "xwingSolver";
 
@@ -112,7 +112,7 @@ export class Puzzle {
   /**
    * Resets the untried numbers in a puzzle, similar to passing in a string to parse
    */
-  public resetUntriedNumbers():Puzzle {
+  public resetUntriedNumbers(): Puzzle {
     return new Puzzle(this.getString());
   }
   /**
@@ -132,7 +132,10 @@ export class Puzzle {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the row
  */
-export const getRow = (address: Address): number[] => {
+export const getRow = (address: Address|number): number[] => {
+  if (typeof address == "number") {
+    address = convertToAddress(address);
+  }
   const arr: number[] = [];
   for (let i = (address.r - 1) * 9, j = 0; i < (address.r) * 9; i++, j++) {
     arr[j] = i;
@@ -144,7 +147,10 @@ export const getRow = (address: Address): number[] => {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the column
  */
-export const getCol = (address: Address): number[] => {
+export const getCol = (address: Address|number): number[] => {
+  if (typeof address == "number") {
+    address = convertToAddress(address);
+  }
   const arr: number[] = [];
   for (
     let j = 0, i = j * 9 + (address.c - 1);
@@ -161,7 +167,10 @@ export const getCol = (address: Address): number[] => {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the square
  */
-export const getSquare = (address: Address): number[] => {
+export const getSquare = (address: Address|number): number[] => {
+  if (typeof address == "number") {
+    address = convertToAddress(address);
+  }
   const arr: number[] = [];
   const startCol = address.c - ((address.c - 1) % 3);
   const startRow = address.r - ((address.r - 1) % 3);
@@ -263,11 +272,14 @@ export const validateCell = (
 
 /**
  * Returns indexes of peers of cell, not including the cell itself
- *
+ * In order the column, row, square
  * @param address Address of cell to get peers of
  * @returns
  */
-export const getPeers = (address: Address): number[] => {
+export const getPeers = (address: Address|number): number[] => {
+  if (typeof address == "number") {
+    address = convertToAddress(address);
+  }
   // Make set to remove duplicate
   const arr = Array.from(
     new Set([

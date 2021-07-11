@@ -5,7 +5,9 @@ import {
   convertToAddress,
   convertToIndex,
   getCol,
+  getPeers,
   getRow,
+getSquare,
   makeUnits,
   Puzzle,
   SolverObj,
@@ -616,8 +618,12 @@ export function multipleLinesSolver(
   return changes;
 }
 
+const equals = (a: any[], b: any[]) =>
+  a.length === b.length &&
+  a.every((v, i) => v === b[i]);
+
 // TODO Think about making untriedCandidates more indicitive of if there is a number there yet
-  // So if there's only one candidate, that means that there is a number there
+// So if there's only one candidate, that means that there is a number there
 export function nakedPairSolver(
   puzzle: Puzzle,
   units?: number[][],
@@ -625,10 +631,68 @@ export function nakedPairSolver(
   if (units == undefined) {
     units = makeUnits();
   }
-  let address: Address[];
+  let address: Address[], changeCount: number;
   const changes: change[] = [];
   const type: solver = "nakedPair";
-  return -1;
+  do {
+    changeCount = 0;
+    // Get all indices with only 2 candidates
+    const twoCandidatesArr = puzzle.untriedNumbers.map((candidates) =>
+      candidates.length == 2 ? candidates : null
+    );
+    for (let i = 0; i < twoCandidatesArr.length; i++) {
+      if (twoCandidatesArr[i] == null) continue;
+      if (twoCandidatesArr[i]?.length != 2) continue;
+      const candidates = twoCandidatesArr[i];
+      // Get peers
+      const peers = getPeers(i);
+      const matchedCandidates = peers.filter((index) =>
+        twoCandidatesArr[index] != null && index != i &&
+        equals(twoCandidatesArr[index] as number[], candidates as number[])
+      );
+      matchedCandidates.forEach((cellIndex) => {
+        let toUpdate: number[] = [];
+        if (peers.indexOf(cellIndex) < 8) {
+          toUpdate = getCol(cellIndex);
+        } else if (peers.indexOf(cellIndex) < 17) {
+          toUpdate = getRow(cellIndex);
+        } else {
+          toUpdate = getSquare(cellIndex);
+        }
+        toUpdate.splice(toUpdate.indexOf(cellIndex),1);
+        toUpdate.splice(toUpdate.indexOf(i),1);
+        if (
+          updateSpecificPeers(
+            puzzle,
+            toUpdate,
+            (twoCandidatesArr[i] as number[])[0],
+          )
+        ) {
+          changeCount++;
+          changes.push({
+            address: [convertToAddress(i), convertToAddress(cellIndex)],
+            number: (twoCandidatesArr[i] as number[])[0],
+            type,
+          });
+        }
+        if (
+          updateSpecificPeers(
+            puzzle,
+            toUpdate,
+            (twoCandidatesArr[i] as number[])[1],
+          )
+        ) {
+          changeCount++;
+          changes.push({
+            address: [convertToAddress(i), convertToAddress(cellIndex)],
+            number: (twoCandidatesArr[i] as number[])[1],
+            type,
+          });
+        }
+      });
+    }
+  } while (changeCount);
+  return changes;
 }
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
@@ -637,4 +701,5 @@ export const solverObj: SolverObj = {
   pointingSolver,
   doublePairsSolver,
   multipleLinesSolver,
+  nakedPairSolver,
 };
