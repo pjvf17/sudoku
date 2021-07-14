@@ -14,8 +14,8 @@ import {
 //    printSudokuToConsole(puzzle);
 // }
 
-const testPuzzle =
-  ".2.94.61.......5..7....8..4....1...3.67...94.2...9....3..4....6..4.......86.79.2.";
-const puzzle = new Puzzle(testPuzzle);
+const puzzle = new Puzzle(
+  "6..8.27357.235694.3..4.7.621..975.242..183.79.79624..34..56.2.7.6724.3..92.7384.6",
+);
 mainSolver(puzzle);
 printSudokuToConsole(puzzle);

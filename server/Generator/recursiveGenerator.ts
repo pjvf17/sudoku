@@ -13,9 +13,9 @@ export type solverFunction =
   | "pointingSolver"
   | "doublePairsSolver"
   | "multipleLinesSolver"
-  | "nakedPairSolver";
-// | "hiddenPairSolver"
-// | "nakedTripleSolver"
+  | "nakedPairSolver"
+  // | "hiddenPairSolver"
+  | "nakedTripleSolver";
 // | "hiddenTripleSolver"
 // | "nakedQuadSolver"
 // | "hiddenQuadSolver"
@@ -132,7 +132,7 @@ export class Puzzle {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the row
  */
-export const getRow = (address: Address|number): number[] => {
+export const getRow = (address: Address | number): number[] => {
   if (typeof address == "number") {
     address = convertToAddress(address);
   }
@@ -147,7 +147,7 @@ export const getRow = (address: Address|number): number[] => {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the column
  */
-export const getCol = (address: Address|number): number[] => {
+export const getCol = (address: Address | number): number[] => {
   if (typeof address == "number") {
     address = convertToAddress(address);
   }
@@ -167,7 +167,7 @@ export const getCol = (address: Address|number): number[] => {
  * @param address
  * @returns arr of length 9 containing the indices of all 9 cells in the square
  */
-export const getSquare = (address: Address|number): number[] => {
+export const getSquare = (address: Address | number): number[] => {
   if (typeof address == "number") {
     address = convertToAddress(address);
   }
@@ -276,7 +276,7 @@ export const validateCell = (
  * @param address Address of cell to get peers of
  * @returns
  */
-export const getPeers = (address: Address|number): number[] => {
+export const getPeers = (address: Address | number): number[] => {
   if (typeof address == "number") {
     address = convertToAddress(address);
   }
@@ -589,18 +589,24 @@ export function eliminate(puzzle: Puzzle, hiddenSingles: boolean): number {
 export function updateSpecificPeers(
   puzzle: Puzzle,
   peers: number[],
-  number: number,
+  number: number | number[],
 ): number {
+  if (typeof number == "number") {
+    number = [number];
+  }
   let index;
   let changes = 0;
   for (const cellIndex of peers) {
     // If cell is empty
     if (puzzle.cells[cellIndex] == ".") {
-      index = puzzle.untriedNumbers[cellIndex].indexOf(number);
-      // If untriedNumbers contains number, remove it
-      if (index != -1) {
-        puzzle.untriedNumbers[cellIndex].splice(index, 1);
-        changes++;
+      // Loop through number array
+      for (const num of number) {
+        index = puzzle.untriedNumbers[cellIndex].indexOf(num);
+        // If untriedNumbers contains number, remove it
+        if (index != -1) {
+          puzzle.untriedNumbers[cellIndex].splice(index, 1);
+          changes++;
+        }
       }
     }
   }

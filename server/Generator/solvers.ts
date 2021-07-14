@@ -7,7 +7,7 @@ import {
   getCol,
   getPeers,
   getRow,
-getSquare,
+  getSquare,
   makeUnits,
   Puzzle,
   SolverObj,
@@ -58,7 +58,7 @@ export function nakedSingleSolver(
         // Save change
         changes.push({
           address: [convertToAddress(i)],
-          number,
+          number: [number],
           type,
         });
         changeCount++;
@@ -135,7 +135,7 @@ export function hiddenSingleSolver(
           // Save change
           changes.push({
             address: [convertToAddress(index)],
-            number,
+            number: [number],
             type,
           });
           changeCount++;
@@ -216,7 +216,7 @@ export function pointingSolver(
               changeCount++;
               changes.push({
                 address,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -247,7 +247,7 @@ export function pointingSolver(
               changeCount++;
               changes.push({
                 address,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -374,7 +374,7 @@ export function doublePairsSolver(
               changeCount++;
               changes.push({
                 address: pair,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -406,7 +406,7 @@ export function doublePairsSolver(
               changeCount++;
               changes.push({
                 address: pair,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -556,7 +556,7 @@ export function multipleLinesSolver(
               changeCount++;
               changes.push({
                 address: set,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -605,7 +605,7 @@ export function multipleLinesSolver(
               changeCount++;
               changes.push({
                 address: set,
-                number,
+                number: [number],
                 type,
               });
             }
@@ -642,7 +642,6 @@ export function nakedPairSolver(
     );
     for (let i = 0; i < twoCandidatesArr.length; i++) {
       if (twoCandidatesArr[i] == null) continue;
-      if (twoCandidatesArr[i]?.length != 2) continue;
       const candidates = twoCandidatesArr[i];
       // Get peers
       const peers = getPeers(i);
@@ -652,6 +651,13 @@ export function nakedPairSolver(
       );
       matchedCandidates.forEach((cellIndex) => {
         let toUpdate: number[] = [];
+        // Because it gets rid of duplicates, the peers array is constructed somewhat strangely
+        // The first 8 cells corrospond to the col
+        // The next cells until the 17th, to the row,
+        // The last 4, to the square.
+        // We then need to fetch all cells in the respective unit, so that we get all cells
+        // Finally, we get rid of the two cells that caused the technique to work, so we don't
+        // Get rid of those candidates
         if (peers.indexOf(cellIndex) < 8) {
           toUpdate = getCol(cellIndex);
         } else if (peers.indexOf(cellIndex) < 17) {
@@ -659,37 +665,110 @@ export function nakedPairSolver(
         } else {
           toUpdate = getSquare(cellIndex);
         }
-        toUpdate.splice(toUpdate.indexOf(cellIndex),1);
-        toUpdate.splice(toUpdate.indexOf(i),1);
+        toUpdate.splice(toUpdate.indexOf(cellIndex), 1);
+        toUpdate.splice(toUpdate.indexOf(i), 1);
+        const numbers = [
+          (twoCandidatesArr[i] as number[])[0],
+          (twoCandidatesArr[i] as number[])[1],
+        ];
         if (
           updateSpecificPeers(
             puzzle,
             toUpdate,
-            (twoCandidatesArr[i] as number[])[0],
+            numbers,
           )
         ) {
           changeCount++;
           changes.push({
             address: [convertToAddress(i), convertToAddress(cellIndex)],
-            number: (twoCandidatesArr[i] as number[])[0],
-            type,
-          });
-        }
-        if (
-          updateSpecificPeers(
-            puzzle,
-            toUpdate,
-            (twoCandidatesArr[i] as number[])[1],
-          )
-        ) {
-          changeCount++;
-          changes.push({
-            address: [convertToAddress(i), convertToAddress(cellIndex)],
-            number: (twoCandidatesArr[i] as number[])[1],
+            number: numbers,
             type,
           });
         }
       });
+    }
+  } while (changeCount);
+  return changes;
+}
+
+export function nakedTripleSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[], changeCount: number;
+  const changes: change[] = [];
+  let unitChanges: change[];
+  const type: solver = "nakedTriple";
+  do {
+    changeCount = 0;
+    // Get all indices with either 2 or 3 candidates
+    const mappedCandidatesArr = puzzle.untriedNumbers.map((candidates) =>
+      (candidates.length == 3 || candidates.length == 2) ? candidates : null
+    );
+    for (const unit of units!) {
+      let candidates: number[];
+      for (let i = 0; i < unit.length; i++) {
+        const cellIndex = unit[i];
+        if (mappedCandidatesArr[cellIndex] == null) continue;
+        if (mappedCandidatesArr[cellIndex]?.length == 0) continue;
+        candidates = mappedCandidatesArr[cellIndex] as number[];
+        // TODO: Verify candidates not already in unitChanges
+        // if (unitChanges.)
+        // Place to store other cells that work for this technique
+        const matchedCandidates: { [index: number]: number[] } = {};
+        // Examples: [127,27,12], [87,76,68], [168,168,168], [178,178,87], [92,278,82] (should not trigger this technique but is VERY close, hidden triple)
+        switch (candidates!.length) {
+          case 2: {
+            // First look for a cell that contains at least one of the candidates, but at also 1 other number
+            // Then look for a cell that contains either all three, or the right configuration of 2
+            // For example, if the first cell contains (a,b), the second one contains (a,c), the last has to contain either
+            // (a,b,c) or (b,c)
+
+            unit.forEach((index) => {
+              const arr = mappedCandidatesArr[index];
+              if (arr != null && index != cellIndex) {
+                const filtered = arr.filter((num) => candidates.includes(num));
+                // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
+                if (filtered.length >= 1 && arr.length == filtered.length + 1) {
+                  matchedCandidates[index] = arr;
+                  // Makes candidates an array of 3 numbers
+                  // The code then falls through to case 3
+                  candidates = Array.from(new Set([...candidates, ...filtered]));
+                }
+              }
+            });
+          }
+          /* falls through */
+          case 3:
+            {
+              // Look for two other cells in this unit that each contain at least two of the candidates
+              unit.forEach((index) => {
+                const arr = mappedCandidatesArr[index];
+                if (arr != null && index != cellIndex) {
+                  const filtered = arr.filter((num) =>
+                    candidates.includes(num)
+                  );
+                  // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
+                  // (length of filtered and original array are the same)
+                  if (filtered.length >= 2 && filtered.length == arr.length) {
+                    matchedCandidates[index] = filtered;
+                  }
+                }
+              });
+            }
+            break;
+        }
+        // TODO set up way to keep track of instances of this technique, so I don't find it 3 times each time
+        // If found two other cells in this unit that work for this technique
+        if (Object.keys(matchedCandidates).length == 2) {
+          console.log(cellIndex);
+          console.log(mappedCandidatesArr[cellIndex])
+          console.log(matchedCandidates)
+        }
+      }
     }
   } while (changeCount);
   return changes;
@@ -702,4 +781,5 @@ export const solverObj: SolverObj = {
   doublePairsSolver,
   multipleLinesSolver,
   nakedPairSolver,
+  nakedTripleSolver,
 };

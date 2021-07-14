@@ -39,7 +39,7 @@ export type solver =
  */
 export type change = {
   address: Address[]|Address[][];
-  number: number;
+  number: number[];
   type: solver;
 };
 
