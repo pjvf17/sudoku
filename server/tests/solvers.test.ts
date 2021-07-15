@@ -119,40 +119,51 @@ Deno.test({
   },
 });
 
+// https://www.sudokuoftheday.com/techniques/naked-pairs-triples/
 Deno.test({
   name: "mainSolver gets to correct state with naked pairs puzzle",
   fn(): void {
-    const puzzle = new Puzzle("4..27.6..798156234.2.84...7237468951849531726561792843.82.15479.7..243....4.87..2");
+    const puzzle = new Puzzle(
+      "4..27.6..798156234.2.84...7237468951849531726561792843.82.15479.7..243....4.87..2",
+    );
     mainSolver(puzzle);
     assertEquals(puzzle.cells[79], 6);
-  }
-})
+  },
+});
 
 Deno.test({
-  name: "mainSolver solves puzzle with nakedSingle, nakedCandidate, Pointing, Double Pairs, Multiple Lines, and Naked Pairs",
+  name:
+    "mainSolver solves puzzle with nakedSingle, nakedCandidate, Pointing, Double Pairs, Multiple Lines, and Naked Pairs",
   fn(): void {
-    const testPuzzle = ".2.94.61.......5..7....8..4....1...3.67...94.2...9....3..4....6..4.......86.79.2.";
+    const testPuzzle =
+      ".2.94.61.......5..7....8..4....1...3.67...94.2...9....3..4....6..4.......86.79.2.";
     const puzzle = new Puzzle(testPuzzle);
     mainSolver(puzzle);
     assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
-  }
-})
+  },
+});
 
+// https://www.sudokuoftheday.com/techniques/naked-pairs-triples/
 Deno.test({
   name: "mainSolver gets to correct state with naked triples puzzle",
   fn(): void {
-    const puzzle = new Puzzle("6..8.27357.235694.3..4.7.621..975.242..183.79.79624..34..56.2.7.6724.3..92.7384.6");
+    const puzzle = new Puzzle(
+      "6..8.27357.235694.3..4.7.621..975.242..183.79.79624..34..56.2.7.6724.3..92.7384.6",
+    );
     mainSolver(puzzle);
     assert(!puzzle.untriedNumbers[1].includes(1));
-  }
-})
+  },
+});
 
+// https://www.sudokuoftheday.com/techniques/naked-pairs-triples/
+// (last puzzle on there)
 Deno.test({
   name: "mainSolver gets to correct state with naked quad puzzle",
   fn(): void {
-    const puzzle = new Puzzle("6249.....7391....8815..4...4....937.3...4...6591..3..29..4..21..296..4248357169");
+    const puzzle = new Puzzle(
+      "6249.....7391....8815..4...4....937.3...4...6591..3..29..4..2..1..296..4248357169",
+    );
     mainSolver(puzzle);
     assert(!puzzle.untriedNumbers[25].includes(3));
-  }
-})
-
+  },
+});

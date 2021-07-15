@@ -717,7 +717,7 @@ export function nakedTripleSolver(
         if (mappedCandidatesArr[cellIndex]?.length == 0) continue;
         candidates = mappedCandidatesArr[cellIndex] as number[];
         // Verify candidates not already in unitChanges, only need to look at one number
-        // Because a number can only be in one technique per unit 
+        // Because a number can only be in one technique per unit
         if (unitChanges.includes(candidates[0])) {
           continue;
         }
@@ -773,14 +773,18 @@ export function nakedTripleSolver(
           // Only have to save the numbers, as each number can only be in one instance of this technique once
           unitChanges = unitChanges.concat(candidates);
           // Get indices and ensure they are numbers
-          const indices = [...Object.keys(matchedCandidates), cellIndex].map(el=>Number(el));
+          const indices = [...Object.keys(matchedCandidates), cellIndex].map(
+            (el) => Number(el)
+          );
 
           // Remove technique indices from unit indices
-          const toUpdate = [...unit].filter(index=>!indices.includes(index));
-          if (updateSpecificPeers(puzzle,toUpdate,candidates)) {
+          const toUpdate = [...unit].filter((index) =>
+            !indices.includes(index)
+          );
+          if (updateSpecificPeers(puzzle, toUpdate, candidates)) {
             changeCount++;
             changes.push({
-              address: [...(indices.map(el=>convertToAddress(el)))],
+              address: [...(indices.map((el) => convertToAddress(el)))],
               number: candidates,
               type,
             });
@@ -802,14 +806,19 @@ export function nakedQuadSolver(
   let address: Address[], changeCount: number;
   const changes: change[] = [];
   let unitChanges: number[];
-  const type: solver = "nakedTriple";
+  const type: solver = "nakedQuad";
   do {
     changeCount = 0;
-    // Get all indices with either 2 or 3 candidates
+    // Get all indices with between 2 and 4 candidates
     const mappedCandidatesArr = puzzle.untriedNumbers.map((candidates) =>
-      (candidates.length == 3 || candidates.length == 2) ? candidates : null
+      (candidates.length >= 2 && candidates.length <= 4) ? candidates : null
     );
     for (const unit of units!) {
+      // Skip units that have <= 5 empty spots
+      // Because if there are only 4, this technique wouldn't change anything
+      // And if there are 5, then the 5th spot is a hidden single
+      if (unit.filter(index=>puzzle.cells[index] == ".").length <= 5) continue;
+      // TODO if there are 6, it should be a hidden pair? But that's not currently implemented
       unitChanges = [];
       let candidates: number[];
       for (let i = 0; i < unit.length; i++) {
@@ -818,7 +827,7 @@ export function nakedQuadSolver(
         if (mappedCandidatesArr[cellIndex]?.length == 0) continue;
         candidates = mappedCandidatesArr[cellIndex] as number[];
         // Verify candidates not already in unitChanges, only need to look at one number
-        // Because a number can only be in one technique per unit 
+        // Because a number can only be in one technique per unit
         if (unitChanges.includes(candidates[0])) {
           continue;
         }
@@ -849,39 +858,63 @@ export function nakedQuadSolver(
             }
           }
           /* falls through */
-          case 3:
-            {
-              // Look for two other cells in this unit that each contain at least two of the candidates
-              unit.forEach((index) => {
-                const arr = mappedCandidatesArr[index];
-                if (arr != null && index != cellIndex) {
-                  const filtered = arr.filter((num) =>
-                    candidates.includes(num)
-                  );
-                  // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
-                  // (length of filtered and original array are the same)
-                  if (filtered.length >= 2 && filtered.length == arr.length) {
-                    matchedCandidates[index] = filtered;
-                  }
+          // TODO adapt to look like previous
+          case 3: {
+            for (const index of unit) {
+              const arr = mappedCandidatesArr[index];
+              if (arr != null && index != cellIndex) {
+                const filtered = arr.filter((num) => candidates.includes(num));
+                // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
+                if (filtered.length >= 1 && arr.length == filtered.length + 1) {
+                  matchedCandidates[index] = arr;
+                  // Makes candidates an array of 3 numbers
+                  // The code then falls through to case 3
+                  candidates = Array.from(new Set([...candidates, ...arr]));
+                  // End loop once found a match, because it switches to case 3 logic
+                  break;
                 }
-              });
+              }
             }
-            break;
+          }
+          /* falls through */
+          case 4: {
+            // Look for two other cells in this unit that each contain at least two of the candidates
+            unit.forEach((index) => {
+              const arr = mappedCandidatesArr[index];
+              if (arr != null && index != cellIndex) {
+                const filtered = arr.filter((num) => candidates.includes(num));
+                // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
+                // (length of filtered and original array are the same)
+                if (filtered.length >= 2 && filtered.length == arr.length) {
+                  matchedCandidates[index] = filtered;
+                }
+              }
+            });
+          }
         }
-        // If found two other cells in this unit that work for this technique
-        if (Object.keys(matchedCandidates).length == 2) {
+        // If found three other cells in this unit that work for this technique
+        if (Object.keys(matchedCandidates).length == 3) {
+          // console.log("\n");
+          // console.log(candidates);
+          // console.log(cellIndex);
+          // console.log(mappedCandidatesArr[cellIndex]);
+          // console.log(matchedCandidates)
           // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
           // Only have to save the numbers, as each number can only be in one instance of this technique once
           unitChanges = unitChanges.concat(candidates);
-          // Get indices and ensure they are numbers
-          const indices = [...Object.keys(matchedCandidates), cellIndex].map(el=>Number(el));
+          // // Get indices and ensure they are numbers
+          const indices = [...Object.keys(matchedCandidates), cellIndex].map(
+            (el) => Number(el)
+          );
 
           // Remove technique indices from unit indices
-          const toUpdate = [...unit].filter(index=>!indices.includes(index));
-          if (updateSpecificPeers(puzzle,toUpdate,candidates)) {
+          const toUpdate = [...unit].filter((index) =>
+            !indices.includes(index)
+          );
+          if (updateSpecificPeers(puzzle, toUpdate, candidates)) {
             changeCount++;
             changes.push({
-              address: [...(indices.map(el=>convertToAddress(el)))],
+              address: [...(indices.map((el) => convertToAddress(el)))],
               number: candidates,
               type,
             });
@@ -893,7 +926,6 @@ export function nakedQuadSolver(
   return changes;
 }
 
-
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
   nakedSingleSolver,
@@ -903,5 +935,5 @@ export const solverObj: SolverObj = {
   multipleLinesSolver,
   nakedPairSolver,
   nakedTripleSolver,
-  nakedQuadSolver
+  nakedQuadSolver,
 };
