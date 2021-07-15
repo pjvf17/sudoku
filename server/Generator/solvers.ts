@@ -791,6 +791,109 @@ export function nakedTripleSolver(
   } while (changeCount);
   return changes;
 }
+
+export function nakedQuadSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[], changeCount: number;
+  const changes: change[] = [];
+  let unitChanges: number[];
+  const type: solver = "nakedTriple";
+  do {
+    changeCount = 0;
+    // Get all indices with either 2 or 3 candidates
+    const mappedCandidatesArr = puzzle.untriedNumbers.map((candidates) =>
+      (candidates.length == 3 || candidates.length == 2) ? candidates : null
+    );
+    for (const unit of units!) {
+      unitChanges = [];
+      let candidates: number[];
+      for (let i = 0; i < unit.length; i++) {
+        const cellIndex = unit[i];
+        if (mappedCandidatesArr[cellIndex] == null) continue;
+        if (mappedCandidatesArr[cellIndex]?.length == 0) continue;
+        candidates = mappedCandidatesArr[cellIndex] as number[];
+        // Verify candidates not already in unitChanges, only need to look at one number
+        // Because a number can only be in one technique per unit 
+        if (unitChanges.includes(candidates[0])) {
+          continue;
+        }
+        // Place to store other cells that work for this technique
+        const matchedCandidates: { [index: number]: number[] } = {};
+        // Examples: [127,27,12], [87,76,68], [168,168,168], [178,178,87], [92,278,82] (should not trigger this technique but is VERY close, hidden triple)
+        switch (candidates!.length) {
+          case 2: {
+            // First look for a cell that contains at least one of the candidates, but at also 1 other number
+            // Then look for a cell that contains either all three, or the right configuration of 2
+            // For example, if the first cell contains (a,b), the second one contains (a,c), the last has to contain either
+            // (a,b,c) or (b,c)
+
+            for (const index of unit) {
+              const arr = mappedCandidatesArr[index];
+              if (arr != null && index != cellIndex) {
+                const filtered = arr.filter((num) => candidates.includes(num));
+                // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
+                if (filtered.length >= 1 && arr.length == filtered.length + 1) {
+                  matchedCandidates[index] = arr;
+                  // Makes candidates an array of 3 numbers
+                  // The code then falls through to case 3
+                  candidates = Array.from(new Set([...candidates, ...arr]));
+                  // End loop once found a match, because it switches to case 3 logic
+                  break;
+                }
+              }
+            }
+          }
+          /* falls through */
+          case 3:
+            {
+              // Look for two other cells in this unit that each contain at least two of the candidates
+              unit.forEach((index) => {
+                const arr = mappedCandidatesArr[index];
+                if (arr != null && index != cellIndex) {
+                  const filtered = arr.filter((num) =>
+                    candidates.includes(num)
+                  );
+                  // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
+                  // (length of filtered and original array are the same)
+                  if (filtered.length >= 2 && filtered.length == arr.length) {
+                    matchedCandidates[index] = filtered;
+                  }
+                }
+              });
+            }
+            break;
+        }
+        // If found two other cells in this unit that work for this technique
+        if (Object.keys(matchedCandidates).length == 2) {
+          // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
+          // Only have to save the numbers, as each number can only be in one instance of this technique once
+          unitChanges = unitChanges.concat(candidates);
+          // Get indices and ensure they are numbers
+          const indices = [...Object.keys(matchedCandidates), cellIndex].map(el=>Number(el));
+
+          // Remove technique indices from unit indices
+          const toUpdate = [...unit].filter(index=>!indices.includes(index));
+          if (updateSpecificPeers(puzzle,toUpdate,candidates)) {
+            changeCount++;
+            changes.push({
+              address: [...(indices.map(el=>convertToAddress(el)))],
+              number: candidates,
+              type,
+            });
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
+
+
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
   nakedSingleSolver,
@@ -800,4 +903,5 @@ export const solverObj: SolverObj = {
   multipleLinesSolver,
   nakedPairSolver,
   nakedTripleSolver,
+  nakedQuadSolver
 };

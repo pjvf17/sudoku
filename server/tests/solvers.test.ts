@@ -146,3 +146,13 @@ Deno.test({
     assert(!puzzle.untriedNumbers[1].includes(1));
   }
 })
+
+Deno.test({
+  name: "mainSolver gets to correct state with naked quad puzzle",
+  fn(): void {
+    const puzzle = new Puzzle("6249.....7391....8815..4...4....937.3...4...6591..3..29..4..21..296..4248357169");
+    mainSolver(puzzle);
+    assert(!puzzle.untriedNumbers[25].includes(3));
+  }
+})
+
