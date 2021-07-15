@@ -894,11 +894,6 @@ export function nakedQuadSolver(
         }
         // If found three other cells in this unit that work for this technique
         if (Object.keys(matchedCandidates).length == 3) {
-          // console.log("\n");
-          // console.log(candidates);
-          // console.log(cellIndex);
-          // console.log(mappedCandidatesArr[cellIndex]);
-          // console.log(matchedCandidates)
           // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
           // Only have to save the numbers, as each number can only be in one instance of this technique once
           unitChanges = unitChanges.concat(candidates);
@@ -906,7 +901,6 @@ export function nakedQuadSolver(
           const indices = [...Object.keys(matchedCandidates), cellIndex].map(
             (el) => Number(el)
           );
-
           // Remove technique indices from unit indices
           const toUpdate = [...unit].filter((index) =>
             !indices.includes(index)

@@ -167,3 +167,14 @@ Deno.test({
     assert(!puzzle.untriedNumbers[25].includes(3));
   },
 });
+Deno.test({
+  name: "mainSolver gets to correct state with hidden pair puzzle",
+  fn(): void {
+    const puzzle = new Puzzle(
+      "1....73...2..9.....856...9.958....3..7.....4..6....5.853...426.....5..73..23....5",
+    );
+    mainSolver(puzzle);
+    printSudokuToConsole(puzzle);
+    assert(!puzzle.untriedNumbers[14].includes(3));
+  },
+});
