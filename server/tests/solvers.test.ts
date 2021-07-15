@@ -143,6 +143,6 @@ Deno.test({
   fn(): void {
     const puzzle = new Puzzle("6..8.27357.235694.3..4.7.621..975.242..183.79.79624..34..56.2.7.6724.3..92.7384.6");
     mainSolver(puzzle);
-    assert(!puzzle.untriedNumbers[2].includes(1));
+    assert(!puzzle.untriedNumbers[1].includes(1));
   }
 })

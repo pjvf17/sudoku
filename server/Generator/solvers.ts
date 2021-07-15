@@ -772,13 +772,15 @@ export function nakedTripleSolver(
           // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
           // Only have to save the numbers, as each number can only be in one instance of this technique once
           unitChanges = unitChanges.concat(candidates);
-          const indices = [...Object.keys(matchedCandidates), cellIndex];
+          // Get indices and ensure they are numbers
+          const indices = [...Object.keys(matchedCandidates), cellIndex].map(el=>Number(el));
+
           // Remove technique indices from unit indices
           const toUpdate = [...unit].filter(index=>!indices.includes(index));
           if (updateSpecificPeers(puzzle,toUpdate,candidates)) {
             changeCount++;
             changes.push({
-              address: [...(indices.map(el=>convertToAddress(el as number)))],
+              address: [...(indices.map(el=>convertToAddress(el)))],
               number: candidates,
               type,
             });
