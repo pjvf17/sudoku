@@ -700,7 +700,7 @@ export function nakedTripleSolver(
   }
   let address: Address[], changeCount: number;
   const changes: change[] = [];
-  let unitChanges: change[];
+  let unitChanges: number[];
   const type: solver = "nakedTriple";
   do {
     changeCount = 0;
@@ -709,14 +709,18 @@ export function nakedTripleSolver(
       (candidates.length == 3 || candidates.length == 2) ? candidates : null
     );
     for (const unit of units!) {
+      unitChanges = [];
       let candidates: number[];
       for (let i = 0; i < unit.length; i++) {
         const cellIndex = unit[i];
         if (mappedCandidatesArr[cellIndex] == null) continue;
         if (mappedCandidatesArr[cellIndex]?.length == 0) continue;
         candidates = mappedCandidatesArr[cellIndex] as number[];
-        // TODO: Verify candidates not already in unitChanges
-        // if (unitChanges.)
+        // Verify candidates not already in unitChanges, only need to look at one number
+        // Because a number can only be in one technique per unit 
+        if (unitChanges.includes(candidates[0])) {
+          continue;
+        }
         // Place to store other cells that work for this technique
         const matchedCandidates: { [index: number]: number[] } = {};
         // Examples: [127,27,12], [87,76,68], [168,168,168], [178,178,87], [92,278,82] (should not trigger this technique but is VERY close, hidden triple)
@@ -727,7 +731,7 @@ export function nakedTripleSolver(
             // For example, if the first cell contains (a,b), the second one contains (a,c), the last has to contain either
             // (a,b,c) or (b,c)
 
-            unit.forEach((index) => {
+            for (const index of unit) {
               const arr = mappedCandidatesArr[index];
               if (arr != null && index != cellIndex) {
                 const filtered = arr.filter((num) => candidates.includes(num));
@@ -736,10 +740,12 @@ export function nakedTripleSolver(
                   matchedCandidates[index] = arr;
                   // Makes candidates an array of 3 numbers
                   // The code then falls through to case 3
-                  candidates = Array.from(new Set([...candidates, ...filtered]));
+                  candidates = Array.from(new Set([...candidates, ...arr]));
+                  // End loop once found a match, because it switches to case 3 logic
+                  break;
                 }
               }
-            });
+            }
           }
           /* falls through */
           case 3:
@@ -761,12 +767,22 @@ export function nakedTripleSolver(
             }
             break;
         }
-        // TODO set up way to keep track of instances of this technique, so I don't find it 3 times each time
         // If found two other cells in this unit that work for this technique
         if (Object.keys(matchedCandidates).length == 2) {
-          console.log(cellIndex);
-          console.log(mappedCandidatesArr[cellIndex])
-          console.log(matchedCandidates)
+          // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
+          // Only have to save the numbers, as each number can only be in one instance of this technique once
+          unitChanges = unitChanges.concat(candidates);
+          const indices = [...Object.keys(matchedCandidates), cellIndex];
+          // Remove technique indices from unit indices
+          const toUpdate = [...unit].filter(index=>!indices.includes(index));
+          if (updateSpecificPeers(puzzle,toUpdate,candidates)) {
+            changeCount++;
+            changes.push({
+              address: [...(indices.map(el=>convertToAddress(el as number)))],
+              number: candidates,
+              type,
+            });
+          }
         }
       }
     }

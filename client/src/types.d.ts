@@ -20,14 +20,14 @@ export type solver =
   | "hiddenSingle"
   | "nakedPair"
   | "hiddenPair"
+  | "pointing"
+  | "claiming"
   | "doublePairs"
   | "multipleLines"
   | "nakedTriple"
   | "hiddenTriple"
   | "nakedQuad"
   | "hiddenQuad"
-  | "pointing"
-  | "claiming"
   | "xwing";
 
 /**

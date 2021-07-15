@@ -23,6 +23,24 @@ export const scores: Scores = {
     total: 0,
     difficulty: "medium",
   },
+  hiddenPair: {
+    firstUse: 1500,
+    subUses: 1200,
+    total: 0,
+    difficulty: "medium",
+  },
+  pointing: {
+    firstUse: 350,
+    subUses: 200,
+    total: 0,
+    difficulty: "medium",
+  },
+  claiming: {
+    firstUse: 400,
+    subUses: 250,
+    total: 0,
+    difficulty: "medium",
+  },
   doublePairs: {
     firstUse: 500,
     subUses: 250,
@@ -34,12 +52,6 @@ export const scores: Scores = {
     subUses: 400,
     total: 0, 
     difficulty: "medium"
-  },
-  hiddenPair: {
-    firstUse: 1500,
-    subUses: 1200,
-    total: 0,
-    difficulty: "medium",
   },
   nakedTriple: {
     firstUse: 2000,
@@ -64,18 +76,6 @@ export const scores: Scores = {
     subUses: 5000,
     total: 0,
     difficulty: "hard",
-  },
-  pointing: {
-    firstUse: 350,
-    subUses: 200,
-    total: 0,
-    difficulty: "medium",
-  },
-  claiming: {
-    firstUse: 400,
-    subUses: 250,
-    total: 0,
-    difficulty: "medium",
   },
   xwing: {
     firstUse: 2800,
