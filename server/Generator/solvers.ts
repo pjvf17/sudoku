@@ -774,7 +774,7 @@ export function nakedTripleSolver(
           unitChanges = unitChanges.concat(candidates);
           // Get indices and ensure they are numbers
           const indices = [...Object.keys(matchedCandidates), cellIndex].map(
-            (el) => Number(el)
+            (el) => Number(el),
           );
 
           // Remove technique indices from unit indices
@@ -817,7 +817,9 @@ export function nakedQuadSolver(
       // Skip units that have <= 5 empty spots
       // Because if there are only 4, this technique wouldn't change anything
       // And if there are 5, then the 5th spot is a hidden single
-      if (unit.filter(index=>puzzle.cells[index] == ".").length <= 5) continue;
+      if (unit.filter((index) => puzzle.cells[index] == ".").length <= 5) {
+        continue;
+      }
       // TODO if there are 6, it should be a hidden pair? But that's not currently implemented
       unitChanges = [];
       let candidates: number[];
@@ -899,7 +901,7 @@ export function nakedQuadSolver(
           unitChanges = unitChanges.concat(candidates);
           // // Get indices and ensure they are numbers
           const indices = [...Object.keys(matchedCandidates), cellIndex].map(
-            (el) => Number(el)
+            (el) => Number(el),
           );
           // Remove technique indices from unit indices
           const toUpdate = [...unit].filter((index) =>
@@ -920,14 +922,182 @@ export function nakedQuadSolver(
   return changes;
 }
 
+// TODO don't add another change if same pair is found but in a different unit (i.e. pair is in a square after being found in a row/col)
+export function hiddenPairSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "hiddenPair";
+
+  /**
+   * Stores locations of number in each unit,
+   * indexed by number (- 1)
+   */
+  let numberLocations: number[][] = [];
+  do {
+    changeCount = 0;
+    // Loop over units
+    for (const unit of units!) {
+      for (let number = 1; number <= 9; number++) {
+        numberLocations[number - 1] = unit.filter((index) =>
+          puzzle.untriedNumbers[index]?.includes(number)
+        );
+      }
+      // Looking for hidden pairs, so select only the numbers that have 2 entries
+      numberLocations = numberLocations.map((arr) =>
+        arr.length == 2 ? arr : []
+      );
+      // Look for identical indexes for two different numbers
+      for (
+        let firstIndex = 0;
+        firstIndex < numberLocations.length;
+        firstIndex++
+      ) {
+        const firstCellIndexes = numberLocations[firstIndex];
+        // Skip over empty
+        if (!firstCellIndexes.length) continue;
+        // Find another number that has the same indexes as firstCellIndexes
+        for (
+          let secondIndex = firstIndex + 1;
+          secondIndex < numberLocations.length;
+          secondIndex++
+        ) {
+          const secondCellIndexes = numberLocations[secondIndex];
+          // Check if arrays are the same
+          if (equals(firstCellIndexes, secondCellIndexes)) {
+            // To make sure this is hidden and not naked, make sure that at least one of these indexes has other numbers
+            if (
+              puzzle.untriedNumbers[firstCellIndexes[0]].length > 2 ||
+              puzzle.untriedNumbers[firstCellIndexes[1]].length > 2
+            ) {
+              const toUpdate = [...unit].filter((index) =>
+                !firstCellIndexes.includes(index)
+              );
+              updateSpecificPeers(puzzle, toUpdate, [
+                firstIndex + 1,
+                secondIndex + 1,
+              ]);
+              // Update cells with hidden pairs to remove other candidates
+              puzzle.untriedNumbers[firstCellIndexes[0]] = [
+                firstIndex + 1,
+                secondIndex + 1,
+              ];
+              puzzle.untriedNumbers[firstCellIndexes[1]] = [
+                firstIndex + 1,
+                secondIndex + 1,
+              ];
+              changes.push({
+                address: [
+                  convertToAddress(firstCellIndexes[0]),
+                  convertToAddress(firstCellIndexes[2]),
+                ],
+                number: [firstIndex + 1, secondIndex + 1],
+                type,
+              });
+              changeCount++;
+            }
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
+
+// Definition: http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
+export function claimingSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "claiming";
+  /**
+   * Stores locations of number in each unit,
+   * indexed by number (- 1)
+   */
+  let numberLocations: number[][] = [];
+  do {
+    changeCount = 0;
+    // Loop over units, skipping the squares
+    for (const unit of units.slice(0, 17)!) {
+      for (let number = 1; number <= 9; number++) {
+        numberLocations[number - 1] = unit.filter((index) =>
+          puzzle.untriedNumbers[index]?.includes(number)
+        );
+      }
+      for (let i = 0; i < numberLocations.length; i++) {
+        const arr = numberLocations[i];
+        // Looking for numbers that are strictly in one square,
+        // So select only the numbers that have 2-3 entries
+        if (arr.length == 2 || arr.length == 3) {
+          // Select numbers where indexes are all in the same square
+          switch (arr.length) {
+            case 2: {
+              if (getSquare(arr[0]).includes(arr[1])) {
+                const toUpdate = getSquare(arr[0]).filter((index) =>
+                  !arr.includes(index)
+                );
+                if (updateSpecificPeers(puzzle, toUpdate, i + 1)) {
+                  changeCount++;
+                  changes.push({
+                    address: [
+                      convertToAddress(arr[0]),
+                      convertToAddress(arr[1]),
+                    ],
+                    number: [i + 1],
+                    type,
+                  });
+                }
+              }
+              break;
+            }
+            case 3: {
+              if (getSquare(arr[0]).includes(arr[1]) && getSquare(arr[0]).includes(arr[2])) {
+                const toUpdate = getSquare(arr[0]).filter((index) =>
+                  !arr.includes(index)
+                );
+                if (updateSpecificPeers(puzzle, toUpdate, i + 1)) {
+                  changeCount++;
+                  changes.push({
+                    address: [
+                      convertToAddress(arr[0]),
+                      convertToAddress(arr[1]),
+                      convertToAddress(arr[2]),
+                    ],
+                    number: [i + 1],
+                    type,
+                  });
+                }
+              }
+            }
+
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
+
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
   nakedSingleSolver,
   hiddenSingleSolver,
   pointingSolver,
+  claimingSolver,
   doublePairsSolver,
   multipleLinesSolver,
   nakedPairSolver,
   nakedTripleSolver,
   nakedQuadSolver,
+  hiddenPairSolver,
 };

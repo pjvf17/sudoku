@@ -17,18 +17,6 @@ export const scores: Scores = {
     total: 0,
     difficulty: "easy",
   },
-  nakedPair: {
-    firstUse: 750,
-    subUses: 500,
-    total: 0,
-    difficulty: "medium",
-  },
-  hiddenPair: {
-    firstUse: 1500,
-    subUses: 1200,
-    total: 0,
-    difficulty: "medium",
-  },
   pointing: {
     firstUse: 350,
     subUses: 200,
@@ -52,6 +40,18 @@ export const scores: Scores = {
     subUses: 400,
     total: 0, 
     difficulty: "medium"
+  },
+  nakedPair: {
+    firstUse: 750,
+    subUses: 500,
+    total: 0,
+    difficulty: "medium",
+  },
+  hiddenPair: {
+    firstUse: 1500,
+    subUses: 1200,
+    total: 0,
+    difficulty: "medium",
   },
   nakedTriple: {
     firstUse: 2000,

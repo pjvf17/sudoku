@@ -126,6 +126,10 @@ Deno.test({
     const puzzle = new Puzzle(
       "4..27.6..798156234.2.84...7237468951849531726561792843.82.15479.7..243....4.87..2",
     );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
     mainSolver(puzzle);
     assertEquals(puzzle.cells[79], 6);
   },
@@ -138,6 +142,10 @@ Deno.test({
     const testPuzzle =
       ".2.94.61.......5..7....8..4....1...3.67...94.2...9....3..4....6..4.......86.79.2.";
     const puzzle = new Puzzle(testPuzzle);
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
     mainSolver(puzzle);
     assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
   },
@@ -150,6 +158,10 @@ Deno.test({
     const puzzle = new Puzzle(
       "6..8.27357.235694.3..4.7.621..975.242..183.79.79624..34..56.2.7.6724.3..92.7384.6",
     );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
     mainSolver(puzzle);
     assert(!puzzle.untriedNumbers[1].includes(1));
   },
@@ -163,18 +175,43 @@ Deno.test({
     const puzzle = new Puzzle(
       "6249.....7391....8815..4...4....937.3...4...6591..3..29..4..2..1..296..4248357169",
     );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
     mainSolver(puzzle);
     assert(!puzzle.untriedNumbers[25].includes(3));
   },
 });
+
 Deno.test({
-  name: "mainSolver gets to correct state with hidden pair puzzle",
+  name: "mainSolver uses hidden pair technique",
+  fn(): void {
+    const puzzle = new Puzzle(
+      "8.1..6.943....9.8.97..8.5..547.62.3.632....5.198375246.8362.915.65198...2195....8",
+    );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+    const {changes} = mainSolver(puzzle);
+    assert(changes.filter(change=>change.type == "hiddenPair").length > 0);
+  },
+});
+
+
+
+Deno.test({
+  name: "mainSolver gets to correct state with hidden pair and claiming puzzle",
   fn(): void {
     const puzzle = new Puzzle(
       "1....73...2..9.....856...9.958....3..7.....4..6....5.853...426.....5..73..23....5",
     );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
     mainSolver(puzzle);
-    printSudokuToConsole(puzzle);
     assert(!puzzle.untriedNumbers[14].includes(3));
   },
 });

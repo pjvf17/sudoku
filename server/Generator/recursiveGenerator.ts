@@ -11,15 +11,15 @@ export type solverFunction =
   | "nakedSingleSolver"
   | "hiddenSingleSolver"
   | "pointingSolver"
+  | "claimingSolver"
   | "doublePairsSolver"
   | "multipleLinesSolver"
   | "nakedPairSolver"
-  // | "hiddenPairSolver"
+  | "hiddenPairSolver"
   | "nakedTripleSolver"
-  // | "hiddenTripleSolver"
   | "nakedQuadSolver";
+// | "hiddenTripleSolver"
 // | "hiddenQuadSolver"
-// | "claimingSolver"
 // | "xwingSolver";
 
 /**
