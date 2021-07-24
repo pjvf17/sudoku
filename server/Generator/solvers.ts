@@ -994,7 +994,7 @@ export function hiddenPairSolver(
               changes.push({
                 address: [
                   convertToAddress(firstCellIndexes[0]),
-                  convertToAddress(firstCellIndexes[2]),
+                  convertToAddress(firstCellIndexes[1]),
                 ],
                 number: [firstIndex + 1, secondIndex + 1],
                 type,
