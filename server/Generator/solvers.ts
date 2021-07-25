@@ -1061,7 +1061,10 @@ export function claimingSolver(
               break;
             }
             case 3: {
-              if (getSquare(arr[0]).includes(arr[1]) && getSquare(arr[0]).includes(arr[2])) {
+              if (
+                getSquare(arr[0]).includes(arr[1]) &&
+                getSquare(arr[0]).includes(arr[2])
+              ) {
                 const toUpdate = getSquare(arr[0]).filter((index) =>
                   !arr.includes(index)
                 );
@@ -1079,9 +1082,138 @@ export function claimingSolver(
                 }
               }
             }
-
           }
         }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
+
+export function hiddenTripleSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[], changeCount: number;
+  const changes: change[] = [];
+  let unitChanges: number[];
+  const type: solver = "hiddenTriple";
+  /**
+   * Stores locations of number in each unit,
+   * indexed by number (- 1)
+   */
+  let numberLocations: number[][] = [];
+  do {
+    changeCount = 0;
+    for (const unit of units!) {
+      unitChanges = [];
+      for (let number = 1; number <= 9; number++) {
+        numberLocations[number - 1] = unit.filter((index) =>
+          puzzle.untriedNumbers[index]?.includes(number)
+        );
+      }
+      // Looking for hidden triples, so select only the numbers that have 2-3 entries
+      numberLocations = numberLocations.map((arr) =>
+        arr.length == 2 || arr.length == 3 ? arr : []
+      );
+      for (
+        let firstNumber = 0;
+        firstNumber < numberLocations.length;
+        firstNumber++
+      ) {
+        // Code adapted from nakedTripleSolver
+
+        let locations = numberLocations[firstNumber];
+        // Skip over empty arrays
+        if (!locations.length) continue;
+        // Verify number not already in unitChanges, only need to look at one number
+        // Because a number can only be in one technique per unit
+        if (unitChanges.includes(firstNumber + 1)) continue;
+        // // Place to store other cells that work for this technique
+        // const matchedCandidates: { [index: number]: number[] } = {};
+        // Stores the second number for this technique
+        let secondNumber;
+        // Stores the third number for this technique
+        let thirdNumber
+        switch (locations.length) {
+          case 2: {
+            // First look for a number that overlaps locations with the firstNumber in at least one place and one other location
+            // Then look for a number that is in either all 3 locations, or the right configuration of 2 of them
+            // For example, if the first cell contains (a,b), the second one contains (a,c), the last has to contain either
+            // (a,b,c) or (b,c)
+            for (
+              secondNumber = firstNumber + 1;
+              secondNumber < numberLocations.length;
+              secondNumber++
+            ) {
+              const secondNumLocations = numberLocations[secondNumber];
+              // Check that one location is the same, and one is different
+              if (
+                secondNumLocations.some((location) =>
+                  locations.includes(location)
+                ) && secondNumLocations.some((location) =>
+                  !locations.includes(location)
+                )
+              ) {
+                // Makes locations = an array of 3 numbers
+                // The code then falls through to case 3 logic
+                locations = Array.from(
+                  new Set([...locations, ...secondNumLocations]),
+                );
+                // End loop once found a match, because it switches to case 3 logic
+                break;
+              }
+            }
+          }
+          /* falls through */
+          case 3: {
+            // Look for a number that can be put in 2-3 of the cellIndexes in 'locations' that isn't firstNumber or secondNumber
+            // TODO figure out what to do if secondNumber not determined yet
+          }
+            // {
+            //   // Look for two other cells in this unit that each contain at least two of the candidates
+            //   unit.forEach((index) => {
+            //     const arr = numberLocations[index];
+            //     if (arr != null && index != cellIndex) {
+            //       const filtered = arr.filter((num) =>
+            //         candidates.includes(num)
+            //       );
+            //       // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
+            //       // (length of filtered and original array are the same)
+            //       if (filtered.length >= 2 && filtered.length == arr.length) {
+            //         matchedCandidates[index] = filtered;
+            //       }
+            //     }
+            //   });
+            // }
+            break;
+        }
+        // // If found two other cells in this unit that work for this technique
+        // if (Object.keys(matchedCandidates).length == 2) {
+        //   // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
+        //   // Only have to save the numbers, as each number can only be in one instance of this technique once
+        //   unitChanges = unitChanges.concat(candidates);
+        //   // Get indices and ensure they are numbers
+        //   const indices = [...Object.keys(matchedCandidates), cellIndex].map(
+        //     (el) => Number(el),
+        //   );
+
+        //   // Remove technique indices from unit indices
+        //   const toUpdate = [...unit].filter((index) =>
+        //     !indices.includes(index)
+        //   );
+        //   if (updateSpecificPeers(puzzle, toUpdate, candidates)) {
+        //     changeCount++;
+        //     changes.push({
+        //       address: [...(indices.map((el) => convertToAddress(el)))],
+        //       number: candidates,
+        //       type,
+        //     });
+        //   }
+        // }
       }
     }
   } while (changeCount);
@@ -1097,7 +1229,8 @@ export const solverObj: SolverObj = {
   doublePairsSolver,
   multipleLinesSolver,
   nakedPairSolver,
-  nakedTripleSolver,
-  nakedQuadSolver,
   hiddenPairSolver,
+  nakedTripleSolver,
+  hiddenTripleSolver,
+  nakedQuadSolver,
 };

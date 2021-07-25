@@ -194,12 +194,10 @@ Deno.test({
     for (const cell of completedPuzzle.cells) {
       assert(cell != ".", "puzzle has empty cell");
     }
-    const {changes} = mainSolver(puzzle);
-    assert(changes.filter(change=>change.type == "hiddenPair").length > 0);
+    const { changes } = mainSolver(puzzle);
+    assert(changes.filter((change) => change.type == "hiddenPair").length > 0);
   },
 });
-
-
 
 Deno.test({
   name: "mainSolver gets to correct state with hidden pair and claiming puzzle",
@@ -213,5 +211,21 @@ Deno.test({
     }
     mainSolver(puzzle);
     assert(!puzzle.untriedNumbers[14].includes(3));
+  },
+});
+
+Deno.test({
+  name: "mainSolver gets to correct state with hidden triple",
+  fn(): void {
+    const puzzle = new Puzzle(
+      "5286...4913649..257942.563....1..2....78263....25.9.6.24.3..9768.97.2413.7.9.4582",
+    );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+    const { changes } = mainSolver(puzzle);
+    assert(changes.filter((change) => change.type == "hiddenTriple").length > 0);
+    assert(!puzzle.untriedNumbers[4].includes(1));
   },
 });
