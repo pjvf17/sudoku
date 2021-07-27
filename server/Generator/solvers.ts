@@ -1119,25 +1119,25 @@ export function hiddenTripleSolver(
       numberLocations = numberLocations.map((arr) =>
         arr.length == 2 || arr.length == 3 ? arr : []
       );
+      // Stores the number and locations for the technique set we find
+      let matchedCandidates: { [index: number]: number[] } = {};
       for (
         let firstNumber = 0;
         firstNumber < numberLocations.length;
         firstNumber++
       ) {
+        matchedCandidates = {};
         // Code adapted from nakedTripleSolver
-
         let locations = numberLocations[firstNumber];
         // Skip over empty arrays
         if (!locations.length) continue;
         // Verify number not already in unitChanges, only need to look at one number
         // Because a number can only be in one technique per unit
         if (unitChanges.includes(firstNumber + 1)) continue;
-        // // Place to store other cells that work for this technique
-        // const matchedCandidates: { [index: number]: number[] } = {};
-        // Stores the second number for this technique
+        // Place to store other cells that work for this technique
+        matchedCandidates[firstNumber + 1] = locations;
         let secondNumber;
-        // Stores the third number for this technique
-        let thirdNumber
+        // Stores the second number for this technique
         switch (locations.length) {
           case 2: {
             // First look for a number that overlaps locations with the firstNumber in at least one place and one other location
@@ -1150,14 +1150,15 @@ export function hiddenTripleSolver(
               secondNumber++
             ) {
               const secondNumLocations = numberLocations[secondNumber];
-              // Check that one location is the same, and one is different
+              const filtered = secondNumLocations.filter((loc) =>
+                locations.includes(loc)
+              );
+              // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
               if (
-                secondNumLocations.some((location) =>
-                  locations.includes(location)
-                ) && secondNumLocations.some((location) =>
-                  !locations.includes(location)
-                )
+                filtered.length >= 1 &&
+                secondNumLocations.length == filtered.length + 1
               ) {
+                matchedCandidates[secondNumber + 1] = secondNumLocations;
                 // Makes locations = an array of 3 numbers
                 // The code then falls through to case 3 logic
                 locations = Array.from(
@@ -1169,51 +1170,74 @@ export function hiddenTripleSolver(
             }
           }
           /* falls through */
-          case 3: {
-            // Look for a number that can be put in 2-3 of the cellIndexes in 'locations' that isn't firstNumber or secondNumber
-            // TODO figure out what to do if secondNumber not determined yet
-          }
-            // {
-            //   // Look for two other cells in this unit that each contain at least two of the candidates
-            //   unit.forEach((index) => {
-            //     const arr = numberLocations[index];
-            //     if (arr != null && index != cellIndex) {
-            //       const filtered = arr.filter((num) =>
-            //         candidates.includes(num)
-            //       );
-            //       // Check that there are at least two candidates in here, and that there aren't other extraneous candidates
-            //       // (length of filtered and original array are the same)
-            //       if (filtered.length >= 2 && filtered.length == arr.length) {
-            //         matchedCandidates[index] = filtered;
-            //       }
-            //     }
-            //   });
-            // }
+          case 3:
+            {
+              // Look for a number that can be put in 2-3 of the cellIndexes in 'locations' that isn't firstNumber or secondNumber
+              // Set number to secondNumber if it's defined, firstNumber if not, and then add one
+              for (
+                let nextNumber = (secondNumber != undefined
+                  ? secondNumber
+                  : firstNumber) + 1;
+                nextNumber < numberLocations.length;
+                nextNumber++
+              ) {
+                // Check that at least two locations overlap, and no extraneous locations exist
+                const nextNumLocations = numberLocations[nextNumber];
+                if (
+                  nextNumLocations.length >= 2 &&
+                  nextNumLocations.length <= 3 &&
+                  nextNumLocations.filter((location) =>
+                      locations.includes(location)
+                    ).length == nextNumLocations.length
+                ) {
+                  matchedCandidates[nextNumber + 1] = nextNumLocations;
+                }
+                if (Object.keys(matchedCandidates).length == 3) {
+                  break;
+                }
+              }
+            }
             break;
         }
-        // // If found two other cells in this unit that work for this technique
-        // if (Object.keys(matchedCandidates).length == 2) {
-        //   // Save candidates so that I don't find each instance of the technique 3 times (once for every cell included)
-        //   // Only have to save the numbers, as each number can only be in one instance of this technique once
-        //   unitChanges = unitChanges.concat(candidates);
-        //   // Get indices and ensure they are numbers
-        //   const indices = [...Object.keys(matchedCandidates), cellIndex].map(
-        //     (el) => Number(el),
-        //   );
 
-        //   // Remove technique indices from unit indices
-        //   const toUpdate = [...unit].filter((index) =>
-        //     !indices.includes(index)
-        //   );
-        //   if (updateSpecificPeers(puzzle, toUpdate, candidates)) {
-        //     changeCount++;
-        //     changes.push({
-        //       address: [...(indices.map((el) => convertToAddress(el)))],
-        //       number: candidates,
-        //       type,
-        //     });
-        //   }
-        // }
+        // // If found two other cells in this unit that work for this technique
+        if (Object.keys(matchedCandidates).length == 3) {
+          // Save locations so that I don't find each instance of the technique 3 times (once for every cell included)
+          // Only have to save the locations, as each location can only be in one instance of this technique once in a unit
+          unitChanges = unitChanges.concat(locations);
+          const numbers = Object.keys(matchedCandidates).map(
+            (el) => Number(el),
+          );
+          // Check for numbers other than matched ones in the locations
+          // (Verify that this is a hidden triple and not a naked one)
+          if (
+            locations.some((loc) =>
+              puzzle.untriedNumbers[loc].filter((candidate) =>
+                !numbers.includes(candidate)
+              ).length
+            )
+          ) {
+            changeCount++;
+            for (let i = 0; i < locations.length; i++) {
+              const loc = locations[i];
+              // Set untriedNumbers to the numbers it has that overlap with 'numbers'
+              puzzle.untriedNumbers[loc] = puzzle.untriedNumbers[loc].filter(
+                (candidate) => numbers.includes(candidate)
+              );
+            }
+            // Get locations and ensure they are numbers
+            // Remove technique locations from unit locations
+            const toUpdate = [...unit].filter((index) =>
+              !locations.includes(index)
+            );
+            updateSpecificPeers(puzzle, toUpdate, numbers);
+            changes.push({
+              address: [...(locations.map((el) => convertToAddress(el)))],
+              number: numbers,
+              type,
+            });
+          }
+        }
       }
     }
   } while (changeCount);
