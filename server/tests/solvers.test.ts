@@ -229,3 +229,21 @@ Deno.test({
     assert(!puzzle.untriedNumbers[4].includes(1));
   },
 });
+
+Deno.test({
+  name: "Correctly identify hiddenQuad",
+  fn(): void {
+    const puzzle = new Puzzle(
+      ".9.73.1..2735146984.196....36248.91............7..328.72984.3.11.8.79.2......1879",
+    );
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+    const { changes } = mainSolver(puzzle);
+    assert(changes.filter((change) => change.type == "hiddenQuad").length > 0);
+    assert(!puzzle.untriedNumbers[36].includes(5));
+  },
+});
+
+

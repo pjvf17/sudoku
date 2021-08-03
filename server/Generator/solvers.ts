@@ -9,6 +9,7 @@ import {
   getRow,
   getSquare,
   makeUnits,
+printSudokuToConsole,
   Puzzle,
   SolverObj,
   updatePeers,
@@ -860,7 +861,6 @@ export function nakedQuadSolver(
             }
           }
           /* falls through */
-          // TODO adapt to look like previous
           case 3: {
             for (const index of unit) {
               const arr = mappedCandidatesArr[index];
@@ -1243,6 +1243,199 @@ export function hiddenTripleSolver(
   } while (changeCount);
   return changes;
 }
+export function hiddenQuadSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[], changeCount: number;
+  const changes: change[] = [];
+  let unitChanges: number[];
+  const type: solver = "hiddenQuad";
+  /**
+   * Stores locations of number in each unit,
+   * indexed by number (- 1)
+   */
+  let numberLocations: number[][] = [];
+  do {
+    changeCount = 0;
+    for (const unit of units!) {
+      unitChanges = [];
+      for (let number = 1; number <= 9; number++) {
+        numberLocations[number - 1] = unit.filter((index) =>
+          puzzle.untriedNumbers[index]?.includes(number)
+        );
+      }
+      // Looking for hidden quads, so select only the numbers that have 2-4 entries
+      numberLocations = numberLocations.map((arr) =>
+        arr.length >= 2 && arr.length <= 4 ? arr : []
+      );
+      // Stores the number and locations for the technique set we find
+      let matchedCandidates: { [index: number]: number[] } = {};
+      for (
+        let firstNumber = 0;
+        firstNumber < numberLocations.length;
+        firstNumber++
+      ) {
+        matchedCandidates = {};
+        // Code adapted from nakedTripleSolver
+        let locations = numberLocations[firstNumber];
+        // Skip over empty arrays
+        if (!locations.length) continue;
+        // Verify number not already in unitChanges, only need to look at one number
+        // Because a number can only be in one technique per unit
+        if (unitChanges.includes(firstNumber + 1)) continue;
+        // Place to store other cells that work for this technique
+        matchedCandidates[firstNumber + 1] = locations;
+        let secondNumber;
+        let thirdNumber;
+        // Stores the second number for this technique
+        switch (locations.length) {
+          case 2: {
+            // First look for a number that overlaps locations with the firstNumber in at least one place and one other location
+            // Then look for a number that is in either all 3 locations, or the right configuration of 2 of them
+            // For example, if the first cell contains (a,b), the second one contains (a,c), the last has to contain either
+            // (a,b,c) or (b,c)
+            for (
+              secondNumber = firstNumber + 1;
+              secondNumber < numberLocations.length;
+              secondNumber++
+            ) {
+              const secondNumLocations = numberLocations[secondNumber];
+              const filtered = secondNumLocations.filter((loc) =>
+                locations.includes(loc)
+              );
+              // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
+              if (
+                filtered.length >= 1 &&
+                secondNumLocations.length == filtered.length + 1
+              ) {
+                matchedCandidates[secondNumber + 1] = secondNumLocations;
+                // Makes locations = an array of 3 numbers
+                // The code then falls through to case 3 logic
+                locations = Array.from(
+                  new Set([...locations, ...secondNumLocations]),
+                );
+                // End loop once found a match, because it switches to case 3 logic
+                break;
+              }
+            }
+          }
+          /* falls through */          
+          case 3: {
+            for (
+              thirdNumber = firstNumber + 1;
+              thirdNumber < numberLocations.length;
+              thirdNumber++
+            ) {
+              const thirdNumLocations = numberLocations[thirdNumber];
+              const filtered = thirdNumLocations.filter((loc) =>
+                locations.includes(loc)
+              );
+              // Check that at least one of the candidates is in the filtered array, and that there's 1 other number
+              if (
+                filtered.length >= 1 &&
+                thirdNumLocations.length == filtered.length + 1
+              ) {
+                matchedCandidates[thirdNumber + 1] = thirdNumLocations;
+                // Makes locations = an array of 3 numbers
+                // The code then falls through to case 3 logic
+                locations = Array.from(
+                  new Set([...locations, ...thirdNumLocations]),
+                );
+                // End loop once found a match, because it switches to case 3 logic
+                break;
+              }
+            }
+          }
+          /* falls through */
+          case 4:
+            {
+              // Look for a number that can be put in 2-3 of the cellIndexes in 'locations' that isn't firstNumber or secondNumber
+              const nums = [firstNumber, secondNumber, thirdNumber].filter(el=>el != undefined)
+              for (
+                let nextNumber = (nums[nums.length-1]!) + 1;
+                nextNumber < numberLocations.length;
+                nextNumber++
+              ) {
+                // Check that at least two locations overlap, and no extraneous locations exist
+                const nextNumLocations = numberLocations[nextNumber];
+                if (
+                  nextNumLocations.length >= 2 &&
+                  nextNumLocations.length <= 4 &&
+                  nextNumLocations.filter((location) =>
+                      locations.includes(location)
+                    ).length == nextNumLocations.length
+                ) {
+                  matchedCandidates[nextNumber + 1] = nextNumLocations;
+                }
+                if (Object.keys(matchedCandidates).length == 4) {
+                  break;
+                }
+              }
+            }
+            break;
+        }
+
+        // // If found two other cells in this unit that work for this technique
+        if (Object.keys(matchedCandidates).length == 4) {
+          // Save locations so that I don't find each instance of the technique 3 times (once for every cell included)
+          // Only have to save the locations, as each location can only be in one instance of this technique once in a unit
+          unitChanges = unitChanges.concat(locations);
+          const numbers = Object.keys(matchedCandidates).map(
+            (el) => Number(el),
+          );
+          // Check for numbers other than matched ones in the locations
+          // (Verify that this is a hidden triple and not a naked one)
+          if (
+            locations.some((loc) =>
+              puzzle.untriedNumbers[loc].filter((candidate) =>
+                !numbers.includes(candidate)
+              ).length
+            )
+          ) {
+            changeCount++;
+            for (let i = 0; i < locations.length; i++) {
+              const loc = locations[i];
+              // Set untriedNumbers to the numbers it has that overlap with 'numbers'
+              puzzle.untriedNumbers[loc] = puzzle.untriedNumbers[loc].filter(
+                (candidate) => numbers.includes(candidate)
+              );
+            }
+            // Get locations and ensure they are numbers
+            // Remove technique locations from unit locations
+            const toUpdate = [...unit].filter((index) =>
+              !locations.includes(index)
+            );
+            updateSpecificPeers(puzzle, toUpdate, numbers);
+            changes.push({
+              address: [...(locations.map((el) => convertToAddress(el)))],
+              number: numbers,
+              type,
+            });
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
+
+// export function xwingSolver(
+// puzzle: Puzzle,
+// units?: number[][],
+// ): change[] | number {
+// if (units == undefined) {
+//   units = makeUnits();
+// }
+// let address: Address[], changeCount: number;
+// const changes: change[] = [];
+// let unitChanges: number[];
+// const type: solver = "hiddenTriple";
+// return [];
+// }
 
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
@@ -1257,4 +1450,5 @@ export const solverObj: SolverObj = {
   nakedTripleSolver,
   hiddenTripleSolver,
   nakedQuadSolver,
+  hiddenQuadSolver
 };

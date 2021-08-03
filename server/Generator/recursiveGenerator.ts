@@ -18,8 +18,8 @@ export type solverFunction =
   | "hiddenPairSolver"
   | "nakedTripleSolver"
   | "hiddenTripleSolver"
-  | "nakedQuadSolver";
-// | "hiddenQuadSolver"
+  | "nakedQuadSolver"
+  | "hiddenQuadSolver";
 // | "xwingSolver";
 
 /**
