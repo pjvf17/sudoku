@@ -225,7 +225,9 @@ Deno.test({
       assert(cell != ".", "puzzle has empty cell");
     }
     const { changes } = mainSolver(puzzle);
-    assert(changes.filter((change) => change.type == "hiddenTriple").length > 0);
+    assert(
+      changes.filter((change) => change.type == "hiddenTriple").length > 0,
+    );
     assert(!puzzle.untriedNumbers[4].includes(1));
   },
 });
@@ -245,5 +247,18 @@ Deno.test({
     assert(!puzzle.untriedNumbers[36].includes(5));
   },
 });
-
-
+Deno.test({
+  name: "Solve xwing puzzle",
+  fn(): void {
+    const testPuzzle =
+      "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5";
+    const puzzle = new Puzzle(testPuzzle);
+    const completedPuzzle = fillInRemaining(puzzle.clone());
+    for (const cell of completedPuzzle.cells) {
+      assert(cell != ".", "puzzle has empty cell");
+    }
+    const { changes } = mainSolver(puzzle);
+    assert(changes.filter((change) => change.type == "xwing").length > 0);
+    assertEquals(puzzle.cells, fillInRemaining(new Puzzle(testPuzzle)).cells);
+  },
+});

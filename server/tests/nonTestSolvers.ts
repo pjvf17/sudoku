@@ -15,9 +15,9 @@ import {
 // }
 
 const puzzle = new Puzzle(
-  ".9.73.1..2735146984.196....36248.91............7..328.72984.3.11.8.79.2......1879",
+  "1......5...719.....6..85.....6...54..21.4.36..93...1.....93..1.....547...7......5",
 );
 printSudokuToConsole(puzzle);
-const {changes} = mainSolver(puzzle);
+const { changes } = mainSolver(puzzle);
 printSudokuToConsole(puzzle);
 console.log(changes);

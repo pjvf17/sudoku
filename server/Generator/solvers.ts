@@ -9,7 +9,7 @@ import {
   getRow,
   getSquare,
   makeUnits,
-printSudokuToConsole,
+  printSudokuToConsole,
   Puzzle,
   SolverObj,
   updatePeers,
@@ -262,17 +262,6 @@ export function pointingSolver(
 
 // As defined at http://hodoku.sourceforge.net/en/tech_intersections.php#lc2
 // TODO Claiming Solver
-
-/**
- * X-Wing specification: http://hodoku.sourceforge.net/en/tech_fishb.php#bf2
- * Take two rows (the base sets).
- * If you can find two columns, such that all candidates of a specific digit
- * (the fish digit) in both rows are containd in the columns (the cover sets),
- * all fish candidates in the columns that are not part of the rows can be eliminated.
- * The result is called an X-Wing in the rows.
- * If you exchange the terms rows and columns in the description above, you get an X-Wing in the columns.
- */
-// TODO X-Wing Solver
 
 // As defined at https://www.sudokuoftheday.com/techniques/double-pairs/
 export function doublePairsSolver(
@@ -1222,7 +1211,7 @@ export function hiddenTripleSolver(
               const loc = locations[i];
               // Set untriedNumbers to the numbers it has that overlap with 'numbers'
               puzzle.untriedNumbers[loc] = puzzle.untriedNumbers[loc].filter(
-                (candidate) => numbers.includes(candidate)
+                (candidate) => numbers.includes(candidate),
               );
             }
             // Get locations and ensure they are numbers
@@ -1323,7 +1312,7 @@ export function hiddenQuadSolver(
               }
             }
           }
-          /* falls through */          
+          /* falls through */
           case 3: {
             for (
               thirdNumber = firstNumber + 1;
@@ -1354,9 +1343,11 @@ export function hiddenQuadSolver(
           case 4:
             {
               // Look for a number that can be put in 2-3 of the cellIndexes in 'locations' that isn't firstNumber or secondNumber
-              const nums = [firstNumber, secondNumber, thirdNumber].filter(el=>el != undefined)
+              const nums = [firstNumber, secondNumber, thirdNumber].filter(
+                (el) => el != undefined,
+              );
               for (
-                let nextNumber = (nums[nums.length-1]!) + 1;
+                let nextNumber = (nums[nums.length - 1]!) + 1;
                 nextNumber < numberLocations.length;
                 nextNumber++
               ) {
@@ -1401,7 +1392,7 @@ export function hiddenQuadSolver(
               const loc = locations[i];
               // Set untriedNumbers to the numbers it has that overlap with 'numbers'
               puzzle.untriedNumbers[loc] = puzzle.untriedNumbers[loc].filter(
-                (candidate) => numbers.includes(candidate)
+                (candidate) => numbers.includes(candidate),
               );
             }
             // Get locations and ensure they are numbers
@@ -1423,19 +1414,157 @@ export function hiddenQuadSolver(
   return changes;
 }
 
-// export function xwingSolver(
-// puzzle: Puzzle,
-// units?: number[][],
-// ): change[] | number {
-// if (units == undefined) {
-//   units = makeUnits();
-// }
-// let address: Address[], changeCount: number;
-// const changes: change[] = [];
-// let unitChanges: number[];
-// const type: solver = "hiddenTriple";
-// return [];
-// }
+/**
+ * X-Wing specification: http://hodoku.sourceforge.net/en/tech_fishb.php#bf2
+ * Take two rows (the base sets).
+ * If you can find two columns, such that all candidates of a specific digit
+ * (the fish digit) in both rows are containd in the columns (the cover sets),
+ * all fish candidates in the columns that are not part of the rows can be eliminated.
+ * The result is called an X-Wing in the rows.
+ * If you exchange the terms rows and columns in the description above, you get an X-Wing in the columns.
+ */
+export function xwingSolver(
+  puzzle: Puzzle,
+  units?: number[][],
+): change[] | number {
+  if (units == undefined) {
+    units = makeUnits();
+  }
+  let address: Address[],
+    // Holds potential pairs to check, indexed by number (- 1)
+    rowCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    colCandidates: Address[][][] = [[], [], [], [], [], [], [], [], []],
+    changeCount: number;
+  const changes: change[] = [];
+  const type: solver = "xwing";
+
+  // While there are changes
+  do {
+    changeCount = 0;
+    rowCandidates = [[], [], [], [], [], [], [], [], []];
+    colCandidates = [[], [], [], [], [], [], [], [], []];
+    /**
+     * Loop through rows and columns (units indices 0-17)
+     * Search rows and cols that have only 2 locations for a certain number possible, which are both in the same row or col (opposite)
+     * Store them in candidates array at index associated with number
+     *
+     * Second loop: loop through candidates array by index (number), find a pair of addresses that satisfy double pairs
+    */
+    for (let i = 0; i <= 8; i++) {
+      // Loop through numbers from 1-9
+      for (let number = 1; number <= 9; number++) {
+        // Filter cells by if they have number as a candidate
+        const filteredCellIndices = units[i].filter((cellIndex) => {
+          // Return true if cell is empty and contains number as candidate
+          return puzzle.cells[cellIndex] == "." &&
+            puzzle.untriedNumbers[cellIndex].includes(number);
+        });
+        // If length > 2, guaranteed not to work for double pairs
+        if (filteredCellIndices.length <= 2) {
+          address = [
+            convertToAddress(filteredCellIndices[0]),
+            convertToAddress(filteredCellIndices[1]),
+          ];
+          rowCandidates[number - 1].push(address);
+        }
+      }
+    }
+    for (let i = 9; i <= 17; i++) {
+      // Loop through numbers from 1-9
+      for (let number = 1; number <= 9; number++) {
+        // Filter cells by if they have number as a candidate
+        const filteredCellIndices = units[i].filter((cellIndex) => {
+          // Return true if cell is empty and contains number as candidate
+          return puzzle.cells[cellIndex] == "." &&
+            puzzle.untriedNumbers[cellIndex].includes(number);
+        });
+        // If length > 2, guaranteed not to work for double pairs
+        if (filteredCellIndices.length <= 2) {
+          address = [
+            convertToAddress(filteredCellIndices[0]),
+            convertToAddress(filteredCellIndices[1]),
+          ];
+          colCandidates[number - 1].push(address);
+        }
+      }
+    }
+    let c1: number;
+    let r1: number;
+    let c2: number;
+    let r2: number;
+    let peers: number[];
+    let rowCandidatesArr: Address[][];
+    let colCandidatesArr: Address[][];
+    // Second loop: loop through candidates array by index (number), find a pair of addresses that satisfy double pairs
+    for (let number = 1; number <= 9; number++) {
+      rowCandidatesArr = rowCandidates[number - 1];
+      for (let i = 0; i < rowCandidatesArr.length; i++) {
+        const element = rowCandidatesArr[i];
+        // Look for another set of addresses with the same columns
+        c1 = element[0].c;
+        c2 = element[1].c;
+        let pair: Address[][];
+        for (let j = i + 1; j < rowCandidatesArr.length; j++) {
+          if (
+            rowCandidatesArr[j][0].c == c1 && rowCandidatesArr[j][1].c == c2
+          ) {
+            pair = [element, rowCandidatesArr[j]];
+            // Update puzzle
+            peers = [...getCol(element[0]), ...getCol(element[1])];
+            r1 = element[0].r;
+            r2 = rowCandidatesArr[j][0].r;
+            peers = peers.filter((index) =>
+              !(convertToAddress(index).r == r1 ||
+                convertToAddress(index).r == r2)
+            );
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: pair,
+                number: [number],
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+      colCandidatesArr = colCandidates[number - 1];
+      for (let i = 0; i < colCandidatesArr.length; i++) {
+        const element = colCandidatesArr[i];
+        // Look for another set of addresses with the same rows
+        r1 = element[0].r;
+        r2 = element[1].r;
+        let pair: Address[][];
+        for (let j = i + 1; j < colCandidatesArr.length; j++) {
+          if (
+            colCandidatesArr[j][0].r == r1 && colCandidatesArr[j][1].r == r2
+          ) {
+            pair = [element, colCandidatesArr[j]];
+            // Update puzzle
+            peers = [...getRow(element[0]), ...getRow(element[1])];
+            c1 = element[0].c;
+            c2 = colCandidatesArr[j][0].c;
+            peers = peers.filter((index) =>
+              !(convertToAddress(index).c == c1 ||
+                convertToAddress(index).c == c2)
+            );
+            if (updateSpecificPeers(puzzle, peers, number)) {
+              changeCount++;
+              changes.push({
+                address: pair,
+                number: [number],
+                type,
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+  } while (changeCount);
+  return changes;
+}
 
 // Used to easily call solver functions from creator.ts
 export const solverObj: SolverObj = {
@@ -1450,5 +1579,6 @@ export const solverObj: SolverObj = {
   nakedTripleSolver,
   hiddenTripleSolver,
   nakedQuadSolver,
-  hiddenQuadSolver
+  hiddenQuadSolver,
+  xwingSolver,
 };

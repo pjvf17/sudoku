@@ -19,8 +19,8 @@ export type solverFunction =
   | "nakedTripleSolver"
   | "hiddenTripleSolver"
   | "nakedQuadSolver"
-  | "hiddenQuadSolver";
-// | "xwingSolver";
+  | "hiddenQuadSolver"
+  | "xwingSolver";
 
 /**
  * Prints sudoku to console, accepting either a puzzle class or string
