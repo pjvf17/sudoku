@@ -650,7 +650,7 @@ export function nakedPairSolver(
         // Get rid of those candidates
         if (peers.indexOf(cellIndex) < 8) {
           toUpdate = getCol(cellIndex);
-        } else if (peers.indexOf(cellIndex) < 17) {
+        } else if (peers.indexOf(cellIndex) < 16) {
           toUpdate = getRow(cellIndex);
         } else {
           toUpdate = getSquare(cellIndex);
@@ -1460,7 +1460,7 @@ export function xwingSolver(
             puzzle.untriedNumbers[cellIndex].includes(number);
         });
         // If length > 2, guaranteed not to work for double pairs
-        if (filteredCellIndices.length <= 2) {
+        if (filteredCellIndices.length == 2) {
           address = [
             convertToAddress(filteredCellIndices[0]),
             convertToAddress(filteredCellIndices[1]),
@@ -1479,7 +1479,7 @@ export function xwingSolver(
             puzzle.untriedNumbers[cellIndex].includes(number);
         });
         // If length > 2, guaranteed not to work for double pairs
-        if (filteredCellIndices.length <= 2) {
+        if (filteredCellIndices.length == 2) {
           address = [
             convertToAddress(filteredCellIndices[0]),
             convertToAddress(filteredCellIndices[1]),
